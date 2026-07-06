@@ -1,0 +1,397 @@
+﻿@page "/gridsessions"
+
+@using DevExpress.Blazor
+@using DevExpress.Data.Filtering
+@using DevExpress.Export
+@using System.Net.Http.Json
+@inject IJSRuntime jsRuntime
+@using Dialysis.Shared.Constants
+@inject HttpClient Http
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <EditForm Model="@searchModel">
+        <MudGrid>            
+             <MudItem xs="6" md="3">
+                        <MudDatePicker Label="Дата от" @bind-Date="dateFrom" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+             </MudItem>
+             <MudItem xs="6" md="3">
+                        <MudDatePicker Label="Дата до" @bind-Date="dateTo" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+             </MudItem>
+            <MudItem xs="2" md="2">
+                <br />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" @onclick="@(async() => await LoadSessionsAsync())">Обновить</MudButton>
+
+            </MudItem>
+            <MudItem xs="4" md="4">
+               
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudCardActions>
+                       </MudCardActions>
+            </MudItem>
+          
+        </MudGrid>
+    </EditForm>
+</MudContainer>
+
+
+
+<DxButton Text="Выберите столбцы"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="OnClickColumns" />
+&nbsp;&nbsp;
+<DxButton Text="Скачать"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="@(async() => await ExportXlsx_Click())" />
+
+<DxGrid @ref="Grid"
+        Data="@Elements"
+        ShowGroupPanel="true"
+        ShowFilterRow="true"
+        
+        PageSizeSelectorVisible="true"
+        PageSizeSelectorAllRowsItemVisible="true"
+        PageSizeSelectorItems="@(new int[] { 50,100,500 })"
+        CustomizeCellDisplayText="Grid_CustomizeCellDisplayText">
+    <Columns>
+        <DxGridDataColumn FieldName="Id" Caption="No:" Width="120px"/>
+        <DxGridDataColumn FieldName="MedCenterTitle" Caption="Мед. Центр" AllowGroup="true" AllowSort="false" Width="100px">            
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="MachineTitle" Caption="Апарат" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="District" Caption="Обл/Гор." AllowGroup="true" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Region" Caption="Район" AllowGroup="true" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Fio" Caption="ФИО" AllowGroup="false" AllowSort="false" Width="150px" Visible="false">            
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Inn" Caption="ПИН" AllowGroup="true" AllowSort="false" Width="160px">            
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.DistrictId" Caption="Обл/Гор.(Пац)" AllowGroup="true" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.RegionId" Caption="Район(Пац)" AllowGroup="true" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.Address" Caption="Адрес" AllowGroup="true" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Age" Caption="Возраст" AllowGroup="true" AllowSort="true" Width="80px">
+            
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.Gender" Caption="Пол" AllowGroup="true" AllowSort="true" Width="120px">
+            <CellDisplayTemplate>
+                @if ((bool)context.Value == true)
+                {
+                    <span>Муж</span>
+                }
+                else
+                {
+                    <span>Жен</span>
+                }
+            </CellDisplayTemplate>
+            <FilterRowCellTemplate>
+                <DxComboBox Value="(bool?)context.FilterRowValue"
+                            ValueChanged="(bool? v) => context.FilterRowValue = v"
+                            Data="GenderStates" ValueFieldName="Value" TextFieldName="DisplayText"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+            </FilterRowCellTemplate>
+        </DxGridDataColumn>        
+        <DxGridDataColumn FieldName="StatusId" Caption="Статус" AllowGroup="true"  AllowSort="false" Width="120px">
+            <FilterRowCellTemplate>
+                <DxComboBox Value="(long?)context.FilterRowValue"
+                            ValueChanged="(long? v) => context.FilterRowValue = v"
+                            Data="StatusList" ValueFieldName="Id" TextFieldName="Title"
+                            FilteringMode="DataGridFilteringMode.Contains"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+            </FilterRowCellTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="SessionStart" Caption="Подключения" AllowGroup="false" AllowSort="false" Width="100px">
+            <FilterRowCellTemplate></FilterRowCellTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="SessionEnd" Caption="Отключения" AllowGroup="false" AllowSort="false" Width="100px"> 
+            <FilterRowCellTemplate></FilterRowCellTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="TotalHours" Caption="Время(час)" AllowGroup="false" AllowSort="false">  
+            <FilterRowCellTemplate></FilterRowCellTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="ActivePrice" Caption="Цена" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Condition" Caption="Состояние" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Complaints" Caption="Жалобы" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Program" Caption="Программа" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Dialyzer" Caption="Диализатор" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Correction" Caption="Коррекция" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Reinfusion" Caption="Реинфузия" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Access" Caption="Доступ" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Anticoagulation" Caption="Антикоагуляция" AllowGroup="false" AllowSort="false" Width="100px" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Uf" Caption="УФ" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Speed" Caption="Скорость" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="TypeDialyzer" Caption="Тип диализатора" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Durators" Caption="Длителность" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="StartWeight" Caption="Вес(нач)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="EndWeight" Caption="Вес(кон)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Sys" Caption="Sys" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Dia" Caption="Dia" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Temp" Caption="Темпер" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Ritm" Caption="Частота" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="EndSys" Caption="Sys(кон)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="EndDia" Caption="Dia(кон)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="EndTemp" Caption="Темпер(кон)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="EndRitm" Caption="Частота(кон)" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        
+    </Columns>
+    <TotalSummary>
+        <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        <DxGridSummaryItem FieldName="ActivePrice" SummaryType="GridSummaryItemType.Sum"></DxGridSummaryItem>
+    </TotalSummary>
+    <GroupSummary>
+        <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        <DxGridSummaryItem FieldName="ActivePrice" SummaryType="GridSummaryItemType.Sum"></DxGridSummaryItem>
+    </GroupSummary>
+   
+</DxGrid>
+
+@code {
+
+    IGrid Grid;
+    private IEnumerable<AllHDSessionDto> Elements = new List<AllHDSessionDto>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+
+
+
+    private SearchtDto searchModel = new SearchtDto();
+    private bool IsOnlyCenter = true;
+    private bool tableLoading = true;
+
+    private DateTime? dateFrom = DateTime.Today.AddDays(-7);
+    private DateTime? dateTo = DateTime.Today;
+    private DateTime dateToLocal = DateTime.Today.AddDays(1);
+
+    private List<District> Districts { get; set; }
+    private List<Region> Regions { get; set; }
+
+    private int totalCount = 0;
+
+    static readonly IReadOnlyList<AgeInterval> AgeIntervals = new AgeInterval[] {
+        new("[Age] < 20", "< 20"),
+        new("[Age] between (20, 25)", "20-25"),
+        new("[Age] between (20, 30)", "20-30"),
+        new("[Age] between (30, 40)", "30-40"),
+        new("[Age] between (40, 50)", "40-50"),
+        new("[Age] between (60, 60)", "50-60"),
+        new("[Age] > 60", "> 100")
+    };
+    static readonly IReadOnlyList<GenderState>GenderStates = new GenderState[] {
+        new(true, "Муж"),
+        new(false, "Жен")
+    };
+
+    static readonly IReadOnlyList<IdTitle> StatusList = new IdTitle[]
+    {
+        new((long) HDSessionEnum.Finished, "Завершенная"),
+        new((long) HDSessionEnum.SendToPay, "К оплате"),
+        new((long) HDSessionEnum.Payed, "Оплачено")
+    };
+
+    void OnClickColumns()
+    {
+        Grid.ShowColumnChooser(".column-chooser-button");
+    }
+
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if(e.FieldName == "StatusId")
+        {
+            try{
+                e.DisplayText =StatusList.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+             }
+            catch (Exception)
+            {
+                e.DisplayText = "";
+            }
+
+        }
+        else if(e.FieldName == "SessionStart")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy HH:mm") : "");
+        }
+        else if (e.FieldName == "SessionEnd")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy HH:mm") : "");
+        }
+        else if (e.FieldName == "Age")
+        {
+            try
+            {
+                var age = CalcAgeFromInn(e.Value.ToString()).ToString();
+                if(age=="0"){
+                    e.DisplayText = "";
+                }
+                else
+                {
+                    e.DisplayText = age;
+                }
+            }catch(Exception ex)
+            {
+                e.DisplayText = " ";
+            }
+        }
+        else if (e.FieldName == "Patient.DistrictId")
+        {
+            if ((long)e.Value != 0)
+            {
+                e.DisplayText = Districts.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+        }
+        if (e.FieldName == "Patient.RegionId")
+        {
+            if ((long)e.Value != 0)
+            {
+                e.DisplayText = Regions.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+        }
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await Grid.ExportToXlsxAsync("Сводный_реестр_сеансы_xlsx", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+    async Task ExportXls_Click()
+    {
+        await Grid.ExportToXlsAsync("Сводный_реестр_сеансы_xls", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+    async Task ExportCsv_Click()
+    {
+        await Grid.ExportToCsvAsync("Сводный_реестр_сеансы_csv", new GridCsvExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDistAndRegionsAsync();
+        await LoadSessionsAsync();
+        StateHasChanged();
+
+
+    }
+    private async Task LoadSessionsAsync()
+    {
+        string dFrom = dateFrom?.ToString("yyyyMMdd");
+        string dTo = dateTo?.ToString("yyyyMMdd");
+        string searchParams = "?fromDate=" + dFrom + "&toDate=" + dTo;
+        var response = await Http.GetAsync("api/medcard/allhdsessionsd" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<AllHDSessionDto>>();
+        Elements = mappedData.Data;
+    }
+
+    private async Task LoadDistAndRegionsAsync()
+    {
+        Districts = await _commonService.LoadDistrictsAsync();
+        Regions = await _commonService.LoadAllRegionsAsync();
+    }
+
+    private int CalcAge(DateTime BirthDate)
+    {
+        var retAge = 0;
+        try
+        {
+            DateTime TodayDate = DateTime.Now;
+            retAge = (int)(((TodayDate - BirthDate).TotalDays) / 365);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return retAge;
+    }
+
+    private int CalcAgeFromInn(string Inn)
+    {
+        var retAge = 0;
+        try
+        {
+            var bDay = Inn.Substring(1,2);
+            var bMonth = Inn.Substring(3, 2);
+            var bYear = Inn.Substring(5,4);
+            DateTime BirthDate = new DateTime(Convert.ToInt32(bYear), Convert.ToInt32(bMonth), Convert.ToInt32(bDay));
+            DateTime TodayDate = DateTime.Now;
+            retAge = (int)(((TodayDate - BirthDate).TotalDays) / 365);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return retAge;
+    }
+
+    record GenderState(bool? Value, string DisplayText);
+    record AgeInterval(CriteriaOperator Criteria, string DisplayText)
+    {
+        public AgeInterval(string CriteriaText, string DisplayText)
+            : this(CriteriaOperator.Parse(CriteriaText), DisplayText)
+        {
+        }
+    }
+    record IdTitle(long Id, string Title);
+
+
+
+    public class SearchtDto
+    {
+        public long MedCenterId { get; set; }
+        public string Inn { get; set; }
+        public string Image { get; set; }
+        public long Status { get; set; }
+    }
+
+
+}
+

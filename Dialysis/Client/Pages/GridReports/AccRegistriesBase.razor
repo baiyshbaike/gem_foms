@@ -1,0 +1,49 @@
+﻿@page "/accreg"
+@page "/accreg/{Mid:long}"
+@inject HttpClient Http
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" @ref="tabs">
+    <MudTabPanel Text="по Мед центр" Disabled=@one>
+        <Dialysis.Client.Pages.PageComponents.AccRegistriesComponents.AccRegistries userDto=userDto Mid=Mid/>
+    </MudTabPanel>
+    <MudTabPanel Text="по Области" Disabled=@two>
+        <Dialysis.Client.Pages.PageComponents.AccRegistriesComponents.AccRegistries2 userDto=userDto />
+    </MudTabPanel>
+</MudTabs>
+@code {
+    [Parameter]
+    public long? Mid { get; set; }
+    public long ProfileId { get; set; } = 0;
+    int activeTab = 0;
+    string username = "";
+    public UserDto userDto;
+    private bool one = false;
+    private bool two = false;
+    MudTabs tabs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/profile/getuserbyprofileid");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<UserDto>();
+        if (mappedData?.Data != null)
+        {
+            userDto = mappedData.Data;
+        }
+
+        switch (userDto.UserProfile.Id)
+        {
+            case 4:
+                one = true;
+                tabs.ActivatePanel(1);
+                break;
+            case 3:
+                two = true;
+                tabs.ActivatePanel(0);
+                break;
+        }
+    }
+}

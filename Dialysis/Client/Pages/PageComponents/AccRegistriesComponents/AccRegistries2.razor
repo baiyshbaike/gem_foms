@@ -1,0 +1,230 @@
+﻿@page "/accreg2"
+@inject IJSRuntime jsRuntime
+@inject HttpClient Http
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="12" md="6" >
+                @if (!IsOnlyCenter)
+                {
+                    <MudSelect T="long" Label="Область" @bind-Value="@searchModel.DistrictId" AnchorOrigin="Origin.BottomCenter">
+                        @{
+                            @foreach (var medItem in UserDistricts)
+                            {
+                                <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                }
+                @if (IsOnlyCenter)
+                {
+                    <MudText Typo="Typo.h6">@UserDistricts.Where(p=>p.Id==searchModel.DistrictId).FirstOrDefault().Title</MudText>
+                }
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="Дата от" @bind-Date="dateFrom" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="Дата до" @bind-Date="dateTo" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudCardActions>
+                    <br />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" @onclick="@(async() => await LoadSessionsAsync())">Обновить</MudButton>
+                </MudCardActions>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+</MudContainer>
+
+
+<MudTable Items="@Elements" Loading="@tableLoading" RowsPerPage=1000 Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped"
+          Virtualize=false
+          GroupBy="@_groupDefinition"
+          GroupFooterClass="mb-4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">СВОДНЫЙ СЧЕТ-РЕЕСТР </MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" @onclick="@(async()=> await PrintModal())" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Печать</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Наименование организации здраоохранения</MudTh>
+        <MudTh>Кол-во сеансов</MudTh>
+        <MudTh>Кол-во пациентов</MudTh>
+        <MudTh>Предъявлено к оплате, сом</MudTh>
+    </HeaderContent>
+    <GroupHeaderTemplate>
+
+    </GroupHeaderTemplate>
+    <RowTemplate>
+        <MudTd>@context.MedCenterTitle</MudTd>
+        <MudTd>@context.SessionCount</MudTd>
+        <MudTd>@context.PatientCount</MudTd>
+        <MudTd>@context.TotalPrice</MudTd>
+    </RowTemplate>
+    <GroupFooterTemplate>
+        <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" Style="font-size:18px; font-weight:600; text-align:right !important;">Итого:</MudTh>
+        <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" Style="font-size:18px; font-weight:600;"> @context.Items.Sum((e) => e.SessionCount)</MudTh>
+        <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" Style="font-size:18px; font-weight:600;"> @context.Items.Sum((e) => e.PatientCount)</MudTh>
+        <MudTh Class="mud-table-cell-custom-group mud-table-cell-custom-group-footer" Style="font-size:18px; font-weight:600;"> @context.Items.Sum((e) => e.TotalPrice)</MudTh>
+    </GroupFooterTemplate>
+
+</MudTable>
+
+
+@code {
+    [Parameter]
+    public UserDto userDto { get; set; }
+    public long? Mid { get; set; }
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string districtName = "";
+    private int patientCount = 0;
+    private RegOblDto RegObl = new RegOblDto();
+    private IEnumerable<RegMedCenterOblDto> Elements = new List<RegMedCenterOblDto>();
+    private IEnumerable<District> UserDistricts = new List<District>();
+
+    private SearchtDto searchModel = new SearchtDto();
+    private bool IsOnlyCenter = true;
+    private bool tableLoading = true;
+
+    private DateTime? dateFrom = DateTime.Today;
+    private DateTime? dateTo = DateTime.Today;
+    private DateTime dateToLocal = DateTime.Today.AddDays(1);
+
+    private decimal itog;
+    private int sesCount=0;
+    private int patCount = 0;
+    private TableGroupDefinition<RegMedCenterOblDto> _groupDefinition = new()
+        {
+            GroupName = "Group",
+            Indentation = false,
+            Expandable = false,
+            Selector = (e) => e.OblId
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDistrictsAsync();
+        await LoadSessionsAsync();
+    }
+
+    private async Task LoadSessionsAsync()
+    {
+        tableLoading = true;
+
+        string dFrom = "";
+        string dTo = "";
+        if (dateFrom != null)
+        {
+            dFrom = dateFrom?.ToString("yyyyMMdd");
+        }
+        var dateToLocal = DateTime.Today;
+        if (dateTo != null)
+        {
+            var newToDate = Convert.ToDateTime(dateTo);
+            dateToLocal = newToDate;
+            dTo = dateToLocal.ToString("yyyyMMdd");
+        }
+
+        string searchParams = "&fromDate=" + dFrom + "&toDate=" + dTo;
+        var response = await Http.GetAsync("api/excell/accregistries2?oblId=" + searchModel.DistrictId + "" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<RegOblDto>();
+        if (mappedData?.Data != null)
+        {
+            RegObl = mappedData.Data;
+            Elements = mappedData.Data.RegMedCenterOblDtos;
+        }
+        tableLoading = false;
+    }
+
+    public async Task LoadUserDistrictsAsync()
+    {
+
+        UserDistricts = await _commonService.LoadDistrictsAsync();
+        if (UserDistricts != null)
+        {
+            Console.WriteLine("OnInitializedAsync completed");
+            if (userDto.UserProfile.Id==4)
+            {
+                if (userDto.MedCenters.Count() == 0)
+                {
+                    Console.WriteLine("OnInitializedAsync completed");
+                    searchModel.DistrictId = UserDistricts.Select(t => t.Id).FirstOrDefault();
+                }
+                else
+                {
+                    searchModel.DistrictId = userDto.MedCenters.FirstOrDefault().DistrictId;
+                }
+            }
+            else
+            {
+                IsOnlyCenter = false;
+                searchModel.DistrictId = UserDistricts.Select(t => t.Id).FirstOrDefault();
+            }
+        }
+    }
+
+
+    public class SearchtDto
+    {
+        public long DistrictId { get; set; }
+        public string Inn { get; set; }
+        public string Image { get; set; }
+        public long Status { get; set; }
+    }
+    private async Task PrintModal()
+    {
+        foreach(var item in Elements)
+        {
+            itog= itog+item.TotalPrice;
+            sesCount=sesCount+item.SessionCount;
+            patCount = patCount+item.PatientCount;
+        }
+        string dFrom = "";
+        string dTo = "";
+        if (dateFrom != null)
+        {
+            dFrom = dateFrom?.ToString("yyyyMMdd");
+        }
+        var dateToLocal = DateTime.Today.AddDays(1);
+        if (dateTo != null)
+        {
+            var newToDate = Convert.ToDateTime(dateTo);
+            dateToLocal = newToDate.AddDays(1);
+            dTo = dateToLocal.ToString("yyyyMMdd");
+        }
+        string searchParams = "&fromDate=" + dFrom + "&toDate=" + dTo;
+        var url = searchModel.DistrictId + "" + searchParams;
+        var parameters = new DialogParameters();
+        parameters.Add("url", url);
+        parameters.Add("dateFrom", dateFrom);
+        parameters.Add("dateTo", dateTo);
+        parameters.Add("RegObl", RegObl);
+        parameters.Add("itog", itog);
+        parameters.Add("sesCount", sesCount);
+        parameters.Add("patCount", patCount);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<Dialysis.Client.Pages.GridReports.AccRegistriesPrint2>("Подробности", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadSessionsAsync();
+        }
+    }
+
+}
+

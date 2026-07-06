@@ -1,0 +1,558 @@
+﻿@page "/"
+@inject IJSRuntime JSRuntime
+@using System.Security.Claims
+@using System.Data;
+@using System.Globalization
+@using System.IO;
+@using NPOI.XSSF.UserModel;
+@using NPOI.SS.UserModel;
+@using MudBlazor
+@inject HttpClient Http
+@inject IJSRuntime js
+@{
+    if (isAdmin)
+    {
+        <div>
+            <InputFile id="fileInput" OnChange="OnFileSelected" />
+            <MudButton StartIcon="@Icons.Material.Outlined.Send" Color="Color.Info" Variant="Variant.Filled" OnClick="ImportExcel">Submit</MudButton>
+        </div>
+    }
+}
+<br />
+<MudGrid>
+    <MudItem xs="6">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+            <div id="chartContainer" style="height: 370px; width: 100%;">
+
+                <DxPieChart Data="@MedCenterData"
+                            Diameter="diameter"
+                            InnerDiameter="innerDiameter"
+                            T="MedCentersByDistrictDto">
+                    <DxPieChartSeries T="MedCentersByDistrictDto"
+                                      TArgument="string"
+                                      TValue="double"
+                                      ValueField="si => si.TotalCount"
+                                      ArgumentField="si => si.RegionName"
+                                      SummaryMethod="Enumerable.Sum">
+                        <DxChartSeriesLabel Visible="showLabels"
+                                            Position="labelPosition">
+                            <DxChartSeriesLabelConnector Visible="true" />
+                        </DxChartSeriesLabel>
+                    </DxPieChartSeries>
+                    <DxChartTooltip Enabled="true"
+                                    Position="RelativePosition.Outside">
+                        <div style="margin: 0.75rem">
+                            <div class="fw-bold">@context.Point.Argument</div>
+                            <div>@context.Point.Value</div>
+                        </div>
+                    </DxChartTooltip>
+                    <DxChartTitle Text="Мед. центры и гос. ОЗ">
+                        <DxChartSubTitle Text=" " />
+                    </DxChartTitle>
+                    <DxChartLegend HorizontalAlignment="DevExpress.Blazor.HorizontalAlignment.Center"
+                                   VerticalAlignment="VerticalEdge.Bottom"
+                                   Position="RelativePosition.Outside"
+                                   Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+                </DxPieChart>
+
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+            <div id="chartContainerCake" style="height: 370px; width: 100%;">
+
+                <DxChart T="PatientAgeGroupDto"
+                         Data="@AgesData"
+                         Width="100%">
+                    <DxChartTitle Text="Пол и Возрастная группа пациентов">
+                    </DxChartTitle>
+                    <DxChartStackedBarSeries T="PatientAgeGroupDto"
+                                             TArgument="string"
+                                             TValue="int"
+                                             ArgumentField="pasi => pasi.Gender"
+                                             Name="0-25 лет"
+                                             ValueField="pasi => pasi.Population"
+                                             SummaryMethod="Enumerable.Sum"
+                                             Filter='pasi => pasi.AgeGroup == "0-25 лет"' />
+                    <DxChartStackedBarSeries T="PatientAgeGroupDto"
+                                             TArgument="string"
+                                             TValue="int"
+                                             Name="25-50 лет"
+                                             ArgumentField="pasi => pasi.Gender"
+                                             ValueField="pasi => pasi.Population"
+                                             SummaryMethod="Enumerable.Sum"
+                                             Filter='pasi => pasi.AgeGroup == "25-50 лет"' />
+                    <DxChartStackedBarSeries T="PatientAgeGroupDto"
+                                             TArgument="string"
+                                             TValue="int"
+                                             Name="50 лет и старше"
+                                             ArgumentField="pasi => pasi.Gender"
+                                             ValueField="pasi => pasi.Population"
+                                             SummaryMethod="Enumerable.Sum"
+                                             Filter='pasi => pasi.AgeGroup == "50 лет и старше"' />
+                    <DxChartLegend Position="RelativePosition.Outside"
+                                   HorizontalAlignment="DevExpress.Blazor.HorizontalAlignment.Center"
+                                   VerticalAlignment="DevExpress.Blazor.VerticalEdge.Bottom" />
+                    <DxChartTooltip Enabled="true"
+                                    Position="RelativePosition.Outside">
+                        <div style="margin: 0.75rem">
+                            <div class="fw-bold">@context.Point.Argument</div>
+                            <div>Возрастная группа: @context.Point.SeriesName</div>
+                            <div>Всего: @($"{context.Point.Value:N0}")</div>
+                        </div>
+                    </DxChartTooltip>
+                </DxChart>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12">
+        <DxPieChart Data="@SalesData"
+                    Diameter="diameter2"
+                    InnerDiameter="innerDiameter"
+                    T="MedCenterChartDto">
+            <DxPieChartSeries T="MedCenterChartDto"
+                              TArgument="string"
+                              TValue="double"
+                              ValueField="si => si.Total"
+                              ArgumentField="si => si.MedCenterTittle"
+                              SummaryMethod="Enumerable.Sum">
+                <DxChartSeriesLabel Visible="showLabels"
+                                    Position="labelPosition2"
+                                    ValueFormat="ChartElementFormat.Decimal(1)">
+                    <DxChartSeriesLabelConnector Visible="true" />
+                </DxChartSeriesLabel>
+            </DxPieChartSeries>
+            <DxChartTooltip Enabled="true"
+                            Position="RelativePosition.Outside">
+                <div style="margin: 0.75rem">
+                    <div class="fw-bold">@context.Point.Argument</div>
+                    <div>Количество: @($"{context.Point.Value:#,0.}")</div>
+                </div>
+            </DxChartTooltip>
+            <DxChartTitle Text="Пациенты по Мед. центр">
+                <DxChartSubTitle Text="" />
+            </DxChartTitle>
+            <DxChartLegend HorizontalAlignment="DevExpress.Blazor.HorizontalAlignment.Center"
+                           VerticalAlignment="VerticalEdge.Bottom"
+                           Position="RelativePosition.Outside"
+                           Orientation="DevExpress.Blazor.Orientation.Horizontal" />
+        </DxPieChart>
+    </MudItem>
+</MudGrid>
+
+
+
+
+@code {
+    private bool isAdmin = false;
+    private IBrowserFile selectedFile;
+    
+    IEnumerable<MedCenterChartDto> SalesData;
+    RelativePosition labelPosition2 =RelativePosition.Outside;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
+
+    IEnumerable<MedCentersByDistrictDto> MedCenterData;
+    double? diameter = null;
+    double? diameter2 = 1;
+    double innerDiameter = 0.5;
+    bool showLabels = true;
+    RelativePosition labelPosition = RelativePosition.Inside;
+    
+    public string[] XAxisLabels = {};
+    private IEnumerable<MedCenter> Elements = new List<MedCenter>();
+    IEnumerable<PatientAgeGroupDto> AgesData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        isAdmin = user.IsInRole("admin");
+
+        if (user.Identity.IsAuthenticated)
+        {
+            try
+            {
+                string Surname = user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
+                string Name = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value;
+                Layout.FioTitle = Surname + " " + Name;
+            }
+            catch (Exception ex)
+            {
+
+            }
+            await LoadDataAsync();
+        }
+        else
+        {
+            _navigationManager.NavigateTo("/login");
+        }
+    }
+
+    
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/medcenter/medcentersbydistrict");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<MedCentersByDistrictDto>>();
+        MedCenterData = mappedData.Data;
+
+        var response2 = await Http.GetAsync("api/medcenter/patientagegroup");        
+        var mappedData2 = await response2.ToResult<List<PatientAgeGroupDto>>();
+        AgesData = mappedData2.Data; 
+        var response3 = await Http.GetAsync("api/medcenter/medcenterschart");        
+        var mappedData3 = await response3.ToResult<List<MedCenterChartDto>>();
+        SalesData = mappedData3.Data;
+    }
+
+ 
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File; 
+    }
+    private async Task ImportExcel()
+    {
+        if (selectedFile != null)
+        {
+            DataTable dt = new DataTable();
+            using var fileStream = selectedFile.OpenReadStream();
+            var ms = new MemoryStream();
+            await fileStream.CopyToAsync(ms);
+            fileStream.Close();
+            ms.Position = 0;
+
+            ISheet sheet;
+            var xsswb = new XSSFWorkbook(ms);
+            sheet = xsswb.GetSheetAt(0);
+            IRow hr = sheet.GetRow(1);
+            int columcc = hr.LastCellNum;
+            // Add column headers to the DataTable
+            for (var j = 0; j < columcc; j++)
+            {
+                ICell cell = hr.GetCell(j);
+                dt.Columns.Add(cell?.ToString() ?? string.Empty);
+            }
+            // Create a list to hold the HDSession objects
+            List<ImportHDSessionsDto> importHdSessionsDtos= new List<ImportHDSessionsDto>();
+            
+            // Add rows to the DataTable
+            for (var j = (sheet.FirstRowNum + 2); j <= sheet.LastRowNum; j++)
+            {
+                var r = sheet.GetRow(j);
+                if (r == null) continue;
+                var hdSession = new HDSession();
+                var hdSessionHour1 = new HDSessionHour();
+                var hdSessionHour2 = new HDSessionHour();
+                var hdSessionHour3 = new HDSessionHour();
+                var hdSessionHour4 = new HDSessionHour();
+                List<HDSessionHour> hdSessionHours = new List<HDSessionHour>();
+                for (var i = r.FirstCellNum; i < columcc; i++)
+                {
+                    var cell = r.GetCell(i);
+                    var cellValue = cell?.ToString() ?? string.Empty;
+                    // Map the Excel columns to HDSession properties based on column headers
+                    var columnName = dt.Columns[i].ColumnName;
+
+                    switch (columnName)
+                    {
+                        case "Id":
+                            hdSession.Id = long.TryParse(cellValue, out var id) ? id : 0;
+                            break;
+                        case "Inn":
+                            hdSession.Inn = cellValue;
+                            break;
+                        case "PatientId":
+                            hdSession.PatientId = long.TryParse(cellValue, out var patientId) ? patientId : 0;
+                            break;
+                        case "MedCardId":
+                            hdSession.MedCardId = long.TryParse(cellValue, out var medCardId) ? medCardId : (long?)null;
+                            break;
+                        case "MedCenterId":
+                            hdSession.MedCenterId = long.TryParse(cellValue, out var medCenterId) ? medCenterId : (long?)null;
+                            break;
+                        case "MachineId":
+                            hdSession.MachineId = long.TryParse(cellValue, out var machineId) ? machineId : (long?)null;
+                            break;
+                        case "Condition":
+                            hdSession.Condition = cellValue;
+                            break;
+                        case "Complaints":
+                            hdSession.Complaints = cellValue;
+                            break;
+                        case "Program":
+                            hdSession.Program = cellValue;
+                            break;
+                        case "Dialyzer":
+                            hdSession.Dialyzer = cellValue;
+                            break;
+                        case "Correction":
+                            hdSession.Correction = cellValue;
+                            break;
+                        case "Reinfusion":
+                            hdSession.Reinfusion = cellValue;
+                            break;
+                        case "Access":
+                            hdSession.Access = cellValue;
+                            break;
+                        case "Anticoagulation":
+                            hdSession.Anticoagulation = cellValue;
+                            break;
+                        case "Uf":
+                            hdSession.Uf = cellValue;
+                            break;
+                        case "Speed":
+                            hdSession.Speed = cellValue;
+                            break;
+                        case "TypeDialyzer":
+                            hdSession.TypeDialyzer = cellValue;
+                            break;
+                        case "TypeMedicine":
+                            hdSession.TypeMedicine = cellValue;
+                            break;
+                        case "Durators":
+                            hdSession.Durators = cellValue;
+                            break;
+                        case "StartWeight":
+                            hdSession.StartWeight = double.TryParse(cellValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var startWeight)
+                                ? startWeight
+                                : (double?)null;
+                            break;
+                        case "EndWeight":
+                            hdSession.EndWeight = double.TryParse(cellValue.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var endWeight)
+                                ? endWeight
+                                : (double?)null;
+                            break;
+                        case "Note":
+                            hdSession.Note = cellValue;
+                            break;
+                        case "IdentifyBy":
+                            hdSession.IdentifyBy = long.TryParse(cellValue, out var identifyBy) ? identifyBy : (long?)null;
+                            break;
+                        case "IdentifyOn":
+                            hdSession.IdentifyOn = DateTime.TryParse(cellValue, out var identifyOn) ? identifyOn : (DateTime?)null;
+                            break;
+                        case "CreatedBy":
+                            hdSession.CreatedBy = long.TryParse(cellValue, out var createdBy) ? createdBy : (long?)null;
+                            break;
+                        case "CreatedOn":
+                            hdSession.CreatedOn = DateTime.TryParse(cellValue, out var createdOn) ? createdOn : (DateTime?)null;
+                            break;
+                        case "FinishedBy":
+                            hdSession.FinishedBy = long.TryParse(cellValue, out var finishedBy) ? finishedBy : (long?)null;
+                            break;
+                        case "FinishedOn":
+                            hdSession.FinishedOn = DateTime.TryParse(cellValue, out var finishedOn) ? finishedOn : (DateTime?)null;
+                            break;
+                        case "LastModifiedBy":
+                            hdSession.LastModifiedBy = long.TryParse(cellValue, out var lastModifiedBy) ? lastModifiedBy : (long?)null;
+                            break;
+                        case "LastModifiedOn":
+                            hdSession.LastModifiedOn = DateTime.TryParse(cellValue, out var lastModifiedOn) ? lastModifiedOn : (DateTime?)null;
+                            break;
+                        case "IsDeleted":
+                            hdSession.IsDeleted = bool.TryParse(cellValue, out var isDeleted) && isDeleted;
+                            break;
+                        case "DeletedOn":
+                            hdSession.DeletedOn = DateTime.TryParse(cellValue, out var deletedOn) ? deletedOn : (DateTime?)null;
+                            break;
+                        case "SessionStart":
+                            hdSession.SessionStart = DateTime.TryParseExact(
+                                cellValue, 
+                                "yyyy-MM-dd HH-mm-ss", 
+                                CultureInfo.InvariantCulture, 
+                                DateTimeStyles.None, 
+                                out var sessionStart) ? sessionStart : (DateTime?)null;
+                            break;
+                        case "SessionEnd":
+                            hdSession.SessionEnd = DateTime.TryParseExact(
+                                cellValue, 
+                                "yyyy-MM-dd HH-mm-ss", 
+                                CultureInfo.InvariantCulture, 
+                                DateTimeStyles.None, 
+                                out var sessionEnd) ? sessionEnd : (DateTime?)null;
+                            break;
+                        case "StatusId":
+                            hdSession.StatusId = long.TryParse(cellValue, out var statusId) ? statusId : (long?)null;
+                            break;
+                        case "TotalMinutes":
+                            hdSession.TotalMinutes = double.TryParse(cellValue, out var totalMinutes) ? totalMinutes : (double?)null;
+                            break;
+                        case "TotalHours":
+                            hdSession.TotalHours = double.TryParse(cellValue, out var totalHours) ? totalHours : (double?)null;
+                            break;
+                        case "ActivePrice":
+                            hdSession.ActivePrice = decimal.TryParse(cellValue, out var activePrice) ? activePrice : (decimal?)null;
+                            break;
+                        case "SetPrice":
+                            hdSession.SetPrice = decimal.TryParse(cellValue, out var setPrice) ? setPrice : (decimal?)null;
+                            break;
+                        case "Note2":
+                            hdSession.Note2 = cellValue;
+                            break;
+                        case "Note3":
+                            hdSession.Note3 = cellValue;
+                            break;
+                        case "ImageStart":
+                            hdSession.ImageStart = cellValue;
+                            break;
+                        case "ImageEnd":
+                            hdSession.ImageEnd = cellValue;
+                            break;
+                        case "Sys":
+                            hdSession.Sys = cellValue;
+                            break;
+                        case "Dia":
+                            hdSession.Dia = cellValue;
+                            break;
+                        case "Temp":
+                            hdSession.Temp = cellValue;
+                            break;
+                        case "Ritm":
+                            hdSession.Ritm = cellValue;
+                            break;
+                        case "Sys1":
+                            hdSessionHour1.Sys = cellValue;
+                            break;
+                        case "Dia1":
+                            hdSessionHour1.Dia = cellValue;
+                            break;
+                        case "Temp1":
+                            hdSessionHour1.Temp = cellValue;
+                            break;
+                        case "Ritm1":
+                            hdSessionHour1.Ritm = cellValue;
+                            break;
+                        case "Sys2":
+                            hdSessionHour2.Sys = cellValue;
+                            break;
+                        case "Dia2":
+                            hdSessionHour2.Dia = cellValue;
+                            break;
+                        case "Temp2":
+                            hdSessionHour2.Temp = cellValue;
+                            break;
+                        case "Ritm2":
+                            hdSessionHour2.Ritm = cellValue;
+                            break;
+                        case "Sys3":
+                            hdSessionHour3.Sys = cellValue;
+                            break;
+                        case "Dia3":
+                            hdSessionHour3.Dia = cellValue;
+                            break;
+                        case "Temp3":
+                            hdSessionHour3.Temp = cellValue;
+                            break;
+                        case "Ritm3":
+                            hdSessionHour3.Ritm = cellValue;
+                            break;
+                        case "Sys4":
+                            hdSessionHour4.Sys = cellValue;
+                            break;
+                        case "Dia4":
+                            hdSessionHour4.Dia = cellValue;
+                            break;
+                        case "Temp4":
+                            hdSessionHour4.Temp = cellValue;
+                            break;
+                        case "Ritm4":
+                            hdSessionHour4.Ritm = cellValue;
+                            break;
+                        case "EndSys":
+                            hdSession.EndSys = cellValue;
+                            break;
+                        case "EndDia":
+                            hdSession.EndDia = cellValue;
+                            break;
+                        case "EndTemp":
+                            hdSession.EndTemp = cellValue;
+                            break;
+                        case "EndRitm":
+                            hdSession.EndRitm = cellValue;
+                            break;
+                        case "Сhanged":
+                            hdSession.Сhanged = bool.TryParse(cellValue, out var changed) && changed;
+                            break;
+                        case "Hd1Hypotension":
+                            hdSession.Hd1Hypotension = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd2Hypertension":
+                            hdSession.Hd2Hypertension = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd3MuscleCrampsOfTheLimbs":
+                            hdSession.Hd3MuscleCrampsOfTheLimbs = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd4HeartRhythmDisturbances":
+                            hdSession.Hd4HeartRhythmDisturbances = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd5Headache":
+                            hdSession.Hd5Headache = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd6AnginaAttacks":
+                            hdSession.Hd6AnginaAttacks = cellValue.Equals("да", StringComparison.OrdinalIgnoreCase) || cellValue.Equals("Да", StringComparison.OrdinalIgnoreCase);
+                            break;
+                        case "Hd7Other":
+                            hdSession.Hd7Other = cellValue;
+                            break;
+                        case "Hd8CorrectionOfComplications":
+                            hdSession.Hd8CorrectionOfComplications = cellValue;
+                            break;
+                        case "Hd9PlannedAppointments":
+                            hdSession.Hd9PlannedAppointments = cellValue;
+                            break;
+                        case "Hd10Recommendations":
+                            hdSession.Hd10Recommendations = cellValue;
+                            break;
+                        case "Hd11EffectiveTime":
+                            hdSession.Hd11EffectiveTime = cellValue;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                }
+
+                hdSessionHour1.Hour = "1";
+                hdSessionHours.Add(hdSessionHour1);
+                hdSessionHour2.Hour = "2";
+                hdSessionHours.Add(hdSessionHour2);
+                hdSessionHour3.Hour = "3";
+                hdSessionHours.Add(hdSessionHour3);
+                hdSessionHour4.Hour = "4";
+                hdSessionHours.Add(hdSessionHour4);
+                importHdSessionsDtos.Add(new ImportHDSessionsDto()
+                {
+                    HdSession = hdSession,
+                    HdSessionHours = hdSessionHours
+                });
+            }
+
+            importHdSessionsDtos = importHdSessionsDtos.Where(t => !string.IsNullOrWhiteSpace(t.HdSession.Inn)).ToList();
+            var response = await _httpClient.PostAsJsonAsync("api/medcard/importexcelfile", importHdSessionsDtos);
+            var result = await response.ToResult();
+            if (!result.Succeeded)
+            {
+                _snackBar.Add(result.Messages[0], Severity.Error);
+            }
+            else
+            {
+                _snackBar.Add("Успешно", Severity.Success);
+            }
+
+            selectedFile = null;
+        }
+        else
+        {
+            _snackBar.Add("non selected", Severity.Error);
+        }
+    }
+}
+

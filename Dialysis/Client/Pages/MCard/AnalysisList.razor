@@ -1,0 +1,121 @@
+﻿@page "/analyseslist"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="Дата от" @bind-Date="dateFrom" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="Дата до" @bind-Date="dateTo" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="6" md="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@(async() => await SearchAnalysesAsync())" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+
+
+    <MudTable Items="@Elements" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped">
+
+        <HeaderContent>
+            <MudTh>ФИО</MudTh>
+            <MudTh>ИНН</MudTh>
+            <MudTh>Анализ</MudTh>
+            <MudTh>Резултат</MudTh>
+            <MudTh>Дата Анализа</MudTh>
+            <MudTh>Следующая дата Анализа</MudTh>
+            <MudTh>Дата добавления</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Patient.LastName  @context.Patient.FirstName</MudTd>
+            <MudTd>@context.Patient.Inn</MudTd>
+            <MudTd>@context.Analysis.Title</MudTd>
+            <MudTd>@context.AnalysisResult.Result  @context.Analysis.AnalysisExt</MudTd>
+            <MudTd>@context.AnalysisResult.AnalysisDate?.ToString("dd.MM.yyyy")</MudTd>
+
+            <MudTd Style="@(IsDatePast(((DateTime)context.AnalysisResult.AnalysisDate).AddDays((int)context.Analysis.NextDays)) ? "background-color:red;":"")">
+                @{
+                    if (context.AnalysisResult.AnalysisDate != null && context.Analysis.NextDays > 0)
+                    {
+                        var nextDate = ((DateTime)context.AnalysisResult.AnalysisDate).AddDays((int)context.Analysis.NextDays);
+                        <span><b>@nextDate.ToString("dd.MM.yyyy")</b></span>
+                    }
+                }
+
+            </MudTd>
+
+            <MudTd>@context.AnalysisResult.CreatedOn?.ToString("dd.MM.yyyy")  </MudTd>
+            <MudTd>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+
+
+</MudContainer>
+
+
+@code {
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private bool tableLoading = false;
+
+    public MedCardSearch searchModel = new MedCardSearch();
+    private bool showTable = false;
+
+
+    private DateTime? dateFrom = DateTime.Today.AddDays(-30);
+    private DateTime? dateTo = DateTime.Today;
+
+    private IEnumerable<AnalysisResultsDto> Elements = new List<AnalysisResultsDto>();
+    public Patient PatientModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    private bool IsDatePast(DateTime dateTime)
+    {
+        DateTime dateTimeNow = DateTime.Now.Date;
+        if (dateTime < dateTimeNow)
+        {
+            return true;
+        }
+        return false;
+    }
+    private async Task SearchAnalysesAsync()
+    {
+        string dFrom = dateFrom?.ToString("yyyyMMdd");
+        string dTo = dateTo?.ToString("yyyyMMdd");
+        string searchParams = "&fromDate=" + dFrom + "&toDate=" + dTo;
+        tableLoading = true;
+        var response = await Http.GetAsync("api/medcard/analysesbyinn?inn=" + searchModel.Inn+ "" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<AnalysisResultsDto>>();
+        Elements = mappedData.Data;
+        tableLoading = false;
+    }
+
+}
+

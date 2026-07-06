@@ -1,0 +1,270 @@
+﻿@using Dialysis.Client.Pages.NewPages.Protocols.ProtocolForms
+@using Microsoft.AspNetCore.WebUtilities
+<MudTable
+    T="HDSessionDto"
+    @ref="_table" 
+    Items="@_hdsessions" 
+    ServerData="@(new Func<TableState, Task<TableData<HDSessionDto>>>(ServerReload))" 
+    Loading="@_loading"
+    Dense="true" 
+    Hover="true" 
+    Bordered="true" 
+    Striped="true"
+    FixedHeader="true"
+>
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Сеансы</MudText>
+        <MudSpacer />
+        <MudButton 
+            @onclick="FilterModal"
+            StartIcon="@Icons.Material.Filled.FilterAlt"
+            Size="Size.Small"
+            Variant="Variant.Outlined" 
+            Color="Color.Primary">
+            Фильтр
+        </MudButton>
+        <MudSpacer />
+        <MudTextField 
+            T="string" 
+            ValueChanged="@(s=>OnSearch(s))" 
+            Placeholder="Поиск" 
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="Id">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="Lastname">ФИО и ИНН</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="MedCenterId">Мед. Центр и ГД Аппарат</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="SessionStart">Дата Подключения</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="SessionEnd">Дата Отключения</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="StatusId">Статус</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="TotalHours">Время</MudTableSortLabel></MudTh>
+        <MudTh>Действие</MudTh>
+    </HeaderContent>
+    
+    <RowTemplate>
+        <MudTd>@context.HDSession.Id </MudTd>
+        <MudTd>@context.Patient.FirstName @context.Patient.LastName <br/> @context.Inn</MudTd>
+        <MudTd>
+            @(context.MedCenter != null ? context.MedCenter.Title : "") <br/> 
+            @(context.MedCenterMachine != null ? context.MedCenterMachine.Name: "") <br/>
+            @(context.MedCenterMachine != null ? context.MedCenterMachine.Model: "")
+        </MudTd>
+        <MudTd>
+            @(context.HDSession.SessionStart?.ToString("dd.MM.yyyy HH:mm") 
+            ?? $"время записи: {context.HDSession.IdentifyOn?.ToString("dd.MM.yyyy HH:mm")}")
+        </MudTd>
+        <MudTd>
+            @(context.HDSession.SessionEnd?.ToString("dd.MM.yyyy HH:mm") 
+            ?? "Сессия еще не закончена")
+        </MudTd>
+        <MudTd>
+            @{
+                var (statusText, statusColor) = GetStatusInfo(context.HDSession.StatusId);
+            }
+            <MudChip
+                T="string"
+                Variant="Variant.Text"
+                Color="@statusColor"
+            >
+                @statusText
+            </MudChip>
+        </MudTd>
+        <MudTd>@(context.HDSession.TotalHours.HasValue ? context.HDSession.TotalHours.Value : "")</MudTd>
+        <MudTd>
+            <MudChip
+                OnClick="@(() => AddEditModal(context.HDSession))"
+                T="string"
+                Variant="Variant.Text"
+                Icon="@Icons.Material.Filled.Settings"
+                Color="Color.Primary">
+                Редактировать
+            </MudChip>
+            <MudChip
+                OnClick="@(() => DeleteModel(context.HDSession))"
+                T="string"
+                Variant="Variant.Text"
+                Icon="@Icons.Material.Filled.Settings"
+                Color="Color.Primary">
+                Удалить
+            </MudChip>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new [] { 10, 25, 50, 100, int.MaxValue }"
+                       RowsPerPageString="Строк на странице:"
+                       InfoFormat="{first_item}-{last_item} из {all_items}"
+                       AllItemsText="Все"
+        />
+    </PagerContent>
+</MudTable>
+<style>
+    .mud-tooltip-root.mud-tooltip-inline{
+        max-width: 250px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool IsMedCardAccess { get; set; }
+    [Parameter]
+    public bool IsAdmin { get; set; }
+    [Parameter]
+    public IEnumerable<MedCenter> UserCenters { get; set; } = new List<MedCenter>();
+    [Parameter]
+    public SessionFilterDto FilterModel { get; set; } = new SessionFilterDto();
+    [Parameter]
+    public EventCallback<SessionCountDto> DateChanged { get; set; }
+    private bool _loading = true;
+    private MudTable<HDSessionDto> _table;
+    private IEnumerable<HDSessionDto> _hdsessions = new List<HDSessionDto>();
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserCenters.Count() > 1)
+        {
+            FilterModel.MedCenterId = 0;
+        }
+        else
+        {
+            FilterModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+        }
+        StateHasChanged();
+    }
+    
+    private async Task<TableData<HDSessionDto>> ServerReload(TableState state)
+    {
+        try
+        {
+            _loading = true;
+            var queryParams = new Dictionary<string, string>
+            {
+                ["pageNumber"] = (state.Page + 1).ToString(),
+                ["pageSize"] = state.PageSize.ToString(),
+                ["statusId"] = "5",
+                ["sortBy"] = state.SortLabel ?? "",
+                ["sortAsc"] = (state.SortDirection == SortDirection.Ascending).ToString().ToLower(),
+                ["searchString"] = FilterModel.search ?? "",
+                ["medCenterId"] = FilterModel.MedCenterId.ToString() ?? "0",
+                ["sessionStartDateFrom"] = FilterModel.DateTimeFrom?.ToString("yyyy-MM-dd") ?? "",
+                ["sessionStartDateTo"] = FilterModel.DateTimeTo?.ToString("yyyy-MM-dd") ?? "",
+            };
+            var url = QueryHelpers.AddQueryString("api/hdsession/hdsessions-paged", queryParams);
+            var response = await _httpClient.GetFromJsonAsync<SessionResponseDto<HDSessionDto>>(url);
+            await DateChanged.InvokeAsync(response.SessionCount);
+            return new TableData<HDSessionDto>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add(ex.Message, Severity.Error);
+            return new TableData<HDSessionDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+    private async Task FilterModal()
+    {
+        var parameters = new DialogParameters
+        {
+            ["FilterModel"] = FilterModel,
+            ["UserCenters"] = UserCenters
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<SessionFilter>("Фильтр", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data is SessionFilterDto filter)
+        {
+            FilterModel = filter;
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private void OnSearch(string text)
+    {
+        FilterModel.search = text;
+        _table.ReloadServerData();
+    }
+    private (string, Color) GetStatusInfo(long? statusId)
+    {
+        if (!statusId.HasValue) return ("Неизвестно", Color.Default);
+        return statusId switch
+        {
+            1 => ("Идентификация", Color.Warning),
+            2 => ("Активный", Color.Secondary),
+            3 => ("Пауза", Color.Info),
+            4 => ("Завершенный", Color.Error),
+            5 => ("К оплате", Color.Default),
+            6 => ("Оплачено", Color.Tertiary),
+            7 => ("Акт оплачен", Color.Success),
+            8 => ("Остановлен", Color.Error),
+            9 => ("Ошибка", Color.Error),
+            10 => ("Отклонено", Color.Error),
+            11 => ("Завершение идентификации", Color.Info),
+            12 => ("Завершено", Color.Error),
+            _ => ("Неизвестно", Color.Default)
+        };
+    }
+    private async Task AddEditModal(HDSession? hdSession = null)
+    {
+        var parameters = new DialogParameters
+        {
+            ["HDSession"] = hdSession ?? new HDSession(),
+            ["UserCenters"] = UserCenters
+        };
+        var title   = hdSession is null ? "Добавить идентификация" : "Редактировать сеанс";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+
+        var dialog  = _dialogService.Show<SessionAddEdit>(title, parameters, options);
+        var result  = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task DeleteModel(HDSession hdSession)
+    {
+        try
+        {
+            var confirm = await _dialogService.ShowMessageBox(
+                "Внимание!",
+                $"Вы хотите удалить информацию о сеанса: {hdSession.Inn}?",
+                yesText: "Удалить", cancelText: "Отмена");
+            if (confirm == true)
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/hdsession/delete-hdsession", hdSession);
+                var result = await response.ToResult();
+                if (result.Succeeded)
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    await _table.ReloadServerData();
+                    StateHasChanged();
+                }
+            }
+            
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+        _loading = false;
+    }
+}

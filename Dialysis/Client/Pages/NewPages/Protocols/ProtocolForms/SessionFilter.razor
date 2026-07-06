@@ -1,0 +1,70 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Дата начала регистрации" 
+                               Clearable="true"
+                               Editable="true"
+                               @bind-Date="FilterModel.DateTimeFrom"/>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Дата окончания регистрации"
+                               Editable="true"
+                               Clearable="true"
+                               @bind-Date="FilterModel.DateTimeTo"/>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="MedCenter"
+                                 @bind-Value="_selectedMedCenter"
+                                 MaxItems="1000"
+                                 SearchFunc="@SearchMedCenters"
+                                 ToStringFunc="@(c => c?.Title ?? string.Empty)"
+                                 Label="Мед центр"
+                                 Variant="Variant.Outlined"
+                                 />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Warning" OnClick="Reset">Сбросить фильтр</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Применить</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Inject] private IDialogService DialogService { get; set; } // for MessageBox
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [Parameter] public SessionFilterDto FilterModel { get; set; }
+    [Parameter] public IEnumerable<MedCenter> UserCenters { get; set; }
+    private MudDateRangePicker _picker;
+    private MedCenter _selectedMedCenter;
+
+    private async Task Reset()
+    {
+        FilterModel = new SessionFilterDto();
+        _selectedMedCenter = new MedCenter();
+    }
+    private void Submit()
+    {
+        FilterModel.MedCenterId = _selectedMedCenter?.Id ?? 0;
+        MudDialog.Close(DialogResult.Ok(FilterModel));
+    } 
+    private void Cancel() => MudDialog.Cancel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (FilterModel.MedCenterId != 0)
+        {
+            _selectedMedCenter = UserCenters.Where(m => m.Id.Equals(FilterModel.MedCenterId)).FirstOrDefault();
+        }
+    }
+    private async Task<IEnumerable<MedCenter>> SearchMedCenters(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return UserCenters;
+            
+        return UserCenters.Where(x => 
+            x.Title.Contains(value, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+}

@@ -1,0 +1,143 @@
+﻿<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+<MudForm Model="@AddEditModel" @ref="form">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudContainer Style="max-height: 400px; overflow-y: scroll">
+
+            <MudGrid>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Slizistaia" Required="true" Label="Слизистая оболочка" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Polost" Required="true" Label="Полость рта, Зубы, десна" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Yazyk" Required="true" Label="Язык" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Zev" Required="true" Label="Зев, миндалины" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudText Typo="Typo.h6">
+                                Живот
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Osmotr" Required="true" Label="Осмотр" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Jivot" Required="true" Label="Пальпация" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Perkussia" Required="true" Label="Перкуссия" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Prochee"  Label="Прочее" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudText Typo="Typo.h6">
+                                Печень
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="AddEditModel.Palypatsia" Required="true" Label="Пальпация" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="AddEditModel.Granitsa" Required="true" Label="Границы по Курлову" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudText Typo="Typo.h6">
+                                Пальпация и перкуссия других органов
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Jelchniy" Required="true" Label="Желчный пузырь" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.PodJelchniy" Required="true" Label="Поджелудочная железа" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Selezenka" Required="true" Label="Селезенка" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>                       
+                        <MudItem xs="12" md="12">
+                            <MudTextField @bind-Value="AddEditModel.Stul" Label="Стул со слов пациента:" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudTextField @bind-Value="AddEditModel.Prochee2"  Label="Прочее" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+            </MudGrid>
+            </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+</MudContainer>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public long MedCardId { get; set; }
+    [Parameter] public FirstConfectionery AddEditModel { get; set; }
+    //public FirstConfectionery AddEditModel { get; set; } = new FirstConfectionery();
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addconfec", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

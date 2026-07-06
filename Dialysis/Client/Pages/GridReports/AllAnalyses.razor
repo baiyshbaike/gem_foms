@@ -1,0 +1,275 @@
+﻿@page "/gridanalyses"
+@page "/gridanalyses/{Mid:long}"
+@using DevExpress.Blazor
+@using DevExpress.Data.Filtering
+@using DevExpress.Export
+@using System.Net.Http.Json
+@inject IJSRuntime jsRuntime
+@using Dialysis.Shared.Constants
+@inject HttpClient Http
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="6" md="3">
+                <MudDatePicker Label="Дата от" @bind-Date="dateFrom" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudDatePicker Label="Дата до" @bind-Date="dateTo" DateFormat="dd.MM.yyyy" DisableToolbar="true" />         
+            </MudItem>
+             <MudItem xs="5" md="2">
+                 <MudTextField @bind-Value="@searchModel.FromAn" Required="true" Label="От(результат)" />  
+            </MudItem>
+            <MudItem xs="5" md="2">
+                <MudTextField @bind-Value="@searchModel.ToAn" Required="true" Label="До(результат)" />
+            </MudItem>
+            <MudItem xs="2" md="2">
+                <br />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" @onclick="@(async() => await LoadResultsAsync())">Обновить</MudButton>
+            </MudItem>            
+            <MudItem xs="12" md="12">
+                <MudCardActions>
+                </MudCardActions>
+            </MudItem>
+
+        </MudGrid>
+    </EditForm>
+</MudContainer>
+
+
+
+<DxButton Text="Выберите столбцы"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="OnClickColumns" />
+&nbsp;&nbsp;
+<DxButton Text="Скачать"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="@(async() => await ExportXlsx_Click())" />
+
+<DxGrid @ref="Grid"
+        Data="@Elements"
+        ShowGroupPanel="true"
+        ShowFilterRow="true"
+        PageSizeSelectorVisible="true"
+        PageSize=100
+        PageSizeSelectorAllRowsItemVisible="true"
+        PageSizeSelectorItems="@(new int[] { 50,100,500 })"
+        CustomizeCellDisplayText="Grid_CustomizeCellDisplayText">
+    <Columns>
+        <DxGridDataColumn FieldName="AnalysisResult.Id" Caption="No:" Width="120px" />
+        <DxGridDataColumn FieldName="Patient.LastName" Caption="Фамилия" Width="120px"  TextAlignment="GridTextAlignment.Center" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.FirstName" Caption="Имя" Width="120" AllowGroup="false" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.MiddleName" Caption="Отчество" Width="120" AllowGroup="false" Visible="false">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Patient.Inn" Caption="ПИН" AllowGroup="true" AllowSort="false" Width="160px">
+        </DxGridDataColumn>
+        <DxGridDataColumn  FieldName="MedCenter.Title" Caption="Мед центр" AllowGroup="true" AllowSort="false" Width="100px">       
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Analysis.Title" Caption="Анализ" AllowGroup="true" AllowSort="false" Width="350px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="AnalysisResult.Result" Caption="Результат" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Analysis.AnalysisExt" Caption="Ед. измерения" AllowGroup="false" AllowSort="false" Width="70px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="AnalysisResult.AnalysisDate" Caption="Дата Анализа" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="Analysis.NextDays" Caption="След. дата Анализа" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+        <DxGridDataColumn FieldName="AnalysisResult.CreatedOn" Caption="Дата добавления" AllowGroup="false" AllowSort="false" Width="100px">
+        </DxGridDataColumn>
+    </Columns>
+    <TotalSummary>
+        <DxGridSummaryItem FieldName="AnalysisResult.Id" SummaryType="GridSummaryItemType.Count" />
+    </TotalSummary>
+    <GroupSummary>
+        <DxGridSummaryItem FieldName="AnalysisResult.Id" SummaryType="GridSummaryItemType.Count" />
+    </GroupSummary>
+
+</DxGrid>
+
+@code {
+    [Parameter]
+    public long? Mid { get; set; }
+    IGrid Grid;
+    private IEnumerable<AnalysisResultsDto> Elements = new List<AnalysisResultsDto>();
+
+    private SearchtAnalysesDto searchModel = new SearchtAnalysesDto();
+
+
+    private DateTime? dateFrom = DateTime.Today.AddDays(-90);
+    private DateTime? dateTo = DateTime.Today;
+    private DateTime dateToLocal = DateTime.Today.AddDays(1);
+
+    private IEnumerable<Analysis> AnalysesList = new List<Analysis>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+
+    private DateTime todayDate = DateTime.Today;
+
+    void OnClickColumns()
+    {
+        Grid.ShowColumnChooser(".column-chooser-button");
+    }
+
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "AnalysisResult.AnalysisDate")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+        }
+        else if (e.FieldName == "AnalysisResult.CreatedOn")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+        }
+        else if (e.FieldName == "Analysis.NextDays")
+        {
+            if(e.Value != null)
+            {
+                var eValue = Convert.ToInt32(e.Value);
+                if(eValue > 0)
+                {
+                    var getAnalysesDate = e.GetRowValue("AnalysisResult.AnalysisDate");
+                    if (getAnalysesDate != null)
+                    {
+                        var nextDate = ((DateTime)getAnalysesDate).AddDays(eValue);
+                        e.DisplayText = ((DateTime)nextDate).ToString("dd.MM.yyyy");
+                    }
+                }
+            }
+        }
+        else if (e.FieldName == "MedCard.CreatedOn")
+        {
+
+            var getAnalysesDate = e.GetRowValue("AnalysisResult.AnalysisDate");
+            var getNextDays = e.GetRowValue("Analysis.NextDays");
+            int nextDays = Convert.ToInt32(getNextDays);
+            if (getAnalysesDate != null)
+            {                
+                var nextDate = ((DateTime)getAnalysesDate).AddDays(nextDays);
+                if(nextDate < todayDate)
+                {
+                    var totalDays = (todayDate - nextDate).TotalDays;
+                    e.DisplayText = totalDays.ToString();
+                }
+                else
+                {
+                    e.DisplayText =" ";
+                }                
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+        }
+
+
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await Grid.ExportToXlsxAsync("Сводный_реестр_анализы_xlsx", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserCentersAsync();
+        if (Mid != null)
+        {
+            searchModel.MedCenterId = (long)Mid;
+        }
+        await LoadAnalysesAsync();
+        await LoadResultsAsync();
+        StateHasChanged();
+    }
+
+    public async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                searchModel.MedCenterId = 0;
+            }
+            else
+            {
+                searchModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+            }
+        }
+    }
+
+    private async Task LoadResultsAsync()
+    {
+        string dFrom = dateFrom?.ToString("yyyyMMdd");
+        string dTo = dateTo?.ToString("yyyyMMdd");
+        string searchParams = "?medCenterId=" + searchModel.MedCenterId + "&fromDate=" + dFrom + "&toDate=" + dTo;
+        if (searchModel.FromAn != null)
+        {
+            searchParams = searchParams + "&fAn=" + searchModel.FromAn;
+        }
+        else
+        {
+            searchParams = searchParams + "&fAn=0";
+        }
+        if (searchModel.ToAn != null)
+        {
+            searchParams = searchParams + "&tAn=" + searchModel.ToAn;
+        }
+        else
+        {
+            searchParams = searchParams + "&tAn=0";
+        }
+        //
+        // searchParams = searchParams + "&aId=" + searchModel.AnalysesId;
+        //
+        //
+        //
+        //
+        // var response = await Http.GetAsync("api/medcard/analysesfilter" + searchParams);
+        var response = await Http.GetAsync("api/medcard/analysesbymedcenter" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<AnalysisResultsDto>>();
+        Elements = mappedData.Data;
+    }
+
+    private async Task LoadAnalysesAsync()
+    {
+        var response = await Http.GetAsync("api/status/allanalysis");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<Analysis>>();
+        AnalysesList = mappedData.Data;
+    }
+
+   
+
+
+    public class SearchtAnalysesDto
+    {
+        public long MedCenterId { get; set; }
+        public long AnalysesId { get; set; }
+        public decimal FromAn { get; set; }
+        public decimal ToAn { get; set; }
+    }
+
+
+}
+
+

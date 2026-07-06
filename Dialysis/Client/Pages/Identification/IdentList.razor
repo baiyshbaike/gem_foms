@@ -1,0 +1,375 @@
+﻿@page "/identlist"
+@using System.Net.Http.Json
+@using Dialysis.Shared.Constants;
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+<AuthorizeView Roles="medcard_access">
+    @{
+        isMedCardAccess = true;
+    }
+</AuthorizeView>
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <AuthorizeView Roles="identify">
+            <MudItem xs="12" md="12">
+                <MudButton Href="/newident" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Добавить идентификация</MudButton>
+            </MudItem>
+        </AuthorizeView>
+        <MudItem xs="12" md="12">
+            &nbsp;
+        </MudItem>
+    </MudGrid>
+    
+    @if (IsOneCenter != true)
+    {
+        <EditForm Model="@searchModel">
+            <MudGrid>
+                <MudItem xs="6" md="6">
+                    <MudSelect T="MedCenter" Label="Мед. центр" @bind-Value="@searchModel.MedCenter" AnchorOrigin="Origin.BottomCenter">
+                        @{
+                            <MudSelectItem T="MedCenter">-------</MudSelectItem>
+                            @foreach (var medItem in UserCenters)
+                            {
+                                <MudSelectItem T="MedCenter" Value="@medItem">@medItem.Title</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6" md="12">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск идентификация</MudButton>
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    &nbsp;
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    }
+
+    <MudTable Items="@Elements" Loading="@tableLoading" RowStyleFunc="GetRowColor" RowsPerPage=100 Dense="false" Hover="true" Bordered="false" Striped="true" Filter="new Func<HDSessionDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Идентификационный список</MudText>
+            <MudSpacer />
+            <AuthorizeView Roles="admin">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Error" 
+                    StartIcon="@Icons.Material.Filled.Delete" 
+                    Size="Size.Small" 
+                    OnClick="@(()=>DeleteOldSessions())">Удалить просроченный сеансы</MudButton>
+                <MudSpacer />
+                <MudButton 
+                    Size="Size.Small"
+                    StartIcon="@Icons.Material.Filled.Settings"
+                    Variant="Variant.Filled"
+                    Color="@(TundukStatus ? Color.Success : Color.Error)"
+                    OnClick="@(()=>ActivateTundukMode())">
+                    @if (TundukStatus)
+                    {
+                        <text>Включить верификацию через Тундук</text>
+                    }
+                    else
+                    {
+                        <text>Отключить верификацию через Тундук</text>
+                    }
+                </MudButton>
+            </AuthorizeView>
+            <MudTextField @bind-Value="searchString1" Immediate="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+            <HeaderContent>
+                <MudTh>ФИО</MudTh>
+                <MudTh>ИНН</MudTh>
+                <MudTh>Фото</MudTh>
+                <MudTh>Дата</MudTh>
+                <MudTh>Мед. центр</MudTh>
+                <MudTh>&nbsp;</MudTh>
+                <MudTh>&nbsp;</MudTh>
+
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Patient.LastName  <br />@context.Patient.FirstName</MudTd>
+                <MudTd>@context.Patient.Inn</MudTd>
+                <MudTd>
+                @{
+                    if (!String.IsNullOrEmpty(context.HDSession.ImageStart))
+                    {
+                        <img src="/UploadImages/@context.HDSession.ImageStart" height="90"/>
+                    }
+                }
+                </MudTd>
+                <MudTd>@context.HDSession.IdentifyOn?.ToString("dd.MM.yyyy HH:mm")</MudTd>
+                <MudTd>@context.MedCenter.Title</MudTd>
+                <MudTd>
+                    @if(isMedCardAccess==true && isIdentyCard(context.HDSession)){
+                        if (context.MedCard!=null)
+                        {
+                            <MudButton 
+                                Variant="Variant.Filled" 
+                                @onclick="@(()=> OpenMCard(context.MedCard.Id))" 
+                                StartIcon="@Icons.Material.Filled.MedicalInformation" 
+                                Size="Size.Small"
+                                Color="Color.Info">Открыть мед. карту
+                            </MudButton>
+                        }
+                    }
+                </MudTd>
+                <MudTd>
+                @{
+                    if (isAdmin)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="Удалить" @onclick="@(async() => await DeleteModel(context.HDSession.Id))" Size="Size.Small" Color="GetButtonColor(context.HDSession)"></MudIconButton>
+                    }
+                }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+</MudContainer>
+
+
+@code {
+    private bool isAdmin = false;
+    public SearchtDto searchModel = new SearchtDto();
+    private HDSessionDto selectedItem1 = null;
+    private HashSet<HDSessionDto> selectedItems = new HashSet<HDSessionDto>();
+    private IEnumerable<HDSessionDto> Elements = new List<HDSessionDto>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private bool IsOneCenter = true;
+    private bool tableLoading = false;
+    private string searchString1 = "";
+    private bool isMedCardAccess { get; set; } = false;
+    private bool TundukStatus = true;
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        isAdmin = user.IsInRole("admin");
+        await LoadUserCentersAsync();
+        await SearchAsync();
+        await LoadStatusTunduk();
+    }
+
+    private async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                IsOneCenter = false;
+            }
+            else
+            {
+                searchModel.MedCenter = UserCenters.Select(t => t).FirstOrDefault();
+            }
+        }
+        else
+        {
+            IsOneCenter = false;
+        }
+    }
+    private async Task ActivateTundukMode()
+    {
+        var newStatus = !TundukStatus; // Mevcut durumun tersini alıyoruz
+        var confirmMessage = newStatus 
+            ? "Вы уверены, что хотите отключить верификацию через Тундук?" 
+            : "Вы уверены, что хотите включить верификацию через Тундук?";
+        
+        bool? result = await _dialogService.ShowMessageBox(
+            "Подтверждение",
+            confirmMessage,
+            yesText: "Да", 
+            cancelText: "Отмена");
+        
+        if (result == true)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/verify/set_tunduk_status", newStatus);
+                var mappedData = await response.ToResult<bool>();
+                
+                if (mappedData != null && mappedData.Succeeded)
+                {
+                    await LoadStatusTunduk();
+                    _snackBar.Add(
+                        newStatus ? "Верификация через Тундук отключена" : "Верификация через Тундук включена", 
+                        Severity.Success);
+                }
+                else
+                {
+                    _snackBar.Add("Ошибка при изменении статуса", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+            }
+            
+            StateHasChanged();
+        }
+    }
+    private async Task LoadStatusTunduk()
+    {
+        var response = await _httpClient.GetAsync("api/verify/tunduk_status");
+        var mappedData = await response.ToResult<bool>();
+        if (mappedData != null && mappedData.Succeeded)
+        {
+            TundukStatus = mappedData.Data;
+        }
+        else
+        {
+            TundukStatus = false; // Varsayılan değer
+        }
+    }
+    private string GetRowColor(HDSessionDto hdItem, int index)
+    {
+        string retColor = "background-color:#0111";
+        if (hdItem.HDSession.StatusId == (long)HDSessionEnum.Identification)
+        {
+            var nowDate = DateTime.Now;
+            var totalHours = (int)((nowDate - (DateTime)hdItem.HDSession.IdentifyOn).TotalMinutes);
+            if (totalHours > 240)
+            {
+                retColor = "background-color:#E9967A";
+            }
+        }
+        return retColor;
+    }
+    private Color GetButtonColor(HDSession session)
+    {
+        return isIdentyCard(session) ? Color.Warning : Color.Default;
+    }
+    private bool isIdentyCard(HDSession model)
+    {
+        if (model.Id > 0)
+        {
+            var nowDate = DateTime.Now;
+            var totalHours =  (int)((nowDate - (DateTime)model.IdentifyOn).TotalHours);
+            if (totalHours < 4)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else{ return false; }
+    }
+
+    private async Task DeleteOldSessions()
+    {
+        foreach (var hdSessionDto in Elements)
+        {
+            if (hdSessionDto.HDSession.StatusId == (long)HDSessionEnum.Identification)
+            {
+                var nowDate = DateTime.Now;
+                var totalHours = (int)(nowDate - (DateTime)hdSessionDto.HDSession.IdentifyOn).TotalMinutes;
+                if (totalHours > 240)
+                {
+                    await DeleteModel(hdSessionDto.HDSession.Id);
+                }
+            }
+        }
+    }
+    private async Task DeleteModel(long id = 0)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/deletehdsessionbyid", id);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+        }
+        await LoadUserCentersAsync();
+        await SearchAsync();
+    }
+    private async Task LoadIdentListAsync()
+    {
+        tableLoading = true;
+        var response = await Http.GetAsync("api/medcard/allidentify?MedCenterId=" + searchModel.MedCenter.Id);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<HDSessionDto>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            tableLoading = false;
+        }
+    }
+    private async Task LoadIdentAllListAsync()
+    {
+        tableLoading = true;
+        var response = await Http.GetAsync("api/medcard/allidentifyasync");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<HDSessionDto>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            tableLoading = false;
+        }
+    }
+    private bool FilterFunc1(HDSessionDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(HDSessionDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (!string.IsNullOrEmpty(element.Patient.Inn))
+        {
+            if (element.Patient.Inn.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrEmpty(element.Patient.FirstName))
+        {
+            if (element.Patient.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrEmpty(element.Patient.LastName))
+        {
+            if (element.Patient.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+    private async Task OpenMCard(long MCardId = 0)
+    {
+        if (MCardId > 0)
+        {
+            _navigationManager.NavigateTo("/mcarddetail/" + MCardId);
+        }
+    }
+
+    public class SearchtDto
+    {
+        public string Fio { get; set; }
+        public string Inn { get; set; }
+        public string Image { get; set; }
+        public long? PatientId { get; set; }
+        public MedCenter? MedCenter { get; set; }
+
+    }
+    private async Task SearchAsync()
+    {
+        if (searchModel.MedCenter == null)
+        {
+            await LoadIdentAllListAsync();
+        }
+        else
+        {
+            await LoadIdentListAsync();
+        }
+    }
+}

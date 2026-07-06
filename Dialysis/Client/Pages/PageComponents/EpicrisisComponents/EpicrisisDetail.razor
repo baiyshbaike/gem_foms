@@ -1,0 +1,348 @@
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime js
+<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 600px; overflow-y: scroll">
+    <MudItem xs="12" md="4">
+        <MudButton Variant="Variant.Filled"
+        @onclick="@(async() =>  await js.InvokeVoidAsync("printDiv"))" StartIcon="@Icons.Material.Filled.Print"
+                    Size="Size.Small" Color="Color.Info">
+            Печать pdf
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+        @onclick="@(async() =>  await js.InvokeVoidAsync("printDivWord", "Epicrisis"))" StartIcon="@Icons.Material.Filled.Print"
+                   Size="Size.Small" Color="Color.Info">
+            Скачать word
+        </MudButton>
+    </MudItem>
+    <div id="dvPrint" style="line-height:108%;font-family:Calibri;font-size:11pt;">
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; text-align:center; line-height:normal; widows:0; orphans:0; font-size:14pt;">
+            <strong>
+                <span style="font-family:'Times New Roman';">Этапный эпикриз</span>
+            </strong>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; text-align:center; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">За @element.Epicrisis.Started?.ToString("MMM") месяц @element.Epicrisis.Started?.ToString("yyyy") года</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Ф.И.О.  @element.Patient?.LastName @element.Patient?.FirstName @element.Patient?.MiddleName;</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Дата рождения (число, месяц, год)  @element.Patient?.BirthDate?.ToString("dd.MM.yyyy")</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Основной диагноз  @element.Epicrisis.Osn</span>
+            </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Сопутствующий  @element.Epicrisis.Sop</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Осложнения  @element.Epicrisis.Osl</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Количество полученных сеансов ГД, ГДФ @element.Epicrisis.TotalHD</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Состояние к концу месяца (объективный статус)  @element.Epicrisis.Status</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Показатели достижения качества проводимой процедуры</span>
+        </p>
+        <table style="margin-top:0pt;margin-bottom:8pt;width:475.4pt; margin-bottom:0pt; border:0.75pt solid #000000; border-collapse:collapse;">
+            <tbody>
+                <tr>
+                    <td style="width:357.5pt; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">показатели</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Показатели за текущий месяц</span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">НВ</span>
+                            <span style="font-family:'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <span style="font-family:'Times New Roman';">95-110г/л</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Ng
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">АД &lt;140/90 между сеансами</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Ad
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Фосфор 1,13-1,45ммоль/л</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Fosfor
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Кальций общий 2,1-2,5ммоль/л</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Ht
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">spKt/V &ge;1.4</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.SaharKrovi
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">ПТГ 130-600 пг/мл</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Eritropoetin
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">ЩФ</span>
+                            <span style="font-family:'Times New Roman';">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                            <span style="font-family:'Times New Roman';">М &ndash; 53-128</span>
+                            <span style="font-family:'Times New Roman';">&nbsp;&nbsp;</span>
+                            <span style="font-family:'Times New Roman';">Ед/л; Ж &ndash; 42-98 Ед/л</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Erty
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Недельное диализное время &ge;720мин</span>
+                        </p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.TotalHDF
+                            </span></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Ферритин 100-800 мг/л</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Fe
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Целевой уровень альбумина в крови упациентов без СД &ge;40 г/л;</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.KreatininDo
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Целевой уровень альбумина крови упациентов с СД &ge;35 г/л;</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.KreatininAfter
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Средний уровень АД перед сеансом ГД 160/90 мм.рт.ст;</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Alt
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Гематокрит 33-36%</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; border-bottom:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.Leykty
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:357.5pt; border-top:0.75pt solid #000000; border-right:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">Степень гидратации пациента перед сеансом ГД в объеме 15% от целевого объема внеклеточной воды организма или &le;5% от &laquo;сухого веса&raquo;.</span></p>
+                    </td>
+                    <td style="width:95.55pt; border-top:0.75pt solid #000000; border-left:0.75pt solid #000000; padding-right:5.03pt; padding-left:5.03pt; vertical-align:top;">
+                        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+                            <span style="font-family:'Times New Roman';">
+                                @element.Epicrisis.StartWeight
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Данные инструментальных обследований за этот период  @element.Epicrisis.GolovnoiBol </span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Консультация других специалистов  @element.Epicrisis.MedHelpType</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Проводимое медикаментозное лечение&nbsp;</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">по анемии:  @element.Epicrisis.MochevinaDo&nbsp;</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">по ВГПТ:  @element.Epicrisis.MochevinaAfter</span>
+            <span style="font-family:'Times New Roman';">по ГБ:  @element.Epicrisis.AzotDo</span>
+            <span style="font-family:'Times New Roman';">по КБС:  @element.Epicrisis.AzotAfter</span>
+            <span style="font-family:'Times New Roman';">по СД:  @element.Epicrisis.Pya</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Дополнительно назначенное лечение и рекомендации  @element.Epicrisis.Gipotenzia</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Осложнения во время диализа (гипотензия, гипертензия, кровотечения, аллергия, гипертермия и др.) (количество эпизодов за месяц, меры по предупреждению)  @element.Epicrisis.Gipertenzia</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">Госпитализация в другие организации здравоохранения&nbsp;</span>
+            <span style="font-family:'Times New Roman';">(профиль, причины, результаты)  @element.Epicrisis.Sudorogi</span>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <strong>
+                <span style="font-family:'Times New Roman';">Лечащий врач  @element.Epicrisis.FIODoctor</span>
+            </strong>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <strong>
+                <span style="font-family:'Times New Roman';">Зав. отд. @element.Epicrisis.FIODepartmentHead</span>
+            </strong>
+        </p>
+        <p style="margin:0pt 0pt 8pt; margin-bottom:0pt; line-height:normal; widows:0; orphans:0; font-size:12pt;">
+            <span style="font-family:'Times New Roman';">&nbsp;</span>
+        </p>
+    </div>
+</MudContainer>
+ 
+ @code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public long EpicrisisId { get; set; }
+    [Parameter] public EpicrisisDto AddEditModel { get; set; }
+    public EpicrisisDto element { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (EpicrisisId > 0)
+        {
+
+            await LoadDetailAsync();
+        }
+    }
+
+    public async Task LoadDetailAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/getepicrisisdetail?Id=" + EpicrisisId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<EpicrisisDto>();
+        element = mappedData.Data;       
+    }
+
+    private async Task PrintPdf()
+    {
+        await js.InvokeVoidAsync("printDiv");
+    }
+    private async Task PrintWord()
+    {
+        await js.InvokeVoidAsync("printDivWord", "Epicrisis");
+    }
+
+    public void Cancel()
+    {
+         MudDialog.Cancel();
+    }
+
+    
+}
+

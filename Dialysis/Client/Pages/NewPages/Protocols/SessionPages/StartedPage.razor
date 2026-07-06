@@ -1,0 +1,422 @@
+﻿@using Dialysis.Client.Pages.NewPages.Protocols.ProtocolForms
+@using Dialysis.Shared.Constants
+@using Microsoft.AspNetCore.WebUtilities
+<MudTable
+    T="HDSessionDto"
+    @ref="_table" 
+    Items="@_hdsessions" 
+    ServerData="@(new Func<TableState, Task<TableData<HDSessionDto>>>(ServerReload))" 
+    Loading="@_loading"
+    Dense="true" 
+    Hover="true" 
+    Bordered="true" 
+    Striped="true"
+    FixedHeader="true"
+>
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Сеансы</MudText>
+        <MudSpacer />
+        <MudButton 
+            @onclick="FilterModal"
+            StartIcon="@Icons.Material.Filled.FilterAlt"
+            Size="Size.Small"
+            Variant="Variant.Outlined" 
+            Color="Color.Primary">
+            Фильтр
+        </MudButton>
+        <MudSpacer />
+        <MudTextField 
+            T="string" 
+            ValueChanged="@(s=>OnSearch(s))" 
+            Placeholder="Поиск" 
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="Id">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="Lastname">ФИО и ИНН</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="MedCenterId">Мед. Центр и ГД Аппарат</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="SessionStart">Дата Подключения</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="SessionEnd">Дата Отключения</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="StatusId">Статус</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HDSessionDto" SortLabel="TotalHours">Время</MudTableSortLabel></MudTh>
+        <MudTh>Действие</MudTh>
+    </HeaderContent>
+    
+    <RowTemplate Context="item">
+        <MudTd>@item.HDSession.Id </MudTd>
+        <MudTd>@item.Patient.FirstName @item.Patient.LastName <br/> @item.Inn</MudTd>
+        <MudTd>
+            @(item.MedCenter != null ? item.MedCenter.Title : "") <br/> 
+            @(item.MedCenterMachine != null ? item.MedCenterMachine.Name: "") <br/>
+            @(item.MedCenterMachine != null ? item.MedCenterMachine.Model: "")
+        </MudTd>
+        <MudTd>
+            @(item.HDSession.SessionStart?.ToString("dd.MM.yyyy HH:mm") 
+            ?? $"время записи: {item.HDSession.IdentifyOn?.ToString("dd.MM.yyyy HH:mm")}")
+        </MudTd>
+        <MudTd>
+            @(item.HDSession.SessionEnd?.ToString("dd.MM.yyyy HH:mm") 
+            ?? "Сессия еще не закончена")
+        </MudTd>
+        <MudTd>
+            @{
+                var (statusText, statusColor) = GetStatusInfo(item.HDSession.StatusId);
+            }
+            <MudChip
+                T="string"
+                Variant="Variant.Text"
+                Color="@statusColor"
+            >
+                @statusText
+            </MudChip>
+        </MudTd>
+        <MudTd>@(item.HDSession.TotalHours.HasValue ? item.HDSession.TotalHours.Value : "")</MudTd>
+        <MudTd>
+            <MudStack Direction="Column" Spacing="1">
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        OnClick="@(() => SessionStartForm(item))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.PlayArrow"
+                        Color="@GetChipColor(item)">
+                        Начало
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@(item.HDSession.SessionStart.HasValue &&
+                        (DateTime.Now - item.HDSession.SessionStart.Value).TotalHours < 1)"
+                        OnClick="@(() => SessionHourModal(item,item.HDSession.Id, 1, "1_й час"))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.AccessTime"
+                        Color="@GetChipColor2(item, "1")">
+                        1-й час
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@(item.HDSession.SessionStart.HasValue &&
+                                  (DateTime.Now - item.HDSession.SessionStart.Value).TotalHours < 2)"
+                        OnClick="@(() => SessionHourModal(item,item.HDSession.Id, 2, "2-й час"))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.AccessTime"
+                        Color="@GetChipColor2(item, "2")">
+                        2-й час
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@(item.HDSession.SessionStart.HasValue &&
+                                  (DateTime.Now - item.HDSession.SessionStart.Value).TotalHours < 3)"
+                        OnClick="@(() => SessionHourModal(item,item.HDSession.Id, 3, "3-й час"))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.AccessTime"
+                        Color="@GetChipColor2(item, "3")">
+                        3-й час
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@(item.HDSession.SessionStart.HasValue &&
+                                  (DateTime.Now - item.HDSession.SessionStart.Value).TotalHours < 4)"
+                        OnClick="@(() => SessionHourModal(item,item.HDSession.Id, 4, "4-й час"))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.AccessTime"
+                        Color="@GetChipColor2(item, "4")">
+                        4-й час
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@( item.HDSessionHours.All(p => p.Hour != "1") )"
+                        OnClick="@(() => SessionStartForm(item))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.CancelPresentation"
+                        Color="CheckIsStartFilled(item) ? Color.Info : Color.Warning">
+                        Завершить
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        Disabled="@(item.HDSession.Сhanged)"
+                        OnClick="@(() => EditTimeModal(item.HDSession))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Rounded.Edit"
+                        Color="item.HDSession.Сhanged ? Color.Default : Color.Primary">
+                        Редактировать время
+                    </MudChip>
+                </AuthorizeView>
+                <AuthorizeView Roles="admin">
+                    <MudChip
+                        OnClick="@(() => DeleteModel(item.HDSession))"
+                        T="string"
+                        Variant="Variant.Filled"
+                        Icon="@Icons.Material.Filled.Delete"
+                        Color="Color.Error">
+                        Удалить
+                    </MudChip>
+                </AuthorizeView>
+            </MudStack>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new [] { 10, 25, 50, 100, int.MaxValue }"
+                       RowsPerPageString="Строк на странице:"
+                       InfoFormat="{first_item}-{last_item} из {all_items}"
+                       AllItemsText="Все"
+        />
+    </PagerContent>
+</MudTable>
+<style>
+    .mud-tooltip-root.mud-tooltip-inline{
+        max-width: 250px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool IsMedCardAccess { get; set; }
+    [Parameter]
+    public bool IsAdmin { get; set; }
+    [Parameter]
+    public IEnumerable<MedCenter> UserCenters { get; set; } = new List<MedCenter>();
+    [Parameter]
+    public SessionFilterDto FilterModel { get; set; } = new SessionFilterDto();
+    [Parameter]
+    public EventCallback<SessionCountDto> DateChanged { get; set; }
+    private bool _loading = true;
+    private MudTable<HDSessionDto> _table;
+    private IEnumerable<HDSessionDto> _hdsessions = new List<HDSessionDto>();
+    
+    private async Task<TableData<HDSessionDto>> ServerReload(TableState state)
+    {
+        try
+        {
+            _loading = true;
+            var queryParams = new Dictionary<string, string>
+            {
+                ["pageNumber"] = (state.Page + 1).ToString(),
+                ["pageSize"] = state.PageSize.ToString(),
+                ["statusId"] = "2",
+                ["sortBy"] = state.SortLabel ?? "",
+                ["sortAsc"] = (state.SortDirection == SortDirection.Ascending).ToString().ToLower(),
+                ["searchString"] = FilterModel.search ?? "",
+                ["medCenterId"] = FilterModel.MedCenterId.ToString() ?? "0",
+                ["sessionStartDateFrom"] = FilterModel.DateTimeFrom?.ToString("yyyy-MM-dd") ?? "",
+                ["sessionStartDateTo"] = FilterModel.DateTimeTo?.ToString("yyyy-MM-dd") ?? "",
+            };
+            var url = QueryHelpers.AddQueryString("api/hdsession/hdsessions-paged", queryParams);
+            var response = await _httpClient.GetFromJsonAsync<SessionResponseDto<HDSessionDto>>(url);
+            await DateChanged.InvokeAsync(response.SessionCount);
+            return new TableData<HDSessionDto>
+            {
+                Items = response.Items,
+                TotalItems = response.TotalItems
+            };
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add(ex.Message, Severity.Error);
+            return new TableData<HDSessionDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Color GetChipColor(HDSessionDto item)
+    {
+        if (item.HDSession.StartWeight > 0 
+            && !string.IsNullOrEmpty(item.HDSession.Program) 
+            && !string.IsNullOrEmpty(item.HDSession.Temp))
+        {
+            return Color.Info;
+        }
+        return Color.Warning;
+    }
+    private Color GetChipColor2(HDSessionDto item, string hour)
+    {
+        if (item.HDSessionHours.Count > 0)
+        {
+            if (item.HDSession.SessionStart.HasValue &&
+                (DateTime.Now - item.HDSession.SessionStart.Value).TotalHours < Convert.ToDouble(hour)) return Color.Default;
+            foreach(var ii in item.HDSessionHours)
+            {
+                if (ii.Hour == hour)
+                {
+                    if (!String.IsNullOrEmpty(ii.Dia) && !String.IsNullOrEmpty(ii.Sys) && !String.IsNullOrEmpty(ii.Temp))
+                    {
+                        return Color.Info;
+                    }
+                }
+            }
+        }
+        return Color.Warning;
+    }
+    private bool CheckIsStartFilled(HDSessionDto item)
+    {
+        if (item.HDSession.StartWeight > 0 && !String.IsNullOrEmpty(item.HDSession.Program) && !String.IsNullOrEmpty(item.HDSession.Temp))
+        {
+            return true;
+        }
+        return false;
+    }
+    private async Task FilterModal()
+    {
+        var parameters = new DialogParameters
+        {
+            ["FilterModel"] = FilterModel,
+            ["UserCenters"] = UserCenters
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<SessionFilter>("Фильтр", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data is SessionFilterDto filter)
+        {
+            FilterModel = filter;
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private void OnSearch(string text)
+    {
+        FilterModel.search = text;
+        _table.ReloadServerData();
+    }
+    private (string, Color) GetStatusInfo(long? statusId)
+    {
+        if (!statusId.HasValue) return ("Неизвестно", Color.Default);
+        return statusId switch
+        {
+            1 => ("Идентификация", Color.Warning),
+            2 => ("Активный", Color.Secondary),
+            3 => ("Пауза", Color.Info),
+            4 => ("Завершенный", Color.Error),
+            5 => ("К оплате", Color.Default),
+            6 => ("Оплачено", Color.Tertiary),
+            7 => ("Акт оплачен", Color.Success),
+            8 => ("Остановлен", Color.Error),
+            9 => ("Ошибка", Color.Error),
+            10 => ("Отклонено", Color.Error),
+            11 => ("Завершение идентификации", Color.Info),
+            12 => ("Завершено", Color.Error),
+            _ => ("Неизвестно", Color.Default)
+        };
+    }
+    private async Task EditTimeModal(HDSession hdSession)
+    {
+        var parameters = new DialogParameters
+        {
+            ["HdSession"] = hdSession,
+            ["FilterModel"] = FilterModel,
+        };
+        var title = "Редактировать время";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+        var dialog  = _dialogService.Show<SessionAddEdit>(title, parameters, options);
+        var result  = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task SessionHourModal(HDSessionDto hdSessionDto,long hdSessionId, int hour = 0,string title = "")
+    {
+        var sessionHour = hdSessionDto.HDSessionHours.FirstOrDefault(p => p.Hour == hour.ToString());
+        var parameters = new DialogParameters
+        {
+            ["HdSessionDto"] = hdSessionDto,
+            ["HdSessionId"] = hdSessionId,
+            ["Hour"] = hour,
+            ["HdSessionHour"] = sessionHour == null ?new HDSessionHour(): sessionHour
+        };
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+        var dialog = _dialogService.Show<SessionHourForm>(title, parameters, options);
+        var result  = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task SessionStartForm(HDSessionDto hdSessionDto)
+    {
+        var parameters = new DialogParameters
+        {
+            ["HdSessionDto"] = hdSessionDto
+        };
+        var title  =  "Начало сеанса";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+
+        var dialog  = _dialogService.Show<SessionStartForm>(title, parameters, options);
+        var result  = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task DeleteModel(HDSession hdSession)
+    {
+        try
+        {
+            var confirm = await _dialogService.ShowMessageBox(
+                "Внимание!",
+                $"Вы хотите удалить информацию о сеанса: {hdSession.Inn}?",
+                yesText: "Удалить", cancelText: "Отмена");
+            if (confirm == true)
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/hdsession/delete-hdsession", hdSession);
+                var result = await response.ToResult();
+                if (result.Succeeded)
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    await _table.ReloadServerData();
+                    StateHasChanged();
+                }
+            }
+            
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+        _loading = false;
+    }
+}

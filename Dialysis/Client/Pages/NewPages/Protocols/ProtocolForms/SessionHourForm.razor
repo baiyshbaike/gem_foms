@@ -1,0 +1,118 @@
+﻿@using Newtonsoft.Json
+<MudForm Model="@HdSessionHour" @ref="_form"  @bind-IsValid="@_success" @bind-Errors="@_errors">
+    <MudDialog Style="display: flex; flex-direction: column; max-height: 90vh; width: auto;">
+        <DialogContent>
+            <div class="scrollable-dialog-content">
+                <MudGrid>
+                    <MudItem xs="12" md="12">
+                        <MudText>
+                            @HdSessionDto.Patient.LastName @HdSessionDto.Patient.FirstName
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionHour.Sys)" 
+                            MaxLength="4" 
+                            @bind-Value="HdSessionHour.Sys" 
+                            Label="SYS" Required="true"/>
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionHour.Dia)" 
+                            MaxLength="4" 
+                            @bind-Value="HdSessionHour.Dia" 
+                            Label="DIA" 
+                            Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionHour.Ritm)" 
+                            MaxLength="4" 
+                            @bind-Value="HdSessionHour.Ritm" 
+                            Label="Частота" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionHour.Temp)" 
+                            MaxLength="4" 
+                            @bind-Value="HdSessionHour.Temp" 
+                            Label="Температура" 
+                            Required="true" />
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Cancel())" Color="Color.Error">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="@(async ()=>await Submit())" Color="Color.Success">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public HDSessionDto HdSessionDto { get; set; }
+    [Parameter] public long HdSessionId { get; set; }
+    [Parameter] public int Hour { get; set; }
+    [Parameter] public HDSessionHour HdSessionHour { get; set; }
+    private MudForm _form;
+    private string _returnValue;
+    private bool _success;
+    private string[] _errors = { };
+
+    protected override async Task OnInitializedAsync()
+    {
+        HdSessionHour.HDSessionId = HdSessionId;
+        HdSessionHour.Hour = Hour.ToString();
+    }
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            try
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(HdSessionHour, Formatting.Indented));
+                var response = await _httpClient.PostAsJsonAsync("api/hdsession/add-edit-hour-hdsession", HdSessionHour);
+                var result = await response.ToResult();
+                if (!result.Succeeded)
+                {
+                    _snackBar.Add(result.Messages[0], Severity.Error);
+                    MudDialog.Close(DialogResult.Ok(false));
+                }
+                else
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+
+                MudDialog.Close(DialogResult.Ok(_returnValue));
+            }
+            catch (Exception e)
+            {
+                _snackBar.Add(e.Message, Severity.Error);
+                throw;
+            }
+        }
+        else
+        {
+            foreach (var er in _errors)
+            {
+                _snackBar.Add(er, Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}    
+<style>
+    .scrollable-dialog-content {
+        overflow-y: auto;    /* Vertical scrolling only */
+        overflow-x: hidden;  /* Prevent horizontal scrolling */
+        max-height: calc(90vh - 150px); /* Account for header/footer */
+        padding: 8px;
+        width: 100%;
+    }
+</style>

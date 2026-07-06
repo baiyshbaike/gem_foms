@@ -1,0 +1,162 @@
+﻿@page "/totalbylpu"
+
+@using DevExpress.Blazor
+@using DevExpress.Data.Filtering
+@using DevExpress.Export
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>        
+        <MudItem xs="12" md="12">
+            <MudText Typo="Typo.h6">Кол-во пациентов по ЛПУ</MudText>
+        </MudItem>
+    </MudGrid>
+        <MudGrid>            
+            <MudItem xs="6" md="3">
+                <MudDatePicker Label="Дата от" @bind-Date="dateFrom" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudDatePicker Label="Дата до" @bind-Date="dateTo" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>           
+            <MudItem xs="2" md="2">
+                <br />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" @onclick="@(async() => await LoadDataAsync())">Обновить</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudCardActions>
+                </MudCardActions>
+            </MudItem>
+
+        </MudGrid>
+</MudContainer>
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+<DxButton Text="Выберите столбцы"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="OnClickColumns" />
+&nbsp;&nbsp;
+<DxButton Text="Скачать"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="@(async() => await ExportXlsx_Click())" />
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <DxGrid @ref="Grid"
+            Data="@Data"
+            ShowGroupPanel="true"
+            ShowFilterRow="true"
+            PageSizeSelectorVisible="true"
+            PageSizeSelectorAllRowsItemVisible="true"
+            PageSizeSelectorItems="@(new int[] { 50,100,500 })"
+            CustomizeCellDisplayText="Grid_CustomizeCellDisplayText">
+        <Columns>
+            <DxGridDataColumn FieldName="Id" Caption="Код" Width="120px" />
+            <DxGridDataColumn FieldName="Title" Caption="Мед. центр" GroupIndex="0" Width="180px" AllowGroup="true" TextAlignment="GridTextAlignment.Left" AllowSort="true">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Inn" Caption="ПИН" Width="180px" AllowGroup="true" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Fio" Caption="Фио" Width="400px" MinWidth="300" TextAlignment="GridTextAlignment.Left" AllowGroup="false" AllowSort="true">                
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Total" Caption="Сеансы" MinWidth="5" AllowGroup="false">
+            </DxGridDataColumn>            
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        </TotalSummary>
+        <GroupSummary>
+            <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        </GroupSummary>
+    </DxGrid>
+
+</MudContainer>
+
+@code {
+    IGrid Grid;
+    private List<PatientTotalMedCenterDto> Data { get; set; }
+
+    private SearchtDto searchModel = new SearchtDto();
+
+    private DateTime? dateFrom = DateTime.Today.AddDays(-30);
+    private DateTime? dateTo = DateTime.Today;
+    private DateTime dateToLocal = DateTime.Today.AddDays(1);
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+
+    string CurrentGroupInfoKey { get; set; } = "Title";
+
+    DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
+    DataGridFilterCaseSensitivity _caseSensitivity = DataGridFilterCaseSensitivity.Default;
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+
+    }
+   
+    void OnClickColumns()
+    {
+        Grid.ShowColumnChooser(".column-chooser-button");
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await Grid.ExportToXlsxAsync("Кол-во_пациентов_по_ЛПУ", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {        
+        await LoadDataAsync();
+    }
+
+
+    public async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                searchModel.MedCenterId = 0;
+            }
+            else
+            {
+                searchModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+            }
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        string dFrom = "";
+        string dTo = "";
+        if (dateFrom != null)
+        {
+            dFrom = dateFrom?.ToString("yyyyMMdd");
+        }
+        var dateToLocal = DateTime.Today.AddDays(1);
+        if (dateTo != null)
+        {
+            var newToDate = Convert.ToDateTime(dateTo);
+            dateToLocal = newToDate.AddDays(1);
+            dTo = dateToLocal.ToString("yyyyMMdd");
+        }
+
+        var response = await Http.GetAsync("api/patient/allpatients3?fromDate=" + dFrom + "&toDate=" + dTo);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<PatientTotalMedCenterDto>>();
+
+        Data = mappedData.Data;
+
+    }
+
+
+}

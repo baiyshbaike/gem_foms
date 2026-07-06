@@ -1,0 +1,316 @@
+﻿@inject HttpClient Http
+@using System.Text.Json;
+@inject IJSRuntime JSRuntime
+<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+    <EditForm Model="@AddEditModel" OnValidSubmit="SaveAsync">
+        <MudDialog>
+            <TitleContent>
+                @{
+                    if (AddEditModel.Id == 0)
+                    {
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                            Добавить Пациент
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                            Редактировать   Пациент
+                        </MudText>
+                    }
+                }
+            </TitleContent>
+            <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12" md="8">
+                            <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+                            @if (!IsInnNull(searchModel.Inn))
+                            {
+                                if (!IsInnLengthValid(searchModel.Inn))
+                                {
+                                    <div style="color: red;">ИНН должен состоять из 14 цифр!</div>
+                                }
+                                if (!IsInnNumeric(searchModel.Inn))
+                                {
+                                    <div style="color: red;">ИНН должен состоять только из цифр!</div>
+                                }
+                            }
+                            
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        @if (!string.IsNullOrEmpty(frameUri))
+                        {
+                            <img src="@frameUri" />
+                        }
+                        <br />
+                        <MudText></MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        &nbsp;
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <video id="videoFeed" width="240" height="180" />
+                        <canvas class="d-none" id="currentFrame" width="320" height="240" />
+                        <br />
+                        <MudFab Color="Color.Tertiary" @onclick="CaptureFrame" StartIcon="@Icons.Material.Filled.CameraAlt" DisableElevation="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.Inn)" @bind-Value="AddEditModel.Inn" Label="ИНН" />
+                            @if (!IsInnNull(AddEditModel.Inn))
+                            {
+                                if (!IsInnLengthValid(AddEditModel.Inn))
+                                {
+                                    <div style="color: red;">ИНН должен состоять из 14 цифр!</div>
+                                }
+                                if (!IsInnNumeric(AddEditModel.Inn))
+                                {
+                                    <div style="color: red;">ИНН должен состоять только из цифр!</div>
+                                }
+                            }
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.LastName)" @bind-Value="AddEditModel.LastName" Label="Фамилия" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.FirstName)" @bind-Value="AddEditModel.FirstName" Label="Имя" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.MiddleName)" @bind-Value="AddEditModel.MiddleName" Label="Отчество" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long" Label="Область" SelectedValuesChanged="LoadDistRegionsAsync" @bind-Value="@AddEditModel.DistrictId" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                            @foreach (var selectItem in Elements)
+                            {
+                                <MudSelectItem T="long" Value="@selectItem.Id">@selectItem.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long" Label="Район" @bind-Value="@AddEditModel.RegionId" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                            @foreach (var selectReg in RegionList)
+                            {
+                                <MudSelectItem T="long" Value="@selectReg.Id">@selectReg.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField For="@(() => AddEditModel.Address)" @bind-Value="AddEditModel.Address" Label="Адрес проживания"  />
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField For="@(() => AddEditModel.Address2)" @bind-Value="AddEditModel.Address2" Label="Адрес прописки" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.Phone)" @bind-Value="AddEditModel.Phone" Label="Телефон" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.Phone2)" @bind-Value="AddEditModel.Phone2" Label="Телефон 2" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker  PickerVariant="PickerVariant.Dialog" Label="Дата рож." @bind-Date="date" DateFormat="dd.MM.yyyy" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudRadioGroup @bind-SelectedOption="AddEditModel.Gender">
+                            <MudRadio Option="true" Color="Color.Primary" Dense="true">Муж</MudRadio>
+                            <MudRadio Option="false" Color="Color.Secondary" Dense="false">Жен</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        
+                    </MudItem>
+
+                </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+                     <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success" Disabled="!IsFormValid() && !IsInnValid(AddEditModel.Inn)">Сохранить</MudButton>
+
+            </DialogActions>
+        </MudDialog>
+    </EditForm>
+</MudContainer>
+
+ @code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Patient AddEditModel { get; set; }
+    [Parameter] public long id { get; set; }
+    public PatientSearch searchModel = new PatientSearch();
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+    private bool IsDisabled = true;
+    DateTime? date = DateTime.Today;
+    private Patient patient {get;set;} = new();
+    private PatientInfo patientInfo = new PatientInfo();
+    private string frameUri;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDistrictsAsync();
+        if (AddEditModel.BirthDate != null)
+        {
+            date = AddEditModel.BirthDate;
+        }
+        await JSRuntime.InvokeVoidAsync("startVideo", "videoFeed");
+        StateHasChanged();
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private bool IsFormValid()
+    {
+        // Zorunlu alanların dolu olup olmadığını kontrol et
+        return !string.IsNullOrEmpty(AddEditModel.Inn) &&
+               !string.IsNullOrEmpty(AddEditModel.LastName) &&
+               !string.IsNullOrEmpty(AddEditModel.FirstName);
+    }
+    private bool IsInnLengthValid(string inn)
+    {
+        return  inn.Length == 14;
+    }
+    private bool IsInnNull(string inn)
+    {
+        return string.IsNullOrEmpty(inn);
+    }
+    private bool IsInnNumeric(string inn)
+    {
+        return inn.All(char.IsDigit);
+    }
+    private bool IsInnValid(string inn)
+    {
+        if (IsInnNull(inn))
+        {
+            return false;
+        }
+        return IsInnLengthValid(inn) && IsInnNumeric(inn);
+    }
+    private async Task CaptureFrame()
+    {
+        await JSRuntime.InvokeAsync<String>("getImageFrame", "videoFeed", "currentFrame", DotNetObjectReference.Create(this));
+    }
+    private DateTime? GenerateBirthDateFromInn(string inn)
+    {
+        if (inn.Length > 14)
+        {
+            // Geçersiz INN formatı
+            return null;
+        }
+
+        try
+        {
+            // Günü belirlemek için ilk üç harfi alıyoruz
+            int day = int.Parse(inn.Substring(1, 2));
+
+            // Ayı belirlemek için dördüncü ve beşinci harfleri alıyoruz
+            int month = int.Parse(inn.Substring(3, 2));
+
+            // Yılı belirlemek için altıncı, yedinci, sekizinci ve dokuzuncu harfleri alıyoruz
+            int year = int.Parse(inn.Substring(5, 4));
+
+            // Geçerli bir doğum tarihi oluşturuyoruz
+            return new DateTime(year, month, day);
+        }
+        catch (Exception)
+        {
+            // Doğum tarihi oluşturulamadı
+            return null;
+        }
+    }
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            await LoadDistDefaultRegionsAsync();
+        }
+    }
+
+    private async Task LoadDistRegionsAsync()
+    {
+        AddEditModel.RegionId = 0;
+        if (AddEditModel.DistrictId > 0)
+        {
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + AddEditModel.DistrictId);
+            var mappedData = await response.ToResult<List<Region>>();
+            RegionList = mappedData.Data;
+        }
+
+    }
+
+    private async Task LoadDistDefaultRegionsAsync()
+    {
+        if (AddEditModel.DistrictId > 0)
+        {
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + AddEditModel.DistrictId);
+            var mappedData = await response.ToResult<List<Region>>();
+            RegionList = mappedData.Data;
+        }
+
+    }
+
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.IsActive = true;
+        AddEditModel.BirthDate = date;
+        AddEditModel.Image = frameUri;
+        var response = await _httpClient.PostAsJsonAsync("api/patient/addpatient", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    private async Task SearchAsync()
+    {
+        IsDisabled = true;
+        var response = await Http.GetAsync("api/patient/getbyinn?Inn="+searchModel.Inn);
+        var mappedData = await response.ToResult<PatientInfo>();
+        patientInfo = mappedData.Data;
+        AddEditModel.Inn = patientInfo.Pin;
+        AddEditModel.FirstName = patientInfo.Name;
+        AddEditModel.LastName = patientInfo.Surname;
+        date = GenerateBirthDateFromInn(patientInfo.Pin);
+        AddEditModel.MiddleName = patientInfo.Patronymic;
+        AddEditModel.Gender = patientInfo.Gender;
+    }
+    [JSInvokable]
+    public void ProcessImage(string imageString)
+    {
+        frameUri = imageString;
+        //byte[] imageData = Convert.FromBase64String(imageString.Split(',')[1]);
+
+        //Do image processing here
+
+
+        //using (var image = Image.Load(imageData))
+        //{
+        //   frameUri = image.ToBase64String(JpegFormat.Instance);
+        //}
+    }
+    public class PatientSearch
+    {
+        public string Inn { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+    }
+    
+}

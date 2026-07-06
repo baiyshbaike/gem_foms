@@ -1,0 +1,556 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime js
+<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 400px; overflow-y: scroll">
+    <MudItem xs="12" md="4">
+        <MudButton Variant="Variant.Filled"
+        @onclick="@(async() =>  await js.InvokeVoidAsync("printDiv"))" StartIcon="@Icons.Material.Filled.Print"
+                   Size="Size.Small" Color="Color.Info">
+            Печать pdf
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+        @onclick="@(async() =>  await js.InvokeVoidAsync("printDivWord", "outmcard"))" StartIcon="@Icons.Material.Filled.Print"
+                   Size="Size.Small" Color="Color.Info">
+            Скачать word
+        </MudButton>
+    </MudItem>
+    <div id="dvPrint">
+        <div class=WordSection1>
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt; font-family:"Times New Roman","serif"'>  Выписка из мед.карты гемодиализного пациента №</span>
+                </b>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>ИНН  @element.WritingOut.Inn </span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>&nbsp;</span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>
+                    Ф.И.О: @Fio
+                </span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>&nbsp;</span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>
+                    Дата рождения (число, месяц,год) : @date_of_birth?.ToString("dd.MM.yyyy")
+                    Пол (муж, жен)  @pol
+                </span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family: "Times New Roman","serif"'>Группа крови, рез</span><span lang=KY
+                    style='font-size:12.0pt;font-family:"Times New Roman","serif"'>у</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'> с фактор @element.WritingOut.BloodResus
+                </span>
+            </p>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Адрес домашний: @element.WritingOut.Address
+                </span>
+
+            </p>
+
+
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Дата поступления:</span> @element.WritingOut.ReceiptDate?.ToString("dd.MM.yyyy")
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Дата выписки: </span>@element.WritingOut.LeaveDate?.ToString("dd.MM.yyyy")
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Основной клинический диагноз: @element.WritingOut.MainDiagnosis
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Сопутствующий
+                    диагноз @element.WritingOut.SoputDiagnosis
+                </span>
+                <br /><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>Осложнение @element.WritingOut.Complication</span>
+
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Анамнез жизни: @element.WritingOut.Anamnez</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Анамнез заболевания: @element.WritingOut.AnamnezZabol</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Аллергические реакции: @element.WritingOut.Allergo</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Гемотрансфузии: @element.WritingOut.Gemotrans</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Карта вакцинации против гепатита «В»  @element.WritingOut.GepatitB</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Сосудистый доступ:(тип доступа, локализация, тип
+                    кровотока, дата создания, осложнение): @element.WritingOut.Sosud
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Объективный</span><span lang=RU style='font-size:
+12.0pt;font-family:"Times New Roman","serif"'> </span><span lang=RU
+                                                            style='font-size:12.0pt;font-family:"Times New Roman","serif"'>осмотр</span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    : Status
+                    praesens objectivus:
+                    @element.WritingOut.Objectivus
+                </span>
+            </p>
+
+            <p class=MsoNormal><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>&nbsp;</span></p>
+
+            <p class=MsoNormal><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>&nbsp;</span></p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Результаты лабораторного обследования :(общий анализ
+                    крови, общий анализ мочи, мочевина, креатинин, натрий, калий, кальций, фосфор,
+                    общий белок, альбумин, АСТ, АЛТ паратгормон, трансферрин, ферритин, С-реактивный
+                    белок)
+                    @element.WritingOut.AllResults
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Обследование на: @element.WritingOut.ExamFor</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Вирусный гепатит (В, С) @element.WritingOut.VirusBC </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>RW</span> @element.WritingOut.RW
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ВИЧ @element.WritingOut.Vich</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Результаты инструментального обследования:  @element.WritingOut.Instrumental</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>УЗИ (внутренних органов) @element.WritingOut.Uzi</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ЭКГ @element.WritingOut.Ekg</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ЭХОКГ @element.WritingOut.Eho</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Рентгенография грудной клетки  @element.WritingOut.Rentgen</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Консультация специалистов: @element.WritingOut.Consulting</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Диализная
+                    программа (количество часов за неделю, гепарин, диализатор площадь, иглы№,
+                </span><span lang=KY style='font-size:12.0pt;font-family:"Times New Roman","serif"'>к</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    ондуктивность,
+                    бикарбонат, скорость потока растворов, скорость потока крови, рециркуляция во
+                    время сеанса диализа) 
+                    @element.WritingOut.Familiarized
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Отчет по проведенным процедурам ГД, ГДФ (за текущий
+                    месяц):
+                    @element.WritingOut.Otchet
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>.</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Время процедуры, </span><span style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>URR</span><span lang=RU
+                                                       style='font-size:12.0pt;font-family:"Times New Roman","serif"'>, </span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>Kt</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>/</span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>V</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    , междиализная
+                    прибавка (средняя)
+
+                </span><span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span><span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>сухой вес:  @element.WritingOut.TimeProcedure</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>  </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Гемодинамика АД до ГД, во время ГД, после ГД:  @element.WritingOut.Gemo</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Состояние АВ фистулы (катетера, протеза), способ
+                    пункции, дата установки:
+                    @element.WritingOut.Sostoyania" Lines="2
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Медикаментозная терапия в отделении (наименование
+                    препарата, способ введения, назначенная дозировка,  периодичность,
+                    продолжительность приема, введено за месяц, дозы)
+                    @element.WritingOut.Medikamentoz" Lines="2
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>  </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Госпитализация в другое отделение</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'> </span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    (дата
+                    начала, дата окончания госпитализации, причина госпитализации, примечание)
+                    @element.WritingOut.Gospital
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> Рекомендации при выписке:  @element.WritingOut.Recommend </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>   </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'> Лечащий врач:</span>
+                </b>
+                @element.WritingOut.FIODoctor
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>&nbsp;</span>
+                </b>
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>Заведующий отделением</span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'> </span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>гемодиализа</span>
+                </b><b>
+                    <span lang=KY style='font-size:12.0pt;font-family:"Times New Roman","serif"'>:</span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    </span>
+                </b>
+                @element.WritingOut.FIODepartmentHead
+            </p>
+
+
+        </div>
+    </div>
+        
+ </MudContainer>
+ @code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    MudForm form;
+
+
+    public MedCardSearch searchModel = new MedCardSearch();
+    private Patient patient { get; set; } = new();
+    public string Fio = "";
+    public string pol = "";
+    public DateTime? date_of_birth = DateTime.Today;
+
+    public string address = "";
+    [Parameter] public WritingOutDto AddEditModel { get; set; }
+    [Parameter] public long WritingOutId { get; set; }
+    public WritingOutDto element { get; set; }
+
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private IEnumerable<CodeMKB> Codes = new List<CodeMKB>();
+    private bool IsOnlyCenter = true;
+    private bool IsDisabled = true;
+    private bool IsValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDetailAsync();
+        await SearchAsync();
+        StateHasChanged();
+    }
+    private async Task SearchAsync()
+    {
+
+        if (element.Patient != null)
+        {
+            patient = element.Patient;
+            await LoadDistrictsAsync();
+            await LoadDistDefaultRegionsAsync();
+            DateTime datetimenow = DateTime.Now;            
+            Fio = element.Patient.LastName + " " + element.Patient.FirstName + " " + element.Patient!.MiddleName;
+            pol = element.Patient!.Gender ? "Муж" : "Жен";
+            if (element.Patient != null)
+            {
+                date_of_birth = (DateTime)element.Patient.BirthDate;
+            };
+            var dis = "";
+            var reg = "";
+            foreach (var item in Elements)
+            {
+                if (item.Id == patient.DistrictId)
+                {
+                    dis = item.Title;
+                }
+            };
+            foreach (var item in RegionList)
+            {
+                if (item.Id == patient.RegionId)
+                {
+                    reg = item.Title;
+                }
+            };            
+            address = dis + " " + reg + " " + patient.Address;           
+        }
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    public async Task LoadDetailAsync()
+    {
+        element = AddEditModel;
+        /*var response = await Http.GetAsync("api/patient/writingdetail?Id=" + WritingOutId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<WritingOutDto>();
+        element = mappedData.Data;    */   
+    }
+
+ 
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+    }
+    private async Task LoadDistDefaultRegionsAsync()
+    {
+        if(patient.DistrictId!=null){
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + patient.DistrictId);
+        var mappedData = await response.ToResult<List<Region>>();
+        RegionList = mappedData.Data;
+        }
+        
+
+    }
+    
+}

@@ -1,0 +1,107 @@
+﻿@inject HttpClient Http
+<EditForm Model="@AddEditModel">
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.Security" Class="mr-3 mb-n1" />
+                @AddEditModel.LastName @AddEditModel.FirstName @AddEditModel.MIddleName
+                 
+            </MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" md="12">
+                    @{
+                        if (Elements != null)
+                        {
+                            foreach (var item in Elements)
+                            {
+
+                                <input type="checkbox" checked="@checkIsChecked(item.Id)" @onchange="eventArgs => { CheckedChangedFunc(item.Id, eventArgs.Value); }" />  
+                                  @item.Description 
+                                <br/>                               
+                            }
+                        }
+                    }                   
+                </MudItem>          
+
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Закрыть</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public User AddEditModel { get; set; } = new();
+    private IEnumerable<Role> Elements = new List<Role>();
+    private IEnumerable<Role> UserElements = new List<Role>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        await LoadUserDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/user/allroles");
+        var mappedData = await response.ToResult<List<Role>>();
+        Elements = mappedData.Data;        
+    }
+    public async Task LoadUserDataAsync()
+    {
+        var response = await Http.GetAsync("api/user/userroles?id="+AddEditModel.Id);
+        var mappedData = await response.ToResult<List<Role>>();
+        UserElements = mappedData.Data;
+    }
+
+    private bool checkIsChecked(long roleId)
+    {
+        var userRole = UserElements.Where(u => u.Id == roleId).FirstOrDefault();
+        if(userRole != null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private async void CheckedChangedFunc(long roleId, object selValue)
+    {
+        if ((bool)selValue)
+        {
+            await SaveRoleAsync(roleId, AddEditModel.Id, 99);
+        }
+        else
+        {
+            await SaveRoleAsync(roleId, AddEditModel.Id, 0);
+        }
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveRoleAsync(long roleId, long userId, long status)
+    {
+        var response = await Http.GetAsync("api/user/addremrole?roleid=" + roleId+"&userid="+userId+"&status="+status);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);            
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);            
+        }
+    }
+}

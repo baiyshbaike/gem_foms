@@ -1,0 +1,136 @@
+﻿@using Dialysis.Shared.Models.Files
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">Мед центр:  @filesResponse.MedCenter?.Title</MudText>
+        <MudText Typo="Typo.body2">Врач: @filesResponse.User?.FirstName  @filesResponse.User?.LastName</MudText>
+        @if (filesResponse.Items != null && filesResponse.Items.Any())
+        {
+            <MudCard>
+                <MudCardContent>
+                    @foreach (var file in filesResponse.Items)
+                    {
+                        <div class="d-flex align-center justify-space-between pa-2 ma-1 border-solid border-1 rounded">
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@GetFileIcon(file.FileName)" Class="mr-2"/>
+                                <MudText>@file.OriginalFileName</MudText>
+                            </div>
+                            <div>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                           OnClick="() => DownloadFile(file.Id)"
+                                           StartIcon="@Icons.Material.Filled.Download">
+                                    Скачать
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" Color="Color.Secondary"
+                                           OnClick="() => OpenNested(file.Id)"
+                                           StartIcon="@Icons.Material.Filled.Preview">
+                                    Показать
+                                </MudButton>
+                            </div>
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+        else if (filesResponse.Items != null)
+        {
+            <div style="color: red;">
+                Нет загруженных файлов!
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Cancel">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [Parameter] public long _patientId { get; set; }
+    private FilesResponseDto<MedCenterPatientFile> filesResponse = new FilesResponseDto<MedCenterPatientFile>();
+    private void Cancel() => MudDialog.Cancel();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPatientFiles();
+        StateHasChanged();
+    }
+    private async Task LoadPatientFiles()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"api/patient/patient-files/{_patientId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                filesResponse = await response.Content.ReadFromJsonAsync<FilesResponseDto<MedCenterPatientFile>>();
+                if (filesResponse == null) filesResponse = new FilesResponseDto<MedCenterPatientFile>();
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Файлы не могут быть загружены: {ex.Message}", Severity.Error);
+        }
+    }
+    private async Task OpenNested(long fileId)
+    {
+        var file = filesResponse.Items.FirstOrDefault(f => f.Id == fileId);
+        if (file == null) return;
+
+        var parameters = new DialogParameters
+        {
+            ["FileId"] = file.Id,
+            ["FileName"] = file.OriginalFileName
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullScreen = true,
+            CloseButton = true,
+            DisableBackdropClick = true
+        };
+
+        DialogService.Show<FilePreviewDialog>("Предпросмотр файла", parameters, options);
+    }
+    private string GetFileIcon(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLower();
+        return ext switch
+        {
+            ".pdf" => Icons.Material.Filled.PictureAsPdf,
+            ".doc" or ".docx" => Icons.Material.Filled.Description,
+            ".jpg" or ".jpeg" or ".png" => Icons.Material.Filled.Image,
+            _ => Icons.Material.Filled.InsertDriveFile
+        };
+    }
+    private async Task DownloadFile(long fileId)
+    {
+        try
+        {
+            // API'den dosyayı indir
+            var response = await Http.GetAsync($"api/patient/download-file/{fileId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var base64Content = await response.Content.ReadAsStringAsync();
+                var fileInfo = filesResponse.Items.Find(p => p.Id.Equals(fileId));
+                if (fileInfo == null) return;
+                // JS ile otomatik indirme tetikle
+                await JSRuntime.InvokeVoidAsync(
+                    "triggerFileDownload", 
+                    fileInfo.OriginalFileName, 
+                    base64Content
+                );
+            }
+            else
+            {
+                _snackBar.Add("Файл не удалось загрузить!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,263 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Newtonsoft.Json
+<MudForm Model="@HdSessionDto" @ref="_form"  @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudDialog Style="display: flex; flex-direction: column; max-height: 90vh; width: auto;">
+        <DialogContent>
+            <div class="scrollable-dialog-content">
+                <MudGrid>
+                    <MudItem xs="12" md="12">
+                    <MudText>
+                        @HdSessionDto.Patient.FirstName @HdSessionDto.Patient.LastName
+                    </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Condition)" 
+                            @bind-Value="HdSessionDto.HDSession.Condition" 
+                            Required="true" 
+                            Label="Состояние пациента на момент под. к АИП" 
+                            Lines="3" 
+                            Variant="Variant.Outlined"/>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Complaints)" 
+                            @bind-Value="HdSessionDto.HDSession.Complaints" 
+                            Required="true" 
+                            Label="Жалобы на момент осмотра"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudItem xs="12" md="12"> Программа сеанса</MudItem>
+
+                        <MudItem xs="12" md="12">
+                            <InputRadioGroup T="string" @bind-Value="HdSessionDto.HDSession.Program">
+                                <InputRadio class="form-check-input" T="string" Value="@("HD")" Color="Color.Secondary"/><label class="form-check-label">HD</label>
+                                <InputRadio class="form-check-input" T="string" Value="@("HDF")" Color="Color.Secondary"/><label class="form-check-label">HDF</label>
+                                <InputRadio class="form-check-input" T="string" Value="@("Uf")" Color="Color.Secondary"/><label class="form-check-label">UF</label>
+                            </InputRadioGroup>
+                        </MudItem>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Dialyzer)" 
+                            @bind-Value="HdSessionDto.HDSession.Dialyzer" 
+                            Required="true" 
+                            Label="Д-тор промыт и зап. рествором"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Correction)" 
+                            @bind-Value="HdSessionDto.HDSession.Correction" 
+                            Required="true" 
+                            Label="Коррекция электролитов по Na"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Reinfusion)" 
+                            @bind-Value="HdSessionDto.HDSession.Reinfusion" 
+                            Required="true" 
+                            Label="Реинфузия NaCI"/>
+                    </MudItem>
+
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Access)" 
+                            @bind-Value="HdSessionDto.HDSession.Access" 
+                            Required="true" 
+                            Label="Доступ"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Anticoagulation)" 
+                            @bind-Value="HdSessionDto.HDSession.Anticoagulation" 
+                            Required="true" 
+                            Label="Антикоагуляция"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Uf)" 
+                            @bind-Value="HdSessionDto.HDSession.Uf" 
+                            Required="true" 
+                            Label="Обьем УФ"/>
+                    </MudItem>
+                    <MudItem xs="6" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Speed)" 
+                            @bind-Value="HdSessionDto.HDSession.Speed" 
+                            Required="true" 
+                            Label="Скорость потока крови"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Durators)" 
+                            @bind-Value="HdSessionDto.HDSession.Durators" 
+                            Required="true" 
+                            Label="Длителность"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        @if (DataDialyzerTypes.Any())
+                        {
+                            <MudAutocomplete T="string"
+                                             For="@(() => HdSessionDto.HDSession.TypeDialyzer)" 
+                                             @bind-Value="HdSessionDto.HDSession.TypeDialyzer"
+                                             Required="true"
+                                             RequiredError="Тип диализатора обязателен!"
+                                             MaxItems="1000"
+                                             SearchFunc="@SearchTypeDialyzer"
+                                             Label="Тип диализатора"
+                                             Variant="Variant.Outlined"
+                            />
+                        }
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.StartWeight)" 
+                            @bind-Value="HdSessionDto.HDSession.StartWeight" 
+                            MaxLength="5" 
+                            Required="true" 
+                            Label="Вес пациента"/>
+                    </MudItem>
+                    <MudItem xs="3" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Sys)" 
+                            MaxLength="4" 
+                            Required="true" 
+                            @bind-Value="HdSessionDto.HDSession.Sys" 
+                            Label="SYS"/>
+                    </MudItem>
+                    <MudItem xs="3" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Dia)" 
+                            MaxLength="4" 
+                            Required="true" 
+                            @bind-Value="HdSessionDto.HDSession.Dia" 
+                            Label="DIA"/>
+                    </MudItem>
+                    <MudItem xs="3" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Ritm)" 
+                            MaxLength="4" 
+                            Required="true" 
+                            @bind-Value="HdSessionDto.HDSession.Ritm" 
+                            Label="Частота"/>
+                    </MudItem>
+                    <MudItem xs="3" md="2">
+                        <MudTextField 
+                            For="@(() => HdSessionDto.HDSession.Temp)" 
+                            MaxLength="4" 
+                            Required="true" 
+                            @bind-Value="HdSessionDto.HDSession.Temp" 
+                            Label="Температура"/>
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Cancel())" Color="Color.Error">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="@(async ()=>await Submit())" Color="Color.Success">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    
+    [Parameter] 
+    public HDSessionDto HdSessionDto { get; set; }
+    
+    private MudForm _form;
+    private string _returnValue;
+    private bool success;
+    private string[] errors = { };
+    IEnumerable<string> DataDialyzerTypes { get; set; } = new List<string>();
+    protected override async Task OnInitializedAsync()
+    {
+        if (String.IsNullOrEmpty(HdSessionDto.HDSession.Program))
+        {
+            HdSessionDto.HDSession.Program = "HD";
+        }
+        await LoadDialyzerTypesAsync();
+    }
+    
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            try
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(HdSessionDto.HDSession, Formatting.Indented));
+                var response = await _httpClient.PostAsJsonAsync("api/hdsession/update-hdsession", HdSessionDto.HDSession);
+                var result = await response.ToResult();
+                if (!result.Succeeded)
+                {
+                    _snackBar.Add(result.Messages[0], Severity.Error);
+                    MudDialog.Close(DialogResult.Ok(false));
+                }
+                else
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                MudDialog.Close(DialogResult.Ok(_returnValue));
+            }
+            catch (Exception e)
+            {
+                _snackBar.Add(e.Message, Severity.Error);
+                throw;
+            }
+        }
+        else
+        {
+            foreach (var er in errors)
+            {
+                _snackBar.Add(er, Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    private async Task<IEnumerable<string>> SearchTypeDialyzer(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return DataDialyzerTypes;
+            
+        return DataDialyzerTypes.Where(x => 
+            x.Contains(value, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+    private async Task LoadDialyzerTypesAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/status/alldialyzer");
+            var mappedData = await response.ToResult<List<DialyzerType>>();
+            
+            if (!mappedData.Succeeded)
+            {
+                _snackBar.Add(mappedData.Messages[0], Severity.Error);
+            }
+            else
+            {
+                _snackBar.Add("Успешно", Severity.Success);
+                DataDialyzerTypes = mappedData.Data.Select(t => t.Name);
+            }
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+        
+    }
+}
+<style>
+    .scrollable-dialog-content {
+        overflow-y: auto;    /* Vertical scrolling only */
+        overflow-x: hidden;  /* Prevent horizontal scrolling */
+        max-height: calc(90vh - 150px); /* Account for header/footer */
+        padding: 8px;
+        width: 100%;
+    }
+</style>

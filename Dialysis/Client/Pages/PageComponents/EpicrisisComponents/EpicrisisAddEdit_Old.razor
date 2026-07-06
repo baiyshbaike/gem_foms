@@ -1,0 +1,297 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+<MudForm Model="@AddEditModel" @ref="form">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+         <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            <MudGrid>
+                <MudItem xs="12" md="12">
+                    Пациент(ка) @medCardPatient?.LastName @medCardPatient?.FirstName находится на пожизненном лечении программным гемодиализом(ПГД) в отделении НГ.
+                </MudItem>
+                <MudItem xs="2" md="2">
+                    <MudDatePicker Label="" @bind-Date="date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                </MudItem>
+                <MudItem xs="10" md="10">
+                    года по настояшиее время с клиническим диагнозом
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Osn" Label="Осн:" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Osl" Label="Осл:" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Sop" Label="Соп:" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.MedHelpType" Label="Вид мед. помоши:" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Status" Label="Статус на гемоконтакные инфетции:" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6" md="6">
+                    <MudDatePicker Label="Дата выявления ВГВ" @bind-Date="date1" DateFormat="dd.MM.yyyy" DisableToolbar="true" />                    
+                </MudItem>
+                <MudItem xs="6" md="6">
+                    <MudDatePicker Label="Дата выявления ВГС" @bind-Date="date2" DateFormat="dd.MM.yyyy" DisableToolbar="true" />                   
+                </MudItem>
+                
+                <MudItem xs="12" md="12">
+                    <table style="width:100%; font-size:13px;">
+                        <thead>
+                            <tr style="height:5px; font-weight:600; ">
+                                <th></th>
+                                <th>До/диализа</th>
+                                <th>П/диализа</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="label-td">Кол-во сеансов/мес</td>
+                                <td><MudTextField @bind-Value="AddEditModel.TotalHD" Label="HD" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.TotalHDF" Label="HDF" /></td>
+                                <td class="label-td">Нь</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Ng" Label="г/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td"></td>
+                                <td class="label-td">До/диализа</td>
+                                <td class="label-td">П/диализа</td>
+                                <td class="label-td">Ht</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Ht" Label="%" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td"></td>
+                                <td class="label-td"></td>
+                                <td class="label-td"></td>
+                                <td class="label-td">Эр-ты</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Erty" Label="х10/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Мочевина</td>
+                                <td><MudTextField @bind-Value="AddEditModel.MochevinaDo" Label="ммоль/л" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.MochevinaAfter" Label="ммоль/л" /></td>
+                                <td class="label-td">Тромб</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Tromb" Label="х10/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Остаточный азот</td>
+                                <td><MudTextField @bind-Value="AddEditModel.AzotDo" Label="ммоль/л" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.AzotAfter" Label="ммоль/л" /></td>
+                                <td class="label-td">Лейк-ты</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Leykty" Label="х10/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Креатинин</td>
+                                <td><MudTextField @bind-Value="AddEditModel.KreatininDo" Label="мкмоль/л" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.KreatininAfter" Label="мкмоль/л" /></td>
+                                <td class="label-td">п/я</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Pya" Label="%" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Na</td>
+                                <td><MudTextField @bind-Value="AddEditModel.NaDo" Label="ммоль/л" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.NaAfter" Label="ммоль/л" /></td>
+                                <td class="label-td">с/я</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Sya" Label="%" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Ca</td>
+                                <td><MudTextField @bind-Value="AddEditModel.CaDo" Label="ммоль/л" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.CaAfter" Label="ммоль/л" /></td>
+                                <td class="label-td">M</td>
+                                <td><MudTextField @bind-Value="AddEditModel.M" Label="%" /></td>
+                            </tr>
+                             <tr>
+                                <td class="label-td">Фосфор</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Fosfor" Label="ммоль/л" /></td>                              
+                                <td class="label-td">Л</td>
+                                <td><MudTextField @bind-Value="AddEditModel.L" Label="%" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Fe</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Fe" Label="кмоль/л" /></td>                              
+                                <td class="label-td">СОЭ</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Soe" Label="мм/час" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">URR</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.URR" Label="%" /></td>
+                                <td class="label-td">Билирубин</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Bilirubin" Label="мкмоль/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">имт</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Imt" Label="%" /></td>
+                                <td class="label-td">Обш. XC</td>
+                                <td><MudTextField @bind-Value="AddEditModel.ObshiyXC" Label="ммоль/л" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">АД ср.</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Ad" Label="мм рт. ст." /></td>
+                                <td class="label-td">Сахар крови</td>
+                                <td><MudTextField @bind-Value="AddEditModel.SaharKrovi" Label="мкмоль/л" /></td>
+                            </tr>                           
+                            <tr>
+                                <td class="label-td">Сухой вес</td>
+                                <td><MudTextField @bind-Value="AddEditModel.StartWeight" Label="Вес-кг" /></td>
+                                <td><MudTextField @bind-Value="AddEditModel.StartHeight" Label="Рост-см" /></td>
+                                <td class="label-td">АЛТ</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Alt" Label="IU/L" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">RW</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Rw" Label="" /></td>
+                                <td class="label-td">ACT</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Ast" Label="IU/L" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Группа крови</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.GruppaKrovi" Label="Rh" /></td>
+                                <td class="label-td">АЧТВ</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Achtv" Label="IU/L" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Гемотрансфузии</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Gemotransfuzii" Label="" /></td>
+                                <td class="label-td">ПТИ, мно</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Pti" Label="%IU/L" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Эритропоэтин</td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.Eritropoetin" Label="Гд/мес" /></td> 
+                                <td class="label-td">Ср. обеьм УФ</td>
+                                <td><MudTextField @bind-Value="AddEditModel.Uf" Label="" /></td>
+                            </tr>
+                            <tr>
+                                <td class="label-td">Препарат Fe </td>
+                                <td colspan="2"><MudTextField @bind-Value="AddEditModel.PreparatFe" Label="" /></td>
+                                <td class="label-td">Размер фильтра</td>
+                                <td><MudTextField @bind-Value="AddEditModel.RazmerFiltra" Label="" /></td>
+                            </tr>
+                        </tbody>
+                        </table>
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    За период у пациента во время проведения сеансов ГД наблюдались осложнения:
+                </MudItem>
+                <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Gipotenzia" Label="Гипотензия" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Gipertenzia" Label="Гипертензия" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Sudorogi" Label="Судороги" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Shok" Label="Шок" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.GolovnoiBol" Label="Головная боль" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Toshnota" Label="Тошнота, рвота" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Lihorodka" Label="Лихородка" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="6" md="6">
+                    <MudTextField @bind-Value="AddEditModel.TrombABfist" Label="Тромб. А-В фист" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>                
+                <MudItem xs="12" md="2">
+                </MudItem>
+            </MudGrid>
+         </MudContainer> 
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+</MudContainer>
+        @code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public long MedCardId { get; set; }
+
+    public Epicrisis AddEditModel { get; set; } = new Epicrisis();
+    MudForm form;
+    DateTime? date = null;
+    DateTime? date1 = null;
+    DateTime? date2 = null;
+    private Patient medCardPatient { get; set; } = new Patient();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MedCardId > 0)
+        {
+            await LoadPatientAsync();
+        }
+    }
+
+    private async Task LoadPatientAsync()
+    {
+        var response = await Http.GetAsync("api/patient/getbymedcard?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+
+        var mappedData = await response.ToResult<Patient>();
+        medCardPatient = mappedData.Data;
+        AddEditModel.PatientId = medCardPatient.Id;
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.MedCardId = MedCardId;
+        AddEditModel.Started = date;
+        AddEditModel.DateVgv = date1;
+        AddEditModel.DateVgs = date2;
+
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addepicrisis", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

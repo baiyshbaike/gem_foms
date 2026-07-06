@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="BlueTheme" />
+<MudSnackbarProvider />
+<MudContainer MaxWidth="MaxWidth.Small">
+    <div class="d-flex flex-column">
+
+        <MudText Typo="Typo.h5" Class="mt-6" Align="Align.Center">Not Found</MudText>
+        <MudItem xs="12" sm="12" md="12">
+            <div class="pa-4 justify-center my-4 mud-text-align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Link="/">Назад</MudButton>
+            </div>
+        </MudItem>
+    </div>
+</MudContainer>
+
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    MudTheme BlueTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Primary = Colors.Blue.Default,
+            Secondary = Colors.Green.Accent4,
+            AppbarBackground = Colors.Red.Default,
+        },
+        PaletteDark = new Palette()
+        {
+            Primary = Colors.Blue.Lighten1
+        },
+
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthLeft = "260px",
+            DrawerWidthRight = "300px"
+        }
+    };
+}

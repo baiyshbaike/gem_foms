@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <AssemblyName>Dialysis.Client</AssemblyName>
+    <DockerComposeProjectPath>../../docker-compose.dcproj</DockerComposeProjectPath>
+    <UserSecretsId>60fb77e5-198d-42dc-9bd9-5e3da1059ca5</UserSecretsId>
+	  <NoWarn>CS8618, CS8603, CA1416, CS8602, CS8601, CS8625, CS1998, CS8604,  CS0618</NoWarn>
+    <UseNETCoreGenerator>true</UseNETCoreGenerator>
+    <BlazorCacheBootResources>false</BlazorCacheBootResources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Client' ">
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>anycpu</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Dialysis.Client' ">
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <PackageReference Include="DevExpress.Blazor" Version="22.2.4" />
+    <PackageReference Include="DevExpress.Blazor.Reporting.JSBasedControls.WebAssembly" Version="22.2.4" />
+    <PackageReference Include="DevExpress.Data" Version="22.2.4" />
+    <PackageReference Include="DevExpress.Drawing.Skia" Version="22.2.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.20" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="7.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.20" />
+    <PackageReference Include="MudBlazor" Version="6.1.2" />
+    <PackageReference Include="NPOI" Version="2.6.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="MudBlazor" />
+    <None Remove="Pages\Authentication\" />
+    <None Remove="Domain\" />
+    <None Remove="Domain\Account\" />
+    <None Remove="Blazored.LocalStorage" />
+    <None Remove="Domain\Shared\" />
+    <None Remove="Pages\Protocols\FinishedSessions.razor~RFc892e210.TMP" />
+    <None Remove="Shared\Dialogs\" />
+    <None Remove="Domain\Extensions\" />
+    <None Remove="Pages\References\" />
+    <None Remove="Shared\Components\" />
+    <None Remove="Pages\Patients\" />
+    <None Remove="SixLabors.ImageSharp" />
+    <None Remove="Pages\PageComponents\AnalysisComponents\" />
+    <None Remove="Pages\PageComponents\EpicrisisComponents\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\temp_data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\UploadAnalysis" />
+    <Folder Include="wwwroot\UploadImages" />
+    <Folder Include="wwwroot\UploadPriceActs" />
+    <Folder Include="wwwroot\uploads\" />
+    <Folder Include="Domain\Account\" />
+    <Folder Include="Domain\Shared\" />
+    <Folder Include="Shared\Dialogs\" />
+	<Folder Include="Domain\Extensions\" />
+    <Folder Include="Shared\Components\" />
+    <Folder Include="wwwroot\UploadProtocols" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Dialysis.Shared.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

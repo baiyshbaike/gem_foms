@@ -1,0 +1,386 @@
+﻿@page "/MedCenterPatients"
+@attribute [Authorize(Roles = "admin, medcenter_patient")]
+@using Microsoft.AspNetCore.WebUtilities
+<MudTabs
+    Elevation="2"
+    Rounded="true"
+    Centered="true"
+    Class="my-6"
+    Color="Color.Primary">
+    <AuthorizeView Roles="admin">
+        <MudTabPanel
+            Icon="@Icons.Material.Filled.Person"
+            Text="Все пациенты"
+            OnClick="() => Activate(0)"/>
+    </AuthorizeView>
+    <AuthorizeView Roles="admin, medcenter_patient">
+        <MudTabPanel
+            Icon="@Icons.Material.Filled.AirlineSeatFlat"
+            Text="Новый" 
+            BadgeData='@patientCount.NewCount.ToString()'
+            BadgeColor="Color.Success"
+            OnClick="() => Activate(8)"/>
+    </AuthorizeView>
+    <AuthorizeView Roles="admin">
+        <MudTabPanel
+            Icon="@Icons.Material.Filled.AirlineSeatFlatAngled"
+            Text="Архив"
+            BadgeData='@patientCount.ArchiveCount.ToString()'
+            BadgeColor="Color.Error"
+            OnClick="() => Activate(2)"/>
+    </AuthorizeView>
+    <AuthorizeView Roles="admin">
+        <MudTabPanel
+            Icon="@Icons.Material.Filled.AirlineSeatReclineExtra"
+            Text="ФОМС"
+            BadgeData='@patientCount.FomsCount.ToString()'
+            BadgeColor="Color.Warning"
+            OnClick="() => Activate(7)"/>
+    </AuthorizeView>
+    <AuthorizeView Roles="admin">
+        <MudTabPanel
+            Icon="@Icons.Material.Filled.AirlineSeatReclineNormal"
+            Text="Фрезениус"
+            BadgeData='@patientCount.FreseniusCount.ToString()'
+            BadgeColor="Color.Default"
+            OnClick="() => Activate(6)"/>
+    </AuthorizeView>
+</MudTabs>
+<MudTable
+    T="PatientInfoDto"
+    @ref="_table" 
+    Items="@_patients" 
+    ServerData="@(new Func<TableState, Task<TableData<PatientInfoDto>>>(ServerReload))" 
+    Loading="@_loading"
+    Dense="true" 
+    Hover="true" 
+    Bordered="true" 
+    Striped="true"
+    FixedHeader="true"
+    >
+    <ToolBarContent>
+      <MudText Typo="Typo.h6">Пациенты</MudText>
+      <MudSpacer />
+      <MudButton 
+          @onclick="FilterModal"
+          StartIcon="@Icons.Material.Filled.FilterAlt"
+          Size="Size.Small"
+          Variant="Variant.Outlined" 
+          Color="Color.Primary">
+          Фильтр
+      </MudButton>
+      <MudSpacer />
+      <MudButton
+          @onclick="() => AddEditModal()"
+          StartIcon="@Icons.Material.Filled.AddBox"
+          Variant="Variant.Outlined"
+          Color="Color.Primary"
+          Size="Size.Small">
+          Добавить
+      </MudButton>
+      <MudSpacer />
+      <MudTextField 
+          T="string" 
+          ValueChanged="@(s=>OnSearch(s))" 
+          Placeholder="Поиск" 
+          Adornment="Adornment.Start"
+          Immediate="true"
+          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="Id">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="FirstName">ФИО</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="BirthDate">Дата рожд.</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="Inn">Инн</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="GroupId">Статус</MudTableSortLabel></MudTh>
+        @* <MudTh><MudTableSortLabel T="PatientInfoDto" SortLabel="IsDeleted">Удален?</MudTableSortLabel></MudTh> *@
+        <MudTh>Действие</MudTh>
+    </HeaderContent>
+    
+    <RowTemplate>
+        <MudTd>@context.Patient?.Id </MudTd>
+        <MudTd>@context.Patient?.FirstName @context.Patient?.LastName @context.Patient?.MiddleName</MudTd>
+        <MudTd>@context.Patient?.BirthDate?.ToString("dd.MM.yyyy") </MudTd>
+        <MudTd>@context.Patient.Inn</MudTd>
+        <MudTd>
+            @{
+                var (statusText, statusColor) = GetStatusInfo(context.Patient?.GroupId);
+            }
+            <MudChip
+                T="string"
+                Variant="Variant.Text"
+                Color="@statusColor"
+                >
+                @statusText
+            </MudChip>
+        </MudTd>
+        @* <MudTd> *@
+        @*     @if (context.Patient?.IsDeleted == true) *@
+        @*     { *@
+        @*         <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Text">Да</MudChip> *@
+        @*     } *@
+        @*     else *@
+        @*     { *@
+        @*         <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text">Нет</MudChip> *@
+        @*     } *@
+        @* </MudTd> *@
+        <MudTd>
+            <MudMenu Dense="true" AnchorOrigin="Origin.TopCenter">
+                <ActivatorContent>
+                    <MudChip
+                        T="string"
+                        Variant="Variant.Text"
+                        Icon="@Icons.Material.Filled.Settings"
+                        Color="Color.Primary">
+                        Действие
+                    </MudChip>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem 
+                        OnClick="@(()=> AddEditModal(context.Patient))">
+                        <MudIcon 
+                            Icon="@Icons.Material.Filled.Edit"
+                            Color="Color.Primary"
+                        /> 
+                        Редактировать
+                    </MudMenuItem>
+                    <MudMenuItem
+                        OnClick="@(() => OpenFiles(context.Patient?.Id))">
+                        <MudIcon  
+                            Icon="@Icons.Material.Filled.Folder" 
+                            Color="Color.Primary"
+                        /> Информация и файлы пациента
+                    </MudMenuItem>
+                    <MudMenuItem 
+                        OnClick="@(()=> DeleteModel(context.Patient))">
+                        <MudIcon 
+                            Icon="@Icons.Material.Filled.Delete"
+                            Color="Color.Primary"
+                        /> 
+                        Удалить
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
+                       RowsPerPageString="@rowsPerPageString"
+                       InfoFormat="@infoFormat"
+                       AllItemsText="@allItemsText"
+                       />
+    </PagerContent>
+</MudTable>
+@code {
+    private bool _loading = true;
+    private MudTable<PatientInfoDto> _table;
+    private string _searchString;
+    private PatientFilterDto filterModel = new PatientFilterDto();
+    private int _activeTab = 0;
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private IEnumerable<PatientInfoDto> _patients = new List<PatientInfoDto>();
+    private PatientCountDto patientCount = new PatientCountDto();
+    private string rowsPerPageString = "Строк на странице:";
+    private string infoFormat = "{first_item}-{last_item} из {all_items}";
+    private string allItemsText = "Все";
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        _activeTab = user.IsInRole("admin") ? 0 : 8;
+        await LoadUserCentersAsync();
+        _loading = false;
+        await _table.ReloadServerData();
+        StateHasChanged();
+    }
+    private async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                filterModel.MedCenterId = 0;
+            }
+            else
+            {
+                filterModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+            }
+        }
+    }
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+    private void Activate(int index)
+    {
+        _activeTab = index;
+        _table.ReloadServerData();
+    }
+    private (string, Color) GetStatusInfo(long? statusId)
+    {
+        if (!statusId.HasValue) return ("Неизвестно", Color.Default);
+        return statusId switch
+        {
+            2 => ("Архив", Color.Error),
+            6 => ("Фрезениус", Color.Default),
+            7 => ("ФОМС", Color.Warning),
+            8 => ("Новый", Color.Success),
+            _ => ("Неизвестно", Color.Default)
+        };
+    }
+    private async Task FilterModal()
+    {
+        var parameters = new DialogParameters
+        {
+            ["filterModel"] = filterModel,
+            ["UserCenters"] = UserCenters
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<PatientFilter>("Фильтр", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data is PatientFilterDto filter)
+        {
+            filterModel = filter;
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task<TableData<PatientInfoDto>> ServerReload(TableState state)
+    {
+        if (_loading)
+        {
+            return new TableData<PatientInfoDto>
+            {
+                Items = new List<PatientInfoDto>(),
+                TotalItems = 0
+            };
+        }
+        try
+        {
+            _loading = true;
+            var queryParams = new Dictionary<string, string>
+            {
+                ["pageNumber"] = (state.Page + 1).ToString(),
+                ["pageSize"] = state.PageSize.ToString(),
+                ["statusId"] = _activeTab.ToString(),
+                ["medCenterId"] = filterModel.MedCenterId.ToString() ?? "0",
+                ["sortBy"] = state.SortLabel ?? "",
+                ["sortAsc"] = (state.SortDirection == SortDirection.Ascending).ToString().ToLower(),
+                ["searchString"] = _searchString ?? "",
+                ["createdOnDateFrom"] = filterModel.DateTimeFrom?.ToString("yyyy-MM-dd") ?? "",
+                ["createdOnDateTo"] = filterModel.DateTimeTo?.ToString("yyyy-MM-dd") ?? "",
+                ["birthDateFrom"] = filterModel.BirthDateFrom?.ToString("yyyy-MM-dd") ?? "",
+                ["birthDateTo"] = filterModel.BirthDateTo?.ToString("yyyy-MM-dd") ?? ""
+            };
+            var url = QueryHelpers.AddQueryString("api/patient/med-center-patients", queryParams);
+            var response = await _httpClient.GetFromJsonAsync<PagedResponseDto<PatientInfoDto>>(url);
+            await LoadPatientCount(response.PatientCount);
+            return new TableData<PatientInfoDto>
+            {
+                Items = response.Items ?? new List<PatientInfoDto>(),
+                TotalItems = response.TotalItems
+            };
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add(ex.Message, Severity.Error);
+            return new TableData<PatientInfoDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadPatientCount(PatientCountDto patientCountDto)
+    {
+        patientCount = patientCountDto;
+        StateHasChanged();
+    }
+    private async Task AddEditModal(Patient? patient = null)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Patient"] = patient ?? new Patient(),
+            ["UserCenters"] = UserCenters
+        };
+        var title   = patient is null ? "Добавить Пациент" : "Редактировать Пациент";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+
+        var dialog  = _dialogService.Show<MedCenterPatientAddEdit>(title, parameters, options);
+        var result  = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await _table.ReloadServerData();
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+    private async Task DeleteModel(Patient _patient)
+    {
+        try
+        {
+            var confirm = await _dialogService.ShowMessageBox(
+                "Внимание!",
+                $"Вы хотите удалить информацию о пациенте: {_patient.FirstName} {_patient.LastName}?",
+                yesText: "Удалить", cancelText: "Отмена");
+            if (confirm == true)
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/patient/med-center-delete-patient", _patient);
+                var result = await response.ToResult();
+                if (result.Succeeded)
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    await _table.ReloadServerData();
+                    StateHasChanged();
+                }
+            }
+            
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+        _loading = false;
+    }
+    private async Task ViewPatient(long? id)
+    {
+        if (id is null) return;
+        _navigationManager.NavigateTo($"/patient/{id}");
+    }
+    private async Task OpenFiles(long? id)
+    {
+        var parameters = new DialogParameters
+        {
+            { "_patientId", id}
+        };
+        var title   = "Информация и файлы пациента";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+        var dialog  = _dialogService.Show<ProtocolUploadedFiles>(title, parameters, options);
+        var result  = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            StateHasChanged();
+        }
+        _loading = false;
+    }
+}

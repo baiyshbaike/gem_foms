@@ -1,0 +1,232 @@
+﻿@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+<MudForm Model="@HDSession" @ref="_form"  @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudDialog Style="display: flex; flex-direction: column; max-height: 90vh; width: auto;">
+        <DialogContent>
+            <div class="scrollable-dialog-content">
+                <MudGrid>
+                    @if (HDSession.Id ==0)
+                    {
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="searchModel.Inn"
+                                          For="@(() => searchModel.Inn)"
+                                          Label="ИНН"
+                                          Required="true"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudAutocomplete T="MedCenter"
+                                             Required="true"
+                                             Value="_selectedMedCenter"
+                                             ValueChanged="OnMedCenterChanged"
+                                             RequiredError="Мед центр обязателен!"
+                                             MaxItems="1000"
+                                             SearchFunc="@SearchMedCenters"
+                                             ToStringFunc="@(c => c?.Title ?? string.Empty)"
+                                             Label="Мед центр"
+                                             Clearable="true"
+                                             Variant="Variant.Outlined"
+                            />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            @searchModel.Fio
+                        </MudItem>
+                    }
+                    <MudItem xs="12" md="8">
+                        @if (!string.IsNullOrEmpty(HDSession.ImageStart))
+                        {
+                            <img src="@HDSession.ImageStart"/>
+                        }
+                        <br/>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <video id="videoFeed" width="240" height="180"/>
+                        <canvas class="d-none" id="currentFrame" width="320" height="240"/>
+                        <br/>
+                        <MudFab Color="Color.Tertiary" @onclick="CaptureFrame" StartIcon="@Icons.Material.Filled.CameraAlt" DisableElevation="true"/>
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Cancel())" Color="Color.Error">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Submit())" Color="Color.Success">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+<script>
+    window.triggerFileDownload = (fileName, content) => {
+        const byteCharacters = atob(content);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray]);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    };
+</script>
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [Parameter] public HDSession HDSession { get; set; }
+    [Parameter] public IEnumerable<MedCenter> UserCenters { get; set; }
+    private MudForm _form;
+    private string _returnValue;
+    private MedCenter _selectedMedCenter;
+    private SessionFilterDto searchModel = new SessionFilterDto();
+    private bool success;
+    private string[] errors = { };
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                HDSession.MedCenterId = 0;
+            }
+            else
+            {
+                HDSession.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+                _selectedMedCenter = UserCenters.FirstOrDefault();
+            }
+        }
+        await JSRuntime.InvokeVoidAsync("startVideo", "videoFeed");
+        StateHasChanged();
+    }
+    
+    [JSInvokable]
+    public void ProcessImage(string imageString)
+    {
+        HDSession.ImageStart = imageString;
+    }
+
+    private async Task OnMedCenterChanged(MedCenter medCenter)
+    {
+        HDSession.MedCenterId = medCenter.Id;
+        _selectedMedCenter = medCenter;
+    }
+    private async Task<IEnumerable<MedCenter>> SearchMedCenters(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return UserCenters;
+            
+        return UserCenters.Where(x => 
+            x.Title.Contains(value, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+    private async Task Submit()
+    {
+        if (HDSession.PatientId == 0)
+        {
+            _snackBar.Add("Сначала найдите пациента", Severity.Error);
+            return;
+        }
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            try
+            {
+                HDSession.MedCenterId = _selectedMedCenter?.Id ?? 0;
+                var response = await _httpClient.PostAsJsonAsync("api/hdsession/addidentify", HDSession);
+                var result = await response.ToResult();
+                if (!result.Succeeded)
+                {
+                    _snackBar.Add(result.Messages[0], Severity.Error);
+                    MudDialog.Close(DialogResult.Ok(false));
+                }
+                else
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                MudDialog.Close(DialogResult.Ok(_returnValue));
+            }
+            catch (Exception e)
+            {
+                _snackBar.Add(e.Message, Severity.Error);
+                throw;
+            }
+        }
+        else
+        {
+            foreach (var er in errors)
+            {
+                _snackBar.Add(er, Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    
+    private bool ValidateModel(object model)
+    {
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(model);
+        bool isValid = Validator.TryValidateObject(model, validationContext, validationResults, true);
+
+        if (!isValid)
+        {
+            foreach (var error in validationResults)
+            {
+                _snackBar.Add(error.ErrorMessage, Severity.Error);
+            }
+        }
+    
+        return isValid;
+    }
+    private async Task SearchAsync()
+    {
+        if (!ValidateModel(searchModel)) return;
+        try
+        {
+            var response = await Http.GetAsync("api/hdsession/searchpatient?Inn=" + searchModel.Inn);
+            var mappedData = await response.ToResult<Patient>();
+            if (mappedData.Succeeded)
+            {
+                HDSession.PatientId = mappedData.Data.Id;
+                HDSession.Inn = mappedData.Data.Inn;
+                searchModel.Fio = mappedData.Data.LastName + " " + mappedData.Data.FirstName;
+                _snackBar.Add(mappedData.Messages[0], Severity.Success);
+            }
+            else
+            {
+                _snackBar.Add(mappedData.Messages[0], Severity.Error);
+            }
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+       
+    }
+    private async Task CaptureFrame()
+    {
+        await JSRuntime.InvokeAsync<String>("getImageFrame", "videoFeed", "currentFrame", DotNetObjectReference.Create(this));
+    }
+}
+<style>
+    .scrollable-dialog-content {
+        overflow-y: auto;    /* Vertical scrolling only */
+        overflow-x: hidden;  /* Prevent horizontal scrolling */
+        max-height: calc(90vh - 150px); /* Account for header/footer */
+        padding: 8px;
+        width: 100%;
+    }
+</style>

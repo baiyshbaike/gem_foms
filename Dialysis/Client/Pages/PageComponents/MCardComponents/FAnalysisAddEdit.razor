@@ -1,0 +1,531 @@
+﻿<MudForm Model="@AddEditModel" @ref="form" @bind-IsValid="@IsValid">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            <MudGrid>
+            
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Общий анализ крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An1" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An1Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Общий анализ мочи
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An2" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An2Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ крови на креатинин сыворотки крови_
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An3" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An3Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на мочевину сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An4" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An4Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на сахар сыворотки крови на тощак
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An5" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An5Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на сахар после нагрузки едой
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An6" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An6Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на гликогемоглобин
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An7" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An7Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на железо сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An8" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An8Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на ферритин сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An9" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An9Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на калий сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An10" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An10Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на кальций сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An11" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An11Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на натрий сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An12" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An12Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на фосфор сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An13" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An13Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на общий белок сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An14" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An14Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на альбумины сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An15" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An15Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на общий билирубин сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An16" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An16Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на АЛТ сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An17" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An17Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на ACT
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An18" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An18Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+                        <p>&nbsp;</p>
+                        Анализ
+                        крови на параттгормон сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudTextField @bind-Value="AddEditModel.An19" Label="Результат" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.An19Date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="12">
+                        <MudTextField @bind-Value="AddEditModel.Ambulator" Required="true" Label="Амбулаторные
+обследования на:" Lines="2" Variant="Variant.Outlined" />
+                    </MudItem>
+
+
+
+                    <MudItem xs="3" md="3">
+                        <p>&nbsp;</p>
+                        ЭКГ: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        <MudTextField @bind-Value="AddEditModel.Ekg" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.EkgDate" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        <p>&nbsp;</p>
+                        ЭхоКГ: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        <MudTextField @bind-Value="AddEditModel.Eho" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.EhoDate" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        <p>&nbsp;</p>
+                        Рентгенография ОГК: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        <MudTextField @bind-Value="AddEditModel.Ogk" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.OgkDate" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        <p>&nbsp;</p>
+                        УЗИ внутренних органов: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        <MudTextField @bind-Value="AddEditModel.Uzi" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.UziDate" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        <p>&nbsp;</p>
+                        Консультации узких специалистов (эндокринолога, кардиолога, сосудистого хирурга и т.д.): (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        <MudTextField @bind-Value="AddEditModel.Uzi2" />
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            <p>&nbsp;</p>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        <MudDatePicker Label="" @bind-Date="@AddEditModel.UziDate2" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <h4>ОБОСНОВАНИЕ КЛИНИЧЕСКОГО ДИАГНОЗА</h4>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudDatePicker Label="Дата/время" @bind-Date="@AddEditModel.PlanningDate" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField @bind-Value="AddEditModel.Planning" Required="true" Label="ПЛАН ОБСЛЕДОВАНИЯ" Lines="4" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField @bind-Value="AddEditModel.Individual" Required="true" Label="ИНДИВИДУАЛЬНЫЙ ПЛАН ЛЕЧЕНИЯ" Lines="4" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField @bind-Value="AddEditModel.Recommend" Required="true" Label="ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ" Lines="4" Variant="Variant.Outlined" />
+                    </MudItem>
+
+
+                <MudItem xs="12" md="2">
+                </MudItem>
+                </MudGrid>
+             
+             </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success" Disabled="@(IsValid==false)">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]public long MedCardId { get; set; }
+
+    [Parameter]public FirstAnalysis AddEditModel { get; set; } = new FirstAnalysis();
+    MudForm form;
+
+    private bool IsDisabled = true;
+    private bool IsValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addfan", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

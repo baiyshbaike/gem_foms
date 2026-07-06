@@ -1,0 +1,184 @@
+﻿@page "/inddetail/{id:long}/{mid:long}/{MCenterName}"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+@* <MudBreadcrumbs Items="_items"> *@
+@*     <ItemTemplate Context="item"> *@
+@*         <MudLink Href="@item.Href">@item.Text</MudLink> *@
+@*     </ItemTemplate> *@
+@* </MudBreadcrumbs> *@
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudGrid>
+            <MudItem xs="12" md="12">
+            Индикаторы мониторинга исполнения договора за @AddEditModel.Title @AddEditModel.startIndicator?.ToString("dd.MM.yyyy") - @AddEditModel.endIndicator?.ToString("dd.MM.yyyy")
+            </MudItem>
+           
+            <MudItem xs="5" md="5">
+                <MudText Typo="Typo.subtitle2" Style="font-weight:500;">Индикатор</MudText>
+            </MudItem>
+            <MudItem xs="1" md="1">
+                План(абс)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                План(%)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                Факт(абс)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                Факт(%)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                Измен.(абс)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                Измен.(%)
+            </MudItem>
+            <MudItem xs="1" md="1">
+                Порог(%)
+            </MudItem>
+
+                <MudItem xs="5" md="5">
+                    Количество пациентов всего
+                </MudItem>
+                <MudItem xs="1" md="1">
+                    @AddEditModel.IndicatorRows[0].Plan1
+                </MudItem>
+                <MudItem xs="1" md="1">
+               @AddEditModel.IndicatorRows[0].Plan2
+                </MudItem>
+                <MudItem xs="1" md="1">
+                   @AddEditModel.IndicatorRows[0].Fact1
+                </MudItem>
+                <MudItem xs="1" md="1">
+               @AddEditModel.IndicatorRows[0].Fact2
+                </MudItem>
+                <MudItem xs="1" md="1">
+                   @AddEditModel.IndicatorRows[0].Change1
+                </MudItem>
+                <MudItem xs="1" md="1">
+               @AddEditModel.IndicatorRows[0].Change2
+                </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[0].Threshold
+            </MudItem>
+
+            <MudItem xs="5" md="5">
+                Количество пациентов, получаюших программный гемодиализ не менее 3 раз в календарную неделю
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Plan1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Plan2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Fact1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Fact2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Change1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Change2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[1].Threshold
+            </MudItem>
+
+            <MudItem xs="5" md="5">
+                Количество пациентов с показателем диализа sp Kt/v > 1.4 или eKtv > 1.2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Plan1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Plan2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Fact1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Fact2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Change1
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Change2
+            </MudItem>
+            <MudItem xs="1" md="1">
+                @AddEditModel.IndicatorRows[2].Threshold
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+            </MudItem>
+            
+                </MudGrid>
+  
+                </MudContainer>
+
+@code {
+    MudForm form;
+
+    [Parameter]
+    public long id { get; set; }
+    [Parameter]
+    public long? mid { get; set; }
+    [Parameter]
+    public string MCenterName { get; set; }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Мед. центр и гос. ОЗ", href: "/mcenters")
+    };
+
+    private IEnumerable<IndicatorReference> RefList = new List<IndicatorReference>();
+    private List<IndicatorRow> RowList = new List<IndicatorRow>();
+    public IndicatorPostArgs AddEditModel { get; set; } = new IndicatorPostArgs();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRefDataAsync();
+        _items.Add(new BreadcrumbItem(MCenterName, href: "/indlist/" + mid + "/" + MCenterName));
+        _items.Add(new BreadcrumbItem("Индикаторы", href:null ));
+   
+    }
+
+
+    private async Task LoadRefDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allindref");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<IndicatorReference>>();
+        RefList = mappedData.Data;
+        await LoadRowListAsync();
+    }
+
+    private async Task LoadRowListAsync()
+    {
+        var response = await Http.GetAsync("api/medcenter/IndDetail?id="+id);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<IndicatorPostArgs>();
+        AddEditModel = mappedData.Data;
+        if (AddEditModel != null)
+        {
+            RowList = AddEditModel.IndicatorRows;
+        }
+    }
+
+   
+
+}
+

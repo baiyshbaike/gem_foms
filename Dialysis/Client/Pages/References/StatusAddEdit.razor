@@ -1,0 +1,68 @@
+﻿<EditForm Model="@AddEditModel" OnValidSubmit="SaveAsync">
+
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить статус
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать статус
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.Title)" @bind-Value="AddEditModel.Title" Label="Название" />
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Status AddEditModel { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/status/addstatus", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

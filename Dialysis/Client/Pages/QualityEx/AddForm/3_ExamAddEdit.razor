@@ -1,0 +1,1030 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+<style>
+    .mud-input > input.mud-input-root-outlined, div.mud-input-slot.mud-input-root-outlined {
+        padding: 5px 10px;
+    }
+
+    label {
+        display: inline;
+    }
+</style>
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Style="max-height: 500px; overflow-y: scroll">
+    <EditForm Model="@AddEditModel" OnValidSubmit="SaveAsync">
+         <MudDialog>
+        <TitleContent>
+           
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+               
+        </TitleContent>
+        <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="12">
+                <div>
+
+
+
+                            <p class=MsoNoSpacing style='text-align:justify;text-indent:1.0cm'>
+                                <span style='font-size:14.0pt;font-family:"Times New Roman","serif"'><o:p>&nbsp;</o:p></span>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;line-height:normal'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>Экспертиза качества проведенных сеансов ГД/ГДФ<o:p></o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;line-height:normal'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>Форма №11 ОМС/о (</span>
+                                </b><b style='mso-bidi-font-weight:
+normal'>
+                                    <span lang=KY style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman";mso-ansi-language:KY'>
+                                        по итогам
+                                        полугодия
+                                    </span>
+                                </b><b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>)<o:p></o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;line-height:normal'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>Отчет за  <MudDatePicker Label="" @bind-Date="date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />.<o:p></o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+text-align:center;line-height:normal'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'><o:p>&nbsp;</o:p></span>
+                                </b>
+                            </p>
+
+                            <table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0 width=1048
+                                   style='width:786.05pt;margin-left:-15.0pt;border-collapse:collapse;border:
+ none;mso-border-alt:solid black .5pt;mso-yfti-tbllook:1184;mso-padding-alt:
+ 0cm 5.4pt 0cm 5.4pt;mso-border-insideh:.5pt solid black;mso-border-insidev:
+ .5pt solid black'>
+                                <tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;page-break-inside:avoid;
+  height:29.4pt'>
+                                    <td width=93 rowspan=2 valign=top style='width:70.05pt;border:solid black 1.0pt;
+  mso-border-alt:solid black .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Наименова
+                                                    ние <span style='mso-spacerun:yes'>         </span>Центра гемодиализа<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=56 rowspan=2 valign=top style='width:41.7pt;border:solid black 1.0pt;
+  border-left:none;mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:29.4pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Кол-во мед.карт, подлежащих
+                                                    экспертизе<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=162 colspan=3 valign=top style='width:121.3pt;border-top:solid black 1.0pt;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  mso-border-bottom-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;
+  height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Количество
+                                                    актов<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=57 rowspan=2 valign=top style='width:42.5pt;border:solid black 1.0pt;
+  border-left:none;mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:29.4pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>Количество дефектных случаев<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=265 colspan=4 valign=top style='width:7.0cm;border-top:solid black 1.0pt;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  mso-border-bottom-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;
+  height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Дефекты
+                                                    обследования<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=198 colspan=3 valign=top style='width:148.85pt;border-top:solid black 1.0pt;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  mso-border-bottom-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;
+  height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-bottom:0cm;margin-bottom:.0001pt;
+  text-align:center;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Дефекты
+                                                    лечения<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=76 rowspan=2 valign=top style='width:2.0cm;border-top:solid black 1.0pt;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  mso-border-bottom-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;
+  mso-rotate:90;height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-top:0cm;margin-right:5.65pt;
+  margin-bottom:0cm;margin-left:5.65pt;margin-bottom:.0001pt;text-align:center;
+  line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Целевые
+                                                    уровни эффективности и качества не достигнуты<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=76 rowspan=2 valign=top style='width:2.0cm;border-top:solid windowtext 1.0pt;
+  border-left:none;border-bottom:solid black 1.0pt;border-right:solid black 1.0pt;
+  mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  mso-border-top-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;
+  mso-rotate:90;height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-top:0cm;margin-right:5.65pt;
+  margin-bottom:0cm;margin-left:5.65pt;margin-bottom:.0001pt;text-align:center;
+  line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Дефект
+                                                    оформления медицинской документации<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 rowspan=2 valign=top style='width:49.8pt;border:solid black 1.0pt;
+  border-left:none;mso-border-left-alt:solid black .5pt;mso-border-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:29.4pt'>
+                                        <p class=MsoNormal align=center style='margin-top:0cm;margin-right:5.65pt;
+  margin-bottom:0cm;margin-left:5.65pt;margin-bottom:.0001pt;text-align:center;
+  line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                                    Отсутствие
+                                                    в протоколах сеанса всех параметров<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr style='mso-yfti-irow:1;page-break-inside:avoid;height:176.55pt'>
+                                    <td width=48 valign=top style='width:36.25pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>всего<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=57 valign=top style='width:42.5pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:
+  90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>Без дефектов<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=57 valign=top style='width:42.55pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-right-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>С дефектами<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 valign=top style='width:49.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>Всего<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 valign=top style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Отсутствие обязательных лабораторных
+                                                    исследований<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 valign=top style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:
+  90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Отсутствие обязательных инструментальных
+                                                    исследований<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 valign=top style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-right-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Отсутствие консультаций узких
+                                                    специалистов<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=57 valign=top style='width:42.55pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>Всего<o:p></o:p></span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=66 valign=top style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-left-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Возникновение осложнений<span style='mso-spacerun:yes'>  </span>после проведенных сеансов ГД/ГДФ<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                    <td width=76 valign=top style='width:2.0cm;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid black 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;mso-border-right-alt:solid black .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;mso-rotate:90;height:176.55pt'>
+                                        <p class=MsoNormal style='margin-top:0cm;margin-right:5.65pt;margin-bottom:
+  0cm;margin-left:5.65pt;margin-bottom:.0001pt;line-height:normal'>
+                                            <b style='mso-bidi-font-weight:normal'>
+                                                <span style='font-family:"Times New Roman","serif";
+  mso-fareast-font-family:"Times New Roman"'>
+                                                    Отсутствие лечения анемии
+                                                    препаратами железа и эритропоэтином<o:p></o:p>
+                                                </span>
+                                            </b>
+                                        </p>
+                                    </td>
+                                </tr>
+
+                                 @foreach (var item in dynList)
+                                {
+                                     <tr style='mso-yfti-irow:2;page-break-inside:avoid;height:20.15pt'>
+                                    <td width=93 >
+                                            <MudTextField @bind-Value="item.Organisation" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=56>
+                                            <MudTextField @bind-Value="item.TotalMedCard" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=48>
+                                        <MudTextField @bind-Value="item.TotalSession" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=57>
+                                            <MudTextField @bind-Value="item.TotalDefects" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=57>
+                                       <MudTextField @bind-Value="item.TotalNotDefects" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=57>
+                                            <MudTextField @bind-Value="item.Defects" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66 >
+                                       <MudTextField @bind-Value="item.DefectsTotal" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66 >
+                                        <MudTextField @bind-Value="item.Defects1" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66>
+                                       <MudTextField @bind-Value="item.Defects2" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66>
+                                            <MudTextField @bind-Value="item.DefectTreatment" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=57>
+                                        <MudTextField @bind-Value="item.DefectTreatment1" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66>
+                                            <MudTextField @bind-Value="item.DefectTreatment2" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=76>
+                                        <MudTextField @bind-Value="item.Extra1" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=76>
+                                        <MudTextField @bind-Value="item.Extra2" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=76>
+                                      <MudTextField @bind-Value="item.Extra3" Label="" Lines="1" Variant="Variant.Outlined" />
+                                    </td>
+                                    <td width=66>
+                                        
+                                    </td>
+                                </tr>
+                                   
+
+                                }
+
+                               
+                             
+
+
+
+
+
+                            </table>
+
+                            <p class=MsoNormal style='text-align:justify;line-height:150%'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;line-height:
+150%;font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                        <span style='mso-tab-count:2'>                        </span><o:p></o:p>
+                                    </span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal style='text-align:justify;line-height:150%'>
+                                <b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;line-height:
+150%;font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                        <span style='mso-spacerun:yes'>           </span>Начальник ОЭК ТУ ФОМС
+                                    </span>
+                                </b><span style='font-size:11.0pt;line-height:150%;mso-fareast-font-family:"Times New Roman"'>
+                                    <span style='mso-spacerun:yes'>     </span>__________________<span style='mso-spacerun:yes'>
+                                    </span>_______________________________<span style='mso-spacerun:yes'>
+                                    </span><span style='mso-tab-count:2'>                               </span>
+                                </span><b style='mso-bidi-font-weight:normal'>
+                                    <span style='font-size:12.0pt;line-height:
+150%;font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                        Директор
+                                        ТУ ФОМС<span style='mso-spacerun:yes'>
+                                        </span>_________________<span style='mso-spacerun:yes'>
+                                        </span>_____________________________<o:p></o:p>
+                                    </span>
+                                </b>
+                            </p>
+
+                        </div>
+
+                        <span style='font-size:14.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+Calibri;mso-ansi-language:RU;mso-fareast-language:RU;mso-bidi-language:AR-SA'>
+                            <br clear=all style='page-break-before:always;mso-break-type:section-break'>
+                        </span>
+
+                        <div class=WordSection3>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:35.45pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;page-break-after:avoid;mso-outline-level:2;tab-stops:21.3pt'>
+                                <b>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>Инструкция<o:p></o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:35.45pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;tab-stops:21.3pt'>
+                                <b>
+                                    <span style='font-size:12.0pt;
+font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                        по
+                                        заполнению отчетной формы №11 ОМС/о<span style='mso-spacerun:yes'>  </span>(по
+                                        итогам полугодий)<o:p></o:p>
+                                    </span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:35.45pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;tab-stops:21.3pt'>
+                                <b>
+                                    <span style='font-size:12.0pt;
+font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                        «Экспертиза
+                                        качества проведенных сеансов диализа»<o:p></o:p>
+                                    </span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:35.45pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;tab-stops:21.3pt'>
+                                <b>
+                                    <span style='font-size:12.0pt;
+font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;tab-stops:0cm 21.3pt 5.0cm 248.1pt'>
+                                <b style='mso-bidi-font-weight:
+normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>I. Общие положения <o:p></o:p></span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        1.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Отчетная форма №11 ОМС/о<span style='mso-bidi-font-weight:bold'> </span>является документом ведомственной
+                                    отчетности по экспертизе качества медицинских услуг в организациях
+                                    здравоохранения.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        2.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Отчетная форма №11 ОМС/о служит
+                                    основанием для проведения анализа по экспертизе качества медицинских услуг,
+                                    предоставляемых пациентам за отчетный период. <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        3.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Директор территориального управления
+                                    Фонда ОМС несет персональную ответственность за своевременность и качество
+                                    составления отчетных форм №11 ОМС/о. <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        4.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Отчетная форма №11 ОМС/о
+                                    автоматически формируется программой<span style='mso-spacerun:yes'>
+                                    </span>«Экспертиза качества» в виде электронной таблицы «Exсel» в абсолютных
+                                    числах на основании электронных актов медицинской экспертизы проведенных
+                                    сеансов диализа (формы №11 ОМС/у), заполненных специалистами ОЭК ТУ ФОМС по
+                                    результатам проведенных экспертиз качества медицинских услуг в организациях
+                                    здравоохранения. <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        5.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Отчетная форма №11 ОМС/о формируется
+                                    как на территориальном, так и на центральном уровне.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        6.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Сформированный отчет по форме №11
+                                    ОМС/о в абсолютных числах в виде электронных таблиц «Exсel», а также
+                                    отсканированный вариант отчета с подписями начальника отдела экспертизы
+                                    качества и директора ТУ ФОМС, заверенный печатью ТУ ФОМС, должен быть
+                                    представлен начальником отдела экспертизы качества в сектор по мониторингу
+                                    заместительной почечной терапии при Управлении контроля и анализа качества
+                                    медицинской помощи Фонда ОМС по электронной почте не позднее 5-го числа,
+                                    следующего за отчетным периодом.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        7.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Координация и регулирование работы
+                                    базы данных, а также программы<span style='mso-spacerun:yes'>
+                                    </span>«Экспертиза качества» ведется специалистами отдела
+                                    информационно-технического обеспечения на центральном и территориальном
+                                    уровнях. <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;line-height:normal;
+tab-stops:21.3pt'>
+                                <span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span>
+                            </p>
+
+                            <p class=MsoNormal align=center style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;text-align:center;
+line-height:normal;tab-stops:0cm 21.3pt 5.0cm 248.1pt'>
+                                <b style='mso-bidi-font-weight:
+normal'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                        II. Порядок заполнения отчетной
+                                        формы №11 ОМС/о<o:p></o:p>
+                                    </span>
+                                </b>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        8.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 1 проставляется наименование
+                                    организации здравоохранения. <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        9.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 2 проставляется количество
+                                    медицинских карт, подлежащих экспертизе.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        10.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 3 проставляется общее количество
+                                    актов на проэкспертированные медицинские карты за отчетный период.<span style='mso-spacerun:yes'>  </span>Данные графы 3 равны сумме данных граф 4 и 5.
+                                    <o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        11.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Графа 4 «Количество актов без
+                                    дефектов» формируется из суммы количества протоколов сеанса диализа из акта
+                                    формы №11-1 ОМС/у.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        12.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    Графа 5 «Количество актов с
+                                    дефектами» складывается из суммы количества акта формы №11 ОМС/у.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        13.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 6 проставляется общее
+                                    количество дефектных случаев. Данные графы 6 равны сумме данных граф 7, 11, 15,
+                                    16, 17, 18.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        14.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 7 проставляется общее
+                                    количество дефектных случаев обследования. Данные графы 7 равны сумме данных
+                                    граф 8, 9, 10.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        15.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 8 проставляется число
+                                    дефектных случаев с отсутствием обязательных лабораторных исследований и
+                                    формируется из суммы количества ответов «нет»<span style='mso-spacerun:yes'>            </span>п.5.1. акта медицинской экспертизы
+                                    проведенных сеансов диализа.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        16.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 9 проставляется число
+                                    дефектных случаев с отсутствием обязательных инструментальных исследований и
+                                    формируется из суммы количества ответов «нет» п.5.2. акта медицинской
+                                    экспертизы проведенных сеансов диализа.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        17.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 10 проставляется число
+                                    дефектных случаев с отсутствием консультаций узких специалистов
+                                </span><span style='font-size:14.0pt;mso-bidi-font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'> </span><span style='font-size:12.0pt;
+font-family:"Times New Roman","serif";mso-fareast-font-family:"Times New Roman"'>
+                                    и
+                                    формируется из суммы количества ответов «нет» п.5.3. акта медицинской
+                                    экспертизы проведенных сеансов диализа.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        18.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 11 проставляется общее
+                                    количество дефектных случаев лечения. Данные графы 11 равны сумме данных граф
+                                    12, 13, 14.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        19.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 12 проставляется число
+                                    дефектных случаев с возникновением осложнений после проведенных сеансов диализа
+                                    и формируется из суммы количества ответов «да» п.6.1. акта медицинской экспертизы
+                                    проведенных сеансов диализа.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:36.0pt;margin-bottom:.0001pt;text-align:justify;text-indent:-18.0pt;
+line-height:normal;mso-list:l0 level1 lfo3;tab-stops:21.3pt'>
+                                <![if !supportLists]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman"'>
+                                    <span style='mso-list:Ignore'>
+                                        20.<span style='font:7.0pt "Times New Roman"'>
+                                            &nbsp;
+                                        </span>
+                                    </span>
+                                </span><![endif]><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+mso-fareast-font-family:"Times New Roman"'>
+                                    В графе 13 проставляется число
+                                    дефектных случаев с отсутствием лечения анемии препаратами железа и
+                                    эритропоэтином и формируется из суммы количества ответов «нет» п.6.2. акта
+                                    медицинской экспертизы проведенных сеансов диализа.<o:p></o:p>
+                                </span>
+                            </p>
+
+                            <ol style='margin-top:0cm' start=21 type=1>
+                                <li class=MsoNormalCxSpMiddle style='margin-bottom:0cm;margin-bottom:.0001pt;
+     mso-add-space:auto;line-height:normal;mso-list:l0 level1 lfo3'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-language:
+     EN-US'>
+                                        В графе 14 проставляется число дефектных случаев с недостигнутыми
+                                        целевыми уровнями эффективности и качества услуги
+                                    </span><span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+     "Times New Roman"'>
+                                        и формируется из суммы количества ответов «не
+                                        достигнуты» п.6.3 акта медицинской экспертизы проведенных сеансов диализа. <o:p></o:p>
+                                    </span>
+                                </li>
+                                <li class=MsoNormalCxSpMiddle style='margin-bottom:0cm;margin-bottom:.0001pt;
+     mso-add-space:auto;line-height:normal;mso-list:l0 level1 lfo3'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+     "Times New Roman"'><span style='mso-spacerun:yes'> </span></span><span style='font-size:12.0pt;mso-bidi-font-size:11.0pt;font-family:"Times New Roman","serif";
+     mso-fareast-language:EN-US'>
+                                        В графе 15 проставляется число случаев с
+                                        дефектами оформления медицинской документации и формируется из суммы
+                                        количества ответов «да» п.8 акта медицинской экспертизы проведенных
+                                        сеансов диализа.
+                                    </span><span style='font-size:12.0pt;font-family:"Times New Roman","serif";
+     mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span>
+                                </li>
+                                <li class=MsoNormalCxSpLast style='margin-bottom:0cm;margin-bottom:.0001pt;
+     mso-add-space:auto;line-height:normal;mso-list:l0 level1 lfo3'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+     "Times New Roman"'>
+                                        В графе 16 проставляется число дефектных случаев с
+                                        отсутствием в протоколах сеанса всех параметров и формируется из суммы
+                                        количества ответов «нет» п.9 акта медицинской экспертизы проведенных
+                                        сеансов диализа.<o:p></o:p>
+                                    </span>
+                                </li>
+                                <li class=MsoNormalCxSpLast style='margin-bottom:0cm;margin-bottom:.0001pt;
+     mso-add-space:auto;line-height:normal;mso-list:l0 level1 lfo3'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+     "Times New Roman"'>
+                                        В графе 17 проставляется число случаев с дефектами заполнения карты наблюдения 
+                                        за фистулой и формируется из суммы количества ответов «да» п.9 акта медицинской 
+                                        экспертизы проведенных сеансов диализа.<o:p></o:p>
+                                    </span>
+                                </li>
+                                <li class=MsoNormalCxSpLast style='margin-bottom:0cm;margin-bottom:.0001pt;
+     mso-add-space:auto;line-height:normal;mso-list:l0 level1 lfo3'>
+                                    <span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+     "Times New Roman"'>
+                                        В графе 18 проставляется число дефектных случаев с отсутствием в протоколах сеанса
+                                        всех параметров и формируется из суммы количества ответов «нет» п.10 акта медицинской 
+                                        экспертизы проведенных сеансов диализа.<o:p></o:p>
+                                    </span>
+                                </li>
+                            </ol>
+
+                            <p class=MsoNoSpacing style='text-align:justify;text-indent:1.0cm'>
+                                <span style='font-size:14.0pt;font-family:"Times New Roman","serif"'><o:p>&nbsp;</o:p></span>
+                            </p>
+
+
+
+
+                </div>
+            </MudItem>
+        </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+</MudContainer>
+
+ @code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    MudForm form;
+    public Exam3Dto AddEditModel { get; set; } = new();
+    public List<QualityExam3Row> dynList = new  List<QualityExam3Row>();
+
+
+    DateTime? date = null;
+    DateTime? date1 = null;
+    DateTime? date2 = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        for(var i=0; i < 5; i++)
+        {
+            dynList.Add(new QualityExam3Row() { });
+        }
+        AddEditModel.QualityExam3 = new QualityExam3();
+        StateHasChanged();
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private async Task SaveAsync()
+    {
+        
+            //await _commonService.LocalMedCard0Async(AddEditModel);
+            //_navigationManager.NavigateTo("/mcardadd1");
+        //if (!result.Succeeded)
+        //{
+         //   _snackBar.Add(result.Messages[0], Severity.Error);
+         //   MudDialog.Close(DialogResult.Ok(false));
+        //}
+        //else
+        //{
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        //}
+           
+    }
+}

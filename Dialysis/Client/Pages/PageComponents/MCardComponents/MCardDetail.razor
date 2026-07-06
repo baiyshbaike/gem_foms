@@ -1,0 +1,304 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@{
+    if (item != null)
+    {
+        <MudGrid>
+            <MudItem xs="12" md="3" Style="text-align:right;">
+                <MudButton Variant="Variant.Filled" @onclick="@(async()=> await PrintModal(item.MedCard.Id))" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Печать</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="3" Style="text-align:right;">
+                <MudButton Variant="Variant.Filled" @onclick="@(()=> {_navigationManager.NavigateTo($"/mcardeditform/{item.MedCard.Id}");})" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Редактировать</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <table style="width:100%; font-size:13px; line-height:14px; padding:6px;">
+                    <thead>
+                        <tr style="height:5px;">
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <!--!-->
+                    <tbody>
+                        <tr>
+                            <td class="label-td">ИНН</td>
+                            <td>@item.Patient.Inn</td>
+                            <td class="label-td">ФИО</td>
+                            <td>@item.Patient.LastName  @item.Patient.FirstName</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Номер паспорта</td>
+                            <td>@item.MedCard.PassportNum</td>
+                            <td class="label-td">Пол</td>
+                            <td>@gender</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Дата рождения</td>
+                            <td>@item.Patient.BirthDate?.ToString("dd.MM.yyyy")</td>
+                            <td class="label-td">Возрвст</td>
+                            <td>@age</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Контакты</td>
+                            <td>@item.Patient.Phone</td>
+                            <td class="label-td">Оюласть/район/село или город проживания</td>
+                            <td>@region</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Мед. центр</td>
+                            <td>@item.MedCenter.Title</td>
+                            <td class="label-td">Номер протокола М3 К</td>
+                            <td>@item.MedCard.M3</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Дата выписки</td>
+                            <td>@item.MedCard.DirectionDate?.ToString("dd.MM.yyyy")</td>
+                            <td class="label-td">Дата поступления</td>
+                            <td>@item.MedCard.ReceiptDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Время выписки</td>
+                            <td>@item.MedCard.DirectionTime?.ToString(@"hh\:mm\:ss")</td>
+                            <td class="label-td">Время поступления</td>
+                            <td>@item.MedCard.ReceiptTime?.ToString(@"hh\:mm\:ss")</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Группа крови</td>
+                            <td>@item.MedCard.Blood</td>
+                            <td class="label-td">Резус-принадлежность</td>
+                            <td>@item.MedCard.Resus</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Проведено сеансов гемодиализа за период лечения</td>
+                            <td>@item.MedCard.ConductedHemodialysis</td>
+                            <td class="label-td"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Аллергологический анамнез: (лекарственная или другая непереносимость)</td>
+                            <td>@item.MedCard.AllergoAnamez</td>
+                            <td class="label-td"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Исход лечения</td>
+                            <td>@item.MedCard.OutTreatment</td>
+                            <td class="label-td">Больной ознакомлен: с режимом стайионара</td>
+                            <td>@item.MedCard.Familiarized</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Педикулез</td>
+                            <td>@item.MedCard.Pedikulez</td>
+                            <td class="label-td">Чесотка</td>
+                            <td>@item.MedCard.Chesotka</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Глистная инвазия реакция вассермана</td>
+                            <td>@item.MedCard.Vassermana</td>
+                            <td class="label-td">Флюорография</td>
+                            <td>@item.MedCard.Fluorografia</td>
+                        </tr>
+
+                        <tr>
+                            <td class="label-td">Алкоголь</td>
+                            <td>@item.MedCard.Alchohol</td>
+                            <td class="label-td"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Статус на ВГВ</td>
+                            <td>@item.MedCard.Vgv</td>
+                            <td class="label-td">Дата ВГВ</td>
+                            <td>@item.MedCard.VgvDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Статус на ВГС</td>
+                            <td>@item.MedCard.Vgs</td>
+                            <td class="label-td">Дата ВГС</td>
+                            <td>@item.MedCard.VgsDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Статус на ВИЧ.СПИД</td>
+                            <td>@item.MedCard.Vich</td>
+                            <td class="label-td">Дата ВИЧ</td>
+                            <td>@item.MedCard.VichDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Код МКБ</th>
+                            <th>Дата уст.</th>
+                            <th>Время уст.</th>
+                            <th>#</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="label-td">Основной диагноз</td>
+                            <td>@item.MedCard.MainDiagnosisCode</td>
+                            <td>@item.MedCard.MainDiagnosisDate?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.MainDiagnosisTime?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.MainDiagnosis</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Осложнения основного заболевания 1</td>
+                            <td>@item.MedCard.Complication1Code</td>
+                            <td>@item.MedCard.Complication1Date?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.Complication1Time?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.Complication1</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Осложнения основного заболевания 2</td>
+                            <td>@item.MedCard.Complication2Code</td>
+                            <td>@item.MedCard.Complication2Date?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.Complication2Time?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.Complication2</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Осложнения основного заболевания 3</td>
+                            <td>@item.MedCard.Complication3Code</td>
+                            <td>@item.MedCard.Complication3Date?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.Complication3Time?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.Complication3</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Сопутств. Диагноз 1</td>
+                            <td>@item.MedCard.Diagnosis1Code</td>
+                            <td>@item.MedCard.Diagnosis1Date?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.Diagnosis1Time?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.Diagnosis1</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Сопутств. Диагноз 2</td>
+                            <td>@item.MedCard.Diagnosis2Code </td>
+                            <td>@item.MedCard.Diagnosis2Date?.ToString("dd.MM.yyyy") </td>
+                            <td>@item.MedCard.Diagnosis2Time?.ToString(@"hh\:mm\:ss") </td>
+                            <td>@item.MedCard.Diagnosis2 </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label-td">Сопутств. Диагноз 3</td>
+                            <td>@item.MedCard.Diagnosis3Code</td>
+                            <td>@item.MedCard.Diagnosis3Date?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.Diagnosis3Time?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.Diagnosis3</td>
+                        </tr>
+                        <tr>
+                            <td class="label-td">Другое</td>
+                            <td>@item.MedCard.OtherABCode</td>
+                            <td>@item.MedCard.OtherABDate?.ToString("dd.MM.yyyy")</td>
+                            <td>@item.MedCard.OtherABTime?.ToString(@"hh\:mm\:ss")</td>
+                            <td>@item.MedCard.OtherAB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </MudItem>
+        </MudGrid>
+        
+      
+    }
+}
+
+@code {
+    [Parameter]
+    public long MedCardId { get; set; }
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+    public string region = "";
+    public string gender = "";
+    public string age = "";
+    DateTime dateTime = DateTime.Now;
+    private MedCardDto item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        await LoadDistrictRegion();
+        gender = item.Patient.Gender ? "Муж" : "Жен";
+        DateTime dateTimeItem = (DateTime)item.Patient.BirthDate;
+        age = (dateTime.Year - dateTimeItem.Year).ToString();
+    }
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/carddetail?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            var mappedData = await response.ToResult<MedCardDto>();
+            item = mappedData.Data;             
+        }
+    }
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+    }
+    private async Task LoadDistDefaultRegionsAsync()
+    {
+        var response = await Http.GetAsync("api/region/allregions");
+        var mappedData = await response.ToResult<List<Region>>();
+        RegionList = mappedData.Data;
+
+    }
+    private async Task LoadDistrictRegion()
+    {
+        await LoadDistrictsAsync();
+        await LoadDistDefaultRegionsAsync();
+        foreach(var district in Elements)
+        {
+            if (district.Id == item.Patient.DistrictId)
+            {
+                region +=district.Title;
+            }
+        }
+        foreach( var district in RegionList)
+        {
+            if(district.Id == item.Patient.RegionId)
+            {
+                region += district.Title;
+            }
+        }
+        region += item.Patient.Address;
+    }
+    private async Task PrintModal(long id)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("MedCardId", id);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<Dialysis.Client.Pages.MCard.McardPrintForm>("Подробности", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+    /*
+    private async Task AddEditModal(long id=0)
+    {
+        var locId = 0;
+        var parameters = new DialogParameters();
+        parameters.Add("MedCardId", id);
+        parameters.Add("AddEditModel", item.MedCard);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<MCardAddEdit>("Редактировать", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }*/
+}

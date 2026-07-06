@@ -1,0 +1,279 @@
+@page "/gridpatients"
+
+@using DevExpress.Blazor
+@using DevExpress.Data.Filtering
+@using DevExpress.Export
+@using Dialysis.Shared.Dto.GridPatients
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+&nbsp;&nbsp;&nbsp;&nbsp;
+<DxButton Text="Выберите столбцы"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="OnClickColumns" />
+&nbsp;&nbsp;
+<DxButton Text="Скачать"
+          RenderStyle="ButtonRenderStyle.Primary"
+          CssClass="column-chooser-button"
+          Click="@(async() => await ExportXlsx_Click())" />
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <DxGrid @ref="Grid"
+            Data="@Data2"
+            ShowGroupPanel="true"
+            ShowFilterRow="true"
+            PageSizeSelectorVisible="true"
+            PageSizeSelectorAllRowsItemVisible="true"
+            PageSizeSelectorItems="@(new int[] { 50,100,500 })"
+            CustomizeCellDisplayText="Grid_CustomizeCellDisplayText">
+        <Columns>
+            <DxGridDataColumn FieldName="Id" Caption="Код" Width="120px" />
+            <DxGridDataColumn FieldName="GroupId" Caption="Статус" AllowGroup="true" AllowSort="false" Width="150">
+                <FilterRowCellTemplate>
+                    <DxComboBox Value="(long?)context.FilterRowValue"
+                                ValueChanged="(long? v) => context.FilterRowValue = v"
+                                Data="PatientGroupList" ValueFieldName="Id" TextFieldName="Title"
+                                FilteringMode="DataGridFilteringMode.Contains"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                </FilterRowCellTemplate>
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Inn" Caption="ПИН" Width="180px" AllowGroup="true" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="LastName" Caption="Фамилия" Width="120px" MinWidth="100" TextAlignment="GridTextAlignment.Center" AllowGroup="false" AllowSort="true">                
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="FirstName" Caption="Имя" MinWidth="120" AllowGroup="false">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="MiddleName" Caption="Отчество" MinWidth="100" AllowGroup="false" Visible="false">
+            </DxGridDataColumn>            
+            <DxGridDataColumn FieldName="BirthDate" Caption="Дата рождения" Width="100px" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="CreatedOn" Caption="Дата направления" Width="100px" MinWidth="100" />
+            <DxGridDataColumn FieldName="DeletedOn" Caption="Дата выб." Width="100px" MinWidth="100" />
+            <DxGridDataColumn FieldName="GroupReason" Caption="Основание" MinWidth="100" AllowGroup="true" />
+            <DxGridDataColumn FieldName="DistrictId" Caption="Область/Город" Width="100px" MinWidth="100" AllowGroup="true" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="RegionId" Caption="Район" Width="100px" MinWidth="100" AllowGroup="true" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+
+            <DxGridDataColumn FieldName="Gender" Caption="Пол" Width="80px" TextAlignment="GridTextAlignment.Left">
+                <CellDisplayTemplate>
+                    @if ((bool)context.Value == true)
+                    {
+                        <span>Муж</span>
+                    }
+                    else
+                    {
+                        <span>Жен</span>
+                    }
+                </CellDisplayTemplate>
+                <FilterRowCellTemplate>
+                    <DxComboBox Value="(bool?)context.FilterRowValue"
+                                ValueChanged="(bool? v) => context.FilterRowValue = v"
+                                Data="GenderStates" ValueFieldName="Value" TextFieldName="DisplayText"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                </FilterRowCellTemplate>
+            </DxGridDataColumn>
+            
+            <DxGridDataColumn FieldName="Address" Caption="Адрес" Width="100px" MinWidth="100" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Address2" Caption="Адрес 2" Width="100px" MinWidth="100" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Phone" Caption="Телефон" Width="100px" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+            <DxGridDataColumn FieldName="Phone2" Caption="Телефон 2" Width="100px" Visible="false" TextAlignment="GridTextAlignment.Left">
+            </DxGridDataColumn>
+        </Columns>
+        <TotalSummary>
+            <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        </TotalSummary>
+        <GroupSummary>
+            <DxGridSummaryItem FieldName="Id" SummaryType="GridSummaryItemType.Count" />
+        </GroupSummary>
+    </DxGrid>
+
+</MudContainer>
+
+@code {
+    IGrid Grid;
+    private List<Patient> Data { get; set; }
+    private List<PatientGridDto> Data2 { get; set; }
+    private List<District> Districts { get; set; }
+    private List<Region> Regions { get; set; }
+
+    static readonly IReadOnlyList<GenderState> GenderStates = new GenderState[] {
+        new(true, "Муж"),
+        new(false, "Жен")
+    };
+
+    private List<PatientGroup> PatientGroupList { get; set; }
+
+    DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
+    DataGridFilterCaseSensitivity _caseSensitivity = DataGridFilterCaseSensitivity.Default;
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+
+        if (e.FieldName == "DistrictId")
+        {
+            if ((long)e.Value!=0){
+                e.DisplayText = Districts.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+
+        }
+        if (e.FieldName == "RegionId")
+        {
+            if ((long)e.Value != 0)
+            {
+                e.DisplayText = Regions.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+        }
+        if (e.FieldName == "GroupId")
+        {
+            if ((long)e.Value != 0)
+            {
+                e.DisplayText = PatientGroupList.Where(p => p.Id == (long)e.Value).FirstOrDefault().Title;
+            }
+            else
+            {
+                e.DisplayText = " ";
+            }
+        }
+        else if (e.FieldName == "BirthDate")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+            /*try
+            {
+                var age = CalcAge((DateTime)e.Value).ToString();
+                if (age == "0")
+                {
+                    e.DisplayText = " ";
+                }
+                else
+                {
+                    e.DisplayText = age;
+                }
+            }
+            catch (Exception ex)
+            {
+                e.DisplayText = " ";
+            }*/
+            //e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+        }
+        else if (e.FieldName == "CreatedOn")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+        }
+        else if (e.FieldName == "DeletedOn")
+        {
+            e.DisplayText = (e.Value != null ? ((DateTime)e.Value).ToString("dd.MM.yyyy") : "");
+        }        
+    }
+
+
+    void OnClickColumns()
+    {
+        Grid.ShowColumnChooser(".column-chooser-button");
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await Grid.ExportToXlsxAsync("Сводный_реестр_пациенты_xlsx", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = false
+            });
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDistAndRegionsAsync();
+        await LoadGroupDataAsync();
+        await LoadDataAsync();
+        await LoadData2Async();
+    }
+
+
+
+    private async Task LoadDistAndRegionsAsync()
+    {
+        Districts = await _commonService.LoadDistrictsAsync();
+        Regions = await _commonService.LoadAllRegionsAsync();
+    }
+    private async Task LoadDataAsync()
+    {
+
+        var response = await Http.GetAsync("api/patient/allpatients");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<Patient>>();
+
+        Data = mappedData.Data;
+
+    }
+    private async Task LoadData2Async()
+    {
+
+        var response = await Http.GetAsync("api/patient/allpatientswithreason");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<PatientGridDto>>();
+
+        Data2 = mappedData.Data;
+    }
+
+    private async Task LoadGroupDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allgroups");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<PatientGroup>>();
+        PatientGroupList = mappedData.Data;
+    }
+
+    private int CalcAge(DateTime BirthDate)
+    {
+        var retAge = 0;
+        try
+        {
+            DateTime TodayDate = DateTime.Now;
+            retAge = (int)(((TodayDate - BirthDate).TotalDays) / 365);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return retAge;
+    }
+
+
+    record GenderState(bool? Value, string DisplayText);
+    record AgeInterval(CriteriaOperator Criteria, string DisplayText)
+    {
+        public AgeInterval(string CriteriaText, string DisplayText)
+            : this(CriteriaOperator.Parse(CriteriaText), DisplayText)
+        {
+        }
+    }
+    record IdTitle(long Id, string Title);
+
+}

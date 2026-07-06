@@ -1,0 +1,756 @@
+@using System.ComponentModel.DataAnnotations
+@using Dialysis.Shared.Models.Files
+@using Dialysis.Shared.Dto
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+<MudForm Model="@AddEditModel" @ref="_form"  @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudDialog Style="display: flex; flex-direction: column; max-height: 90vh; width: auto;">
+        <DialogContent>
+            <div class="scrollable-dialog-content">
+                <MudGrid>
+                    @if (Patient.Id ==0)
+                    {
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="searchModel.Inn"
+                                          For="@(() => searchModel.Inn)"
+                                          Label="ИНН"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>SearchAsync())" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudAutocomplete T="MedCenter"
+                                             Required="true"
+                                             Value="_selectedMedCenter"
+                                             ValueChanged="OnMedCenterChanged"
+                                             RequiredError="Мед центр обязателен!"
+                                             MaxItems="1000"
+                                             SearchFunc="@SearchMedCenters"
+                                             ToStringFunc="@(c => c?.Title ?? string.Empty)"
+                                             Label="Мед. центр"
+                                             Variant="Variant.Outlined"
+                            />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ClearMedCenter" StartIcon="@Icons.Material.Filled.Clear" Size="Size.Small">Удалить мед. центр</MudButton>
+                        </MudItem>
+                    }
+                    else
+                    {
+                        <MudItem xs="12" md="12">
+                            <MudButton 
+                                OnClick="@ToggleSpecialStatus" 
+                                Color="@(AddEditModel.SpecialStatus == true ? Color.Default : Color.Success)" 
+                                Variant="Variant.Filled" 
+                                StartIcon="@(AddEditModel.SpecialStatus == true ? Icons.Material.Filled.Close : Icons.Material.Filled.Check)">
+                                @(AddEditModel.SpecialStatus == true ? "Брать особый статус" : "Дать особый статус")
+                            </MudButton>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" md="8">
+                        @if (!string.IsNullOrEmpty(AddEditModel.Image))
+                        {
+                            <img src="@AddEditModel.Image"/>
+                        }
+                        <br/>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <video id="videoFeed" width="240" height="180"/>
+                        <canvas class="d-none" id="currentFrame" width="320" height="240"/>
+                        <br/>
+                        <MudFab Color="Color.Tertiary" @onclick="CaptureFrame" StartIcon="@Icons.Material.Filled.CameraAlt" DisableElevation="true"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField
+                            T="string"
+                            Required="true"
+                            RequiredError="Идентификационный номер обязателен!"
+                            For="@(() => AddEditModel.Inn)"
+                            @bind-Value="AddEditModel.Inn"
+                            Label="ИНН"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField
+                            T="string"
+                            Required="true"
+                            RequiredError="Фамилия обязательна!"
+                            For="@(() => AddEditModel.LastName)"
+                            @bind-Value="AddEditModel.LastName"
+                            Label="Фамилия"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField
+                            T="string"
+                            Required="true"
+                            RequiredError="Имя обязательно!"
+                            For="@(() => AddEditModel.FirstName)"
+                            @bind-Value="AddEditModel.FirstName"
+                            Label="Имя"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField
+                            T="string"
+                            For="@(() => AddEditModel.MiddleName)"
+                            @bind-Value="AddEditModel.MiddleName"
+                            Label="Отчество"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long" Label="Область" SelectedValuesChanged="LoadDistRegionsAsync" @bind-Value="@AddEditModel.DistrictId" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                            @foreach (var selectItem in Elements)
+                            {
+                                <MudSelectItem T="long" Value="@selectItem.Id">@selectItem.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="long" Label="Район" @bind-Value="@AddEditModel.RegionId" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                            @foreach (var selectReg in RegionList)
+                            {
+                                <MudSelectItem T="long" Value="@selectReg.Id">@selectReg.Title</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField For="@(() => AddEditModel.Address)" @bind-Value="AddEditModel.Address" Label="Адрес проживания"/>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudTextField For="@(() => AddEditModel.Address2)" @bind-Value="AddEditModel.Address2" Label="Адрес прописки"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.Phone)" @bind-Value="AddEditModel.Phone" Label="Телефон"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField For="@(() => AddEditModel.Phone2)" @bind-Value="AddEditModel.Phone2" Label="Телефон 2"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker T="DateTime?"
+                                       Disabled="true"
+                                       PickerVariant="PickerVariant.Dialog"
+                                       Label="Дата рож."
+                                       @bind-Date="_birthDateNullable"
+                                       DateFormat="dd.MM.yyyy"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudRadioGroup @bind-SelectedOption="AddEditModel.Gender">
+                            <MudRadio
+                                Disabled="true"
+                                Option="true"
+                                Color="Color.Primary"
+                                Dense="true">
+                                Муж
+                            </MudRadio>
+                            <MudRadio
+                                Disabled="true"
+                                Option="false"
+                                Color="Color.Secondary"
+                                Dense="false">
+                                Жен
+                            </MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        @if (!string.IsNullOrEmpty(file1Preview))
+                        {
+                            <div class="mt-2">
+                                <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" Size="Size.Small">
+                                    @file1Preview
+                                </MudChip>
+                            </div>
+                        }
+                        else {
+                        <div class="mt-2">
+                            <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Error" Size="Size.Small">
+                                Нет загруженного файла
+                            </MudChip>
+                        </div>
+                        }
+                        <InputFile id="fileInput1" OnChange="OnInputFileChange1" hidden accept=".pdf,.jpg,.jpeg,.png"/>
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined"
+                                   Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload"
+                                   for="fileInput1">
+                            Копия паспорта
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        @if (!string.IsNullOrEmpty(file2Preview))
+                        {
+                            <div class="mt-2">
+                                <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" Size="Size.Small">
+                                    @file2Preview
+                                </MudChip>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mt-2">
+                                <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Error" Size="Size.Small">
+                                    Нет загруженного файла
+                                </MudChip>
+                            </div>
+                        }
+                        <InputFile id="fileInput2" OnChange="OnInputFileChange2" hidden accept=".pdf,.jpg,.jpeg,.png"/>
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined"
+                                   Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload"
+                                   for="fileInput2">
+                            Выписка от гос
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        @if (!string.IsNullOrEmpty(file3Preview))
+                        {
+                            <div class="mt-2">
+                                <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" Size="Size.Small">
+                                    @file3Preview
+                                </MudChip>
+                            </div>
+                        }
+                        else {
+                        <div class="mt-2">
+                            <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Error" Size="Size.Small">
+                                Нет загруженного файла
+                            </MudChip>
+                        </div>
+                        }
+                        <InputFile id="fileInput3" OnChange="OnInputFileChange3" hidden accept=".pdf,.jpg,.jpeg,.png"/>
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined"
+                                   Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload"
+                                   for="fileInput3">
+                            Анализы
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        @if (!string.IsNullOrEmpty(file4Preview))
+                        {
+                            <div class="mt-2">
+                                <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" Size="Size.Small">
+                                    @file4Preview
+                                </MudChip>
+                            </div>
+                        }
+                        else {
+                        <div class="mt-2">
+                            <MudChip Icon="@Icons.Material.Filled.AttachFile" Color="Color.Error" Size="Size.Small">
+                                Нет загруженного файла
+                            </MudChip>
+                        </div>
+                        }
+                        <InputFile id="fileInput4" OnChange="OnInputFileChange4" hidden accept=".pdf,.jpg,.jpeg,.png"/>
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined"
+                                   Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload"
+                                   for="fileInput4">
+                            Заявление
+                        </MudButton>
+                    </MudItem>
+                    <!-- Mevcut dosyaları göstermek için -->
+                    @if (Patient.Id != 0)
+                    {
+                        <MudItem xs="12">
+                            @if (patientFiles.Count() > 0)
+                            {
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6">Загруженные файлы</MudText>
+                                        @foreach (var file in patientFiles)
+                                        {
+                                            <div class="d-flex align-center justify-space-between pa-2 ma-1 border-solid border-1 rounded">
+                                                <div class="d-flex align-center">
+                                                    <MudIcon Icon="@GetFileIcon(file.FileName)" Class="mr-2"/>
+                                                    <MudText>@file.OriginalFileName</MudText>
+                                                </div>
+                                                <div>
+                                                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                                               OnClick="() => DownloadFile(file.Id)"
+                                                               StartIcon="@Icons.Material.Filled.Download">
+                                                        Скачать
+                                                    </MudButton>
+                                                    <MudButton Variant="Variant.Text" Color="Color.Error"
+                                                               OnClick="() => DeleteFile(file.Id)"
+                                                               StartIcon="@Icons.Material.Filled.Delete">
+                                                        Удалить
+                                                    </MudButton>
+                                                </div>
+                                            </div>
+                                        }
+                                    </MudCardContent>
+                                </MudCard>
+                            }
+                            else
+                            {
+                            <div style="color: red;">
+                                Нет загруженных файлов!
+                            </div>
+                            }
+                        </MudItem>
+                    }
+                </MudGrid>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Cancel())" Color="Color.Error">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="@(()=>Submit())" Color="Color.Success">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+<script>
+    window.triggerFileDownload = (fileName, content) => {
+        // Base64 veriyi binary'e çevir
+        const byteCharacters = atob(content);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray]);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    };
+</script>
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [Parameter] public Patient Patient { get; set; }
+    [Parameter] public IEnumerable<MedCenter> UserCenters { get; set; }
+    private MudForm _form;
+    private PatientAddEditDto AddEditModel = new PatientAddEditDto();
+    private string _returnValue;
+    private MedCenter _selectedMedCenter;
+    private PatientSearchDto searchModel = new PatientSearchDto();
+    private PatientInfo patientInfo = new PatientInfo();
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+    private List<MedCenterPatientFile> patientFiles = new();
+    private bool success;
+    private string[] errors = { };
+    
+    private IBrowserFile selectedFiles1;
+    private IBrowserFile selectedFiles2;
+    private IBrowserFile selectedFiles3;
+    private IBrowserFile selectedFiles4;
+    
+    private string file1Preview = "";
+    private string file2Preview = "";
+    private string file3Preview = "";
+    private string file4Preview = "";
+    [JSInvokable]
+    public void ProcessImage(string imageString)
+    {
+        AddEditModel.Image = imageString;
+    }
+
+    private void ToggleSpecialStatus()
+    {
+        if (AddEditModel.SpecialStatus == true)
+        {
+            AddEditModel.SpecialStatus = false;
+        }
+        else
+        {
+            AddEditModel.SpecialStatus = true;
+        }
+        StateHasChanged();
+    }
+
+    private async Task OnMedCenterChanged(MedCenter medCenter)
+    {
+        AddEditModel.MedCenterId = medCenter.Id;
+        _selectedMedCenter = medCenter;
+    }
+    private async Task ClearMedCenter()
+    {
+        _selectedMedCenter = new MedCenter();
+    }
+    private async Task<IEnumerable<MedCenter>> SearchMedCenters(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return UserCenters;
+            
+        return UserCenters.Where(x => 
+            x.Title.Contains(value, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+    private string GetFileIcon(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLower();
+        return ext switch
+        {
+            ".pdf" => Icons.Material.Filled.PictureAsPdf,
+            ".doc" or ".docx" => Icons.Material.Filled.Description,
+            ".jpg" or ".jpeg" or ".png" => Icons.Material.Filled.Image,
+            _ => Icons.Material.Filled.InsertDriveFile
+        };
+    }
+    private async Task DownloadFile(long fileId)
+    {
+        try
+        {
+            // API'den dosyayı indir
+            var response = await Http.GetAsync($"api/patient/download-file/{fileId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var base64Content = await response.Content.ReadAsStringAsync();
+                var fileInfo = patientFiles.Find(p => p.Id.Equals(fileId));
+                if (fileInfo == null) return;
+                // JS ile otomatik indirme tetikle
+                await JSRuntime.InvokeVoidAsync(
+                    "triggerFileDownload", 
+                    fileInfo.OriginalFileName, 
+                    base64Content
+                );
+            }
+            else
+            {
+                _snackBar.Add("Файл не удалось загрузить!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteFile(long fileId)
+    {
+        try
+        {
+            // Önce onay iste
+            var confirm = await DialogService.ShowMessageBox(
+                "Внимание!",
+                "Вы уверены, что хотите удалить этот файл?",
+                yesText: "Удалить", cancelText: "Отмена");
+
+            if (confirm == true)
+            {
+                // API üzerinden silme işlemi
+                var response = await Http.DeleteAsync($"api/patient/delete-file/{fileId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    // Listeden dosyayı kaldır
+                    patientFiles.RemoveAll(f => f.Id == fileId);
+                    _snackBar.Add("Файл удален!", Severity.Success);
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+        }
+    }
+    private async Task LoadPatientFiles()
+    {
+        try
+        {
+            var response = await Http.GetAsync($"api/patient/patient-files/{Patient.Id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var filesResponse = await response.Content.ReadFromJsonAsync<FilesResponseDto<MedCenterPatientFile>>();
+                patientFiles = filesResponse?.Items ?? new List<MedCenterPatientFile>();
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Файлы не могут быть загружены: {ex.Message}", Severity.Error);
+        }
+    }
+    private async Task<bool> ValidateFile(IBrowserFile file)
+    {
+        var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+        var extension = Path.GetExtension(file.Name).ToLower();
+        
+        if (!allowedExtensions.Contains(extension))
+        {
+            return false;
+        }
+        
+        if (file.Size > 10 * 1024 * 1024) // 10MB
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    private async void OnInputFileChange1(InputFileChangeEventArgs e)
+    {
+        if (!await ValidateFile(e.File))
+        {
+            _snackBar.Add("Можно загружать только файлы PDF, JPG, JPEG и PNG! (макс. 10 МБ)", Severity.Error);
+            return;
+        }
+        selectedFiles1 = e.File;
+        if (selectedFiles1 != null)
+        {
+            AddEditModel.File1 = await ConvertFileToBase64(selectedFiles1);
+            file1Preview = selectedFiles1.Name;
+            StateHasChanged();
+        }
+    }
+    
+    private async void OnInputFileChange2(InputFileChangeEventArgs e)
+    {
+        if (!await ValidateFile(e.File))
+        {
+            _snackBar.Add("Можно загружать только файлы PDF, JPG, JPEG и PNG! (макс. 10 МБ)", Severity.Error);
+            return;
+        }
+        selectedFiles2 = e.File;
+        if (selectedFiles2 != null)
+        {
+            AddEditModel.File2 = await ConvertFileToBase64(selectedFiles2);
+            file2Preview = selectedFiles2.Name;
+            StateHasChanged();
+        }
+    }
+
+    private async void OnInputFileChange3(InputFileChangeEventArgs e)
+    {
+        if (!await ValidateFile(e.File))
+        {
+            _snackBar.Add("Можно загружать только файлы PDF, JPG, JPEG и PNG! (макс. 10 МБ)", Severity.Error);
+            return;
+        }
+        selectedFiles3 = e.File;
+        if (selectedFiles3 != null)
+        {
+            AddEditModel.File3 = await ConvertFileToBase64(selectedFiles3);
+            file3Preview = selectedFiles3.Name;
+            StateHasChanged();
+        }
+    }
+
+    private async void OnInputFileChange4(InputFileChangeEventArgs e)
+    {
+        if (!await ValidateFile(e.File))
+        {
+            _snackBar.Add("Можно загружать только файлы PDF, JPG, JPEG и PNG! (макс. 10 МБ)", Severity.Error);
+            return;
+        }
+        selectedFiles4 = e.File;
+        if (selectedFiles4 != null)
+        {
+            AddEditModel.File4 = await ConvertFileToBase64(selectedFiles4);
+            file4Preview = selectedFiles4.Name;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<string> ConvertFileToBase64(IBrowserFile file)
+    {
+        try
+        {
+            const int maxFileSize = 10 * 1024 * 1024; // 10MB
+            using var stream = file.OpenReadStream(maxFileSize);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var bytes = memoryStream.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            return $"data:{file.ContentType};base64,{base64}";
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка при обработке файла: {ex.Message}", Severity.Error);
+            return "";
+        }
+    }
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            try
+            {
+                Patient.MedCenterId = _selectedMedCenter?.Id ?? 0;
+                await GenerateBirthDateFromInn(AddEditModel.Inn);
+                var response = await _httpClient.PostAsJsonAsync("api/patient/med-center-add-edit-patient", AddEditModel);
+                var result = await response.ToResult();
+                if (!result.Succeeded)
+                {
+                    _snackBar.Add(result.Messages[0], Severity.Error);
+                    MudDialog.Close(DialogResult.Ok(false));
+                }
+                else
+                {
+                    _snackBar.Add("Успешно", Severity.Success);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                MudDialog.Close(DialogResult.Ok(_returnValue));
+            }
+            catch (Exception e)
+            {
+                _snackBar.Add(e.Message, Severity.Error);
+                throw;
+            }
+        }
+        else
+        {
+            foreach (var er in errors)
+            {
+                _snackBar.Add(er, Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    private DateTime? _birthDateNullable
+    {
+        get => AddEditModel.BirthDate;
+        set
+        {
+            if (value.HasValue)
+                AddEditModel.BirthDate = value.Value;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                AddEditModel.MedCenterId = 0;
+            }
+            else
+            {
+                AddEditModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+                _selectedMedCenter = UserCenters.FirstOrDefault();
+            }
+        }
+        if (Patient != null && Patient.Id != 0)
+        {
+            AddEditModel.Id = Patient.Id;
+            AddEditModel.Inn = Patient.Inn;
+            AddEditModel.FirstName = Patient.FirstName;
+            AddEditModel.LastName = Patient.LastName;
+            AddEditModel.MiddleName = Patient.MiddleName;
+            AddEditModel.DistrictId = Patient.DistrictId;
+            AddEditModel.RegionId = Patient.RegionId;
+            AddEditModel.Address = Patient.Address;
+            AddEditModel.Address2 = Patient.Address2;
+            AddEditModel.Phone = Patient.Phone;
+            AddEditModel.Phone2 = Patient.Phone2;
+            AddEditModel.SpecialStatus = Patient.SpecialStatus;
+            await GenerateBirthDateFromInn(Patient.Inn);
+            await LoadPatientFiles();
+        }
+        await LoadDistrictsAsync();
+        await JSRuntime.InvokeVoidAsync("startVideo", "videoFeed");
+        StateHasChanged();
+    }
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            await LoadDistDefaultRegionsAsync();
+        }
+    }
+    private async Task LoadDistDefaultRegionsAsync()
+    {
+        if (AddEditModel.DistrictId > 0)
+        {
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + AddEditModel.DistrictId);
+            var mappedData = await response.ToResult<List<Region>>();
+            RegionList = mappedData.Data;
+        }
+
+    }
+    private bool ValidateModel(object model)
+    {
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(model);
+        bool isValid = Validator.TryValidateObject(model, validationContext, validationResults, true);
+
+        if (!isValid)
+        {
+            foreach (var error in validationResults)
+            {
+                _snackBar.Add(error.ErrorMessage, Severity.Error);
+            }
+        }
+    
+        return isValid;
+    }
+    private async Task SearchAsync()
+    {
+        if (!ValidateModel(searchModel)) return;
+        try
+        {
+            var response = await Http.GetAsync("api/patient/getbyinn?Inn="+searchModel.Inn);
+            var mappedData = await response.ToResult<PatientInfo>();
+            if (mappedData.Succeeded)
+            {
+                patientInfo = mappedData.Data;
+                AddEditModel.Inn = patientInfo.Pin;
+                AddEditModel.FirstName = patientInfo.Name;
+                AddEditModel.LastName = patientInfo.Surname;
+                AddEditModel.MiddleName = patientInfo.Patronymic;
+                AddEditModel.Gender = patientInfo.Gender;
+                await GenerateBirthDateFromInn(patientInfo.Pin);
+                _snackBar.Add(mappedData.Messages[0], Severity.Success);
+            }
+            else
+            {
+                _snackBar.Add(mappedData.Messages[0], Severity.Error);
+            }
+        }
+        catch (Exception e)
+        {
+            _snackBar.Add(e.Message, Severity.Error);
+            throw;
+        }
+    }
+    private async Task CaptureFrame()
+    {
+        await JSRuntime.InvokeAsync<String>("getImageFrame", "videoFeed", "currentFrame", DotNetObjectReference.Create(this));
+    }
+    private async Task GenerateBirthDateFromInn(string inn)
+    {
+        try
+        {
+            int gender = int.Parse(inn.Substring(0, 1));
+            int day = int.Parse(inn.Substring(1, 2));
+            int month = int.Parse(inn.Substring(3, 2));
+            int year = int.Parse(inn.Substring(5, 4));
+            AddEditModel.BirthDate = new DateTime(year, month, day);
+            AddEditModel.Gender = gender == 2;
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add(ex.Message, Severity.Error);
+            throw;
+        }
+    }
+    private async Task LoadDistRegionsAsync()
+    {
+        AddEditModel.RegionId = 0;
+        if (AddEditModel.DistrictId > 0)
+        {
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + AddEditModel.DistrictId);
+            var mappedData = await response.ToResult<List<Region>>();
+            RegionList = mappedData.Data;
+        }
+
+    }
+}
+<style>
+    .scrollable-dialog-content {
+        overflow-y: auto;    /* Vertical scrolling only */
+        overflow-x: hidden;  /* Prevent horizontal scrolling */
+        max-height: calc(90vh - 150px); /* Account for header/footer */
+        padding: 8px;
+        width: 100%;
+    }
+</style>

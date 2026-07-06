@@ -1,0 +1,252 @@
+@page "/medcardlist"
+@page "/medcardlist/{Mid:long}"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.Large">
+         <MudGrid>      
+             <AuthorizeView Roles="medcard_add">
+               <MudItem xs="12" md="12">
+                <MudButton Variant="Variant.Filled" @onclick="@(()=> AddMedCard())" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Добавить мед. карта</MudButton>
+                </MudItem>
+            </AuthorizeView>            
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+    <EditForm Model="@searchModel">
+        <MudGrid>   
+            <MudItem xs="6" md="4">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="6" md="8">
+                <MudSelect T="long" Label="Мед. центр" @bind-Value="@searchModel.MedCenterId" AnchorOrigin="Origin.BottomCenter" Disabled="@IsOnlyCenter">
+                    @{
+                        if (!IsOnlyCenter)
+                        {
+                            <MudSelectItem T="long" Value="0">-------</MudSelectItem>
+                        }
+                        @foreach (var medItem in UserCenters)
+                        {
+                            <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск мед. карта</MudButton>
+            </MudItem>           
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+
+    @if (showTable)
+    {
+        <MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<MedCardListDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+            <ToolBarContent>
+            <MudText Typo="Typo.h6">Мед. карты</MudText>
+            &nbsp;&nbsp;
+           
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString1" Immediate="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>ФИО</MudTh>
+            <MudTh>ИНН</MudTh>
+            <MudTh>Телефон/Адрес</MudTh>
+            <MudTh>Мед. центр</MudTh>           
+            <MudTh>&nbsp;</MudTh>
+            <MudTh>&nbsp;</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+                <MudTd>@context.Patient.LastName  <br />@context.Patient.FirstName</MudTd>
+                <MudTd>@context.Patient.Inn</MudTd>
+                <MudTd>@context.Patient.Phone <br />@context.Patient.Address</MudTd>
+            <MudTd>@context.MedCenter.Title</MudTd>            
+            <MudTd>
+                    <MudButton Variant="Variant.Filled" @onclick="@(()=> OpenMCard(context.MedCard.Id))" StartIcon="@Icons.Material.Filled.MedicalInformation" Size="Size.Small" Color="Color.Info">Открыть</MudButton>
+           </MudTd>
+            <MudTd></MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    }
+
+</MudContainer>
+
+
+@code {
+    public SearchtDto searchModel = new SearchtDto();
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private string quickString = "";
+    private MedCardListDto selectedItem1 = null;
+    private bool showTable = false;
+
+    private bool tableLoading = false;
+
+    [Parameter]
+    public string? Inn { get; set; }
+    [Parameter]
+    public long? Mid { get; set; }
+
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private bool IsOnlyCenter = true;
+
+    private string frameUri;
+    //private HashSet<MedCardDto> selectedItems = new HashSet<MedCardDto>();
+    private IEnumerable<MedCardListDto> Elements = new List<MedCardListDto>();
+
+    private bool FilterFunc1(MedCardListDto element) => FilterFunc(element, searchString1);
+    private bool FilterFunc(MedCardListDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (!string.IsNullOrWhiteSpace(element.Patient.FirstName))
+        {
+            if (element.Patient.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrWhiteSpace(element.Patient.LastName))
+        {
+            if (element.Patient.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        //if (element.Patient.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        //     return true;
+        if (!string.IsNullOrWhiteSpace(element.Patient.Inn))
+        {
+            if (element.Patient.Inn.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserCentersAsync();
+
+        //await JSRuntime.InvokeVoidAsync("startVideo", "videoFeed");
+        if (Elements != null)
+        {
+            if(Elements.Count() > 0)
+            {
+                showTable = true;
+            }
+        }
+
+        if (!String.IsNullOrEmpty(Inn))
+        {
+            searchModel.Inn = Inn;
+            await SearchAsync();
+        }
+        if (Mid != null)
+        {
+            searchModel.MedCenterId = (long)Mid;
+            await SearchAsync();
+        }
+
+        StateHasChanged();
+    }
+
+    public async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                IsOnlyCenter = false;
+                searchModel.MedCenterId = 0;
+            }
+            else if (UserCenters.Count() == 1)
+            {
+                IsOnlyCenter = true;
+                searchModel.MedCenterId = UserCenters.First().Id;
+            }
+            else
+            {
+                IsOnlyCenter = true;
+                searchModel.MedCenterId = 0;
+            }
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        tableLoading = true;
+        showTable = true;
+        string searchParams = "";
+        bool isFirst = false;
+        if(!String.IsNullOrEmpty(searchModel.Inn)){
+            searchParams = "&Inn=" + searchModel.Inn;
+            //isFirst = true;
+        }
+        /*if (!String.IsNullOrEmpty(searchModel.LastName))
+        {
+            if (isFirst) searchParams = searchParams + "&";
+            searchParams = searchParams + "LastName=" + searchModel.LastName;
+            isFirst = true;
+        }
+        if (!String.IsNullOrEmpty(searchModel.FirstName))
+        {
+            if (isFirst) searchParams = searchParams + "&";
+            searchParams = searchParams + "Name=" + searchModel.FirstName;
+            isFirst = true;
+        }*/
+        
+        var response = await Http.GetAsync("api/medcard/searchcard2?Mid=" + searchModel.MedCenterId + "" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<MedCardListDto>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            tableLoading = false;
+        }
+    }
+
+    private async Task OpenMCard(long MCardId = 0)
+    {
+        if (MCardId > 0)
+        {
+            _navigationManager.NavigateTo("/mcarddetail/"+MCardId);
+        }
+    }
+
+    private async Task AddMedCard()
+    {
+         await _commonService.LocalMedCardCleanAllAsync();
+        _navigationManager.NavigateTo("/mcardadd");
+       
+    }
+
+    private async Task AddEditModal(int id = 0)
+    {
+        _navigationManager.NavigateTo("/mcardadd");
+
+        /*var parameters = new DialogParameters();
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<MCardAddEdit>(id == 0 ? "Добавить Пациент" : "Редактировать Пациент", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            //await LoadDataAsync();
+        }*/
+    }
+
+}

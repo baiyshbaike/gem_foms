@@ -1,0 +1,454 @@
+ @page "/protocoladdedit"
+@using Dialysis.Client.Pages.Authentication
+@using Dialysis.Client.Pages.NewPages.Patients
+@using Dialysis.Client.Pages.Protocols
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ISnackbar _snackBar
+@inject NavigationManager _navigationManager
+@inject IDialogService _dialogService
+@using Dialysis.Shared.Dto.GridPatients
+@using Dialysis.Shared.Responses
+@using Dialysis.Shared.Models
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudForm Model="@AddEditModel" @ref="form">
+            <MudGrid>
+            <MudItem xs="12" md="12" Class="d-flex align-center justify-space-between">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                    Добавить протокол комиссии
+                </MudText>
+                @if (hasDraft)
+                {
+                    <div class="d-flex align-center">
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="mr-2 pa-1">Используется черновик</MudAlert>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="ClearDraftAsync">Очистить черновик</MudButton>
+                    </div>
+                }
+            </MudItem>
+            </MudGrid>
+
+<MudGrid>
+        @{
+            foreach (var item in GroupList)
+            {
+                var groupPatients = PatientList.Where(p => p.GroupId == item.Id).ToList();
+
+            <MudItem xs="12" md="12">
+                    <MudText Typo="Typo.subtitle2" Style="font-weight:500;">Выбывшие из списка @item.Title</MudText>
+            </MudItem>
+                <MudItem xs="4" md="4">
+                    Пациент
+                </MudItem>
+                <MudItem xs="2" md="2">
+                   Этап
+                </MudItem>
+                <MudItem xs="3" md="3">
+                   Основание
+                </MudItem>
+                <MudItem xs="2" md="2">
+                    ЛПУ
+                </MudItem>
+                <MudItem xs="1" md="1">
+                </MudItem>
+                foreach (var pp in HistoryList)
+                {                   
+                    if(pp.GroupFromId == item.Id)
+                    {
+                        <MudItem xs="4" md="4">
+                            <DxComboBox Data="@groupPatients"
+                                ListRenderMode="ListRenderMode.Virtual"
+                                FilteringMode="DataGridFilteringMode.Contains"
+                                 TextFieldName="@nameof(PatientBoxDto.TextValue)"
+                        ValueFieldName="@nameof(PatientBoxDto.Id)"
+                                     @bind-Value="@pp.PatientId"
+                                     @bind-Value:after="SaveDraftAsync"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                CssClass="cw-480" />                            
+                        </MudItem>
+                        <MudItem xs="2" md="2">
+
+                            <DxComboBox Data="@GroupList"
+                        ListRenderMode="ListRenderMode.Virtual"
+                        FilteringMode="DataGridFilteringMode.Contains"
+                        TextFieldName="@nameof(PatientGroup.Title)"
+                        ValueFieldName="@nameof(PatientGroup.Id)"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                            @bind-Value="@pp.GroupId"
+                            @bind-Value:after="SaveDraftAsync"
+                        CssClass="cw-480" />
+                           
+                        </MudItem>
+                        <MudItem xs="3" md="3">
+                            <DxComboBox Data="@ReasonList"
+                        ListRenderMode="ListRenderMode.Virtual"
+                        FilteringMode="DataGridFilteringMode.Contains"
+                        TextFieldName="@nameof(GroupReason.Title)"
+                        ValueFieldName="@nameof(GroupReason.Id)"
+                            @bind-Value="@pp.GroupReasonId"
+                            @bind-Value:after="SaveDraftAsync"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        CssClass="cw-480" />
+                           
+                        </MudItem>
+                        <MudItem xs="2" md="2">
+                            <DxComboBox Data="@LPUList"
+                        ListRenderMode="ListRenderMode.Virtual"
+                        FilteringMode="DataGridFilteringMode.Contains"
+                        TextFieldName="@nameof(GroupLPU.Title)"
+                        ValueFieldName="@nameof(GroupLPU.Id)"
+                            @bind-Value="@pp.GroupLPUId"
+                            @bind-Value:after="SaveDraftAsync"
+                            ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                        CssClass="cw-480" />
+                           
+                        </MudItem>
+                        <MudItem xs="1" md="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="@(async() => await RemoveResulRowAsync(pp.PatientId))" aria-label="Удалить" Size="Size.Small" Color="Color.Error"></MudIconButton>
+                        </MudItem>
+                        <MudItem xs="12" md="7">
+                            <MudTextField For="@(() => pp.TextCause)" @bind-Value="pp.TextCause" @bind-Value:after="SaveDraftAsync" Label="Причина" />
+                        </MudItem>
+                        <MudItem xs="12" md="2">
+                            <MudButton Variant="Variant.Filled"
+                                       Disabled="pp.PatientId==0"
+                                       StartIcon="@Icons.Material.Filled.FolderZip"
+                                       @onclick="@(async() => await InfoAndFiles(pp.PatientId))"
+                                       Size="Size.Small"
+                                       Color="Color.Success">
+                                Информация и файлы пациента
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" md="2">
+                            <MudIconButton Icon="@Icons.Material.Filled.FileOpen" aria-label="Редактировать"
+                                           @onclick="@(async() => await UploadFles((long)pp.PatientId))"
+                                           Size="Size.Small"
+                                           Color="Color.Warning">
+
+                            </MudIconButton>
+                        </MudItem>
+                        <MudItem xs="12" md="1">
+                        </MudItem>
+                    }                
+            }
+                <MudItem xs="12" md="12">
+                    <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Attachment"
+                           @onclick="@(async() => await AddNewPatientRowAsync(item.Id))"
+                       Size="Size.Small"
+                       Color="Color.Info">
+                        Добавить новый 
+                    </MudButton>
+                </MudItem>
+            <MudItem xs="12" md="6">
+            </MudItem>
+           
+            
+        }
+    }
+
+
+            <MudItem xs="12" md="12">
+                <MudTextField For="@(() => AddEditModel.Description)" @bind-Value="AddEditModel.Description" @bind-Value:after="SaveDraftAsync" Label="Примечание" Lines="3" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudDatePicker Label="Дата" @bind-Date="_date" @bind-Date:after="SaveDraftAsync" ShowToolbar="false" IsDateDisabledFunc="@((DateTime dt)=>(DateTime.Now<dt))"/>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <b>Состав комиссии </b>
+            </MudItem>
+
+            @foreach (var per in PersonList)
+            {
+       
+                   <MudItem xs="4" md="4">
+                       <br/>
+                        <DxComboBox Data="@TitleList"
+                                TextFieldName="@nameof(GroupPersonTitle.Title)"
+                            ValueFieldName="@nameof(GroupPersonTitle.Id)"
+                                @bind-Value="@per.PersonTitleId"
+                                @bind-Value:after="SaveDraftAsync"
+                                CssClass="cw-480"
+                                ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto"
+                                />
+                 </MudItem>
+                <MudItem xs="7" md="7">
+                        <MudTextField  @bind-Value="per.PersonFio" @bind-Value:after="SaveDraftAsync" Label="ФИО" />
+               </MudItem>           
+                <MudItem xs="1" md="1">
+                    <br />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="@(async() => await RemovePersonRowAsync(per.Id))" aria-label="Удалить" Size="Size.Small" Color="Color.Error"></MudIconButton>
+                </MudItem>
+   
+            }
+            <MudItem xs="12" md="12">
+                <MudButton Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Attachment"
+                           @onclick="@(async() => await AddNewPersonRowAsync())"
+                           Size="Size.Small"
+                           Color="Color.Info">
+                    Добавить 
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" md="6">
+            </MudItem>
+        <MudItem xs="12" md="12">
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success">Сохранить</MudButton>
+            </MudItem>
+</MudGrid>
+    </MudForm>
+        </MudContainer>
+
+@code {
+    MudForm form;
+
+    private IEnumerable<PatientBoxDto> PatientList = new List<PatientBoxDto>();
+
+    private IEnumerable<PatientGroup> GroupList = new List<PatientGroup>();
+    private IEnumerable<GroupReason> ReasonList = new List<GroupReason>();
+    private IEnumerable<GroupLPU> LPUList = new List<GroupLPU>();
+    private IEnumerable<GroupPersonTitle> TitleList = new List<GroupPersonTitle>();
+
+    private List<PatientHistory> HistoryList = new List<PatientHistory>();
+    private List<PatientGroupPerson> PersonList = new List<PatientGroupPerson>();
+
+    public PatientGroupTitle AddEditModel { get; set; } = new PatientGroupTitle();
+    private DateTime? _date = DateTime.Now;
+    private bool hasDraft = false;
+    private const string DraftKey = "protocol_draft";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupDataAsync();
+        await LoadReasonDataAsync();
+        await LoadLPUDataAsync();
+        await LoadPTitleDataAsync();
+        await LoadPatientsAsync();
+        await LoadDraftAsync();
+    }
+
+    private async Task LoadDraftAsync()
+    {
+        try
+        {
+            var draft = await localStorage.GetItemAsync<ProtocolDraft>(DraftKey);
+            if (draft != null)
+            {
+                AddEditModel = draft.AddEditModel ?? new PatientGroupTitle();
+                HistoryList = draft.HistoryList ?? new List<PatientHistory>();
+                PersonList = draft.PersonList ?? new List<PatientGroupPerson>();
+                _date = draft.Date;
+                hasDraft = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading draft: {ex.Message}");
+        }
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        var draft = new ProtocolDraft
+        {
+            AddEditModel = AddEditModel,
+            HistoryList = HistoryList,
+            PersonList = PersonList,
+            Date = _date
+        };
+        await localStorage.SetItemAsync(DraftKey, draft);
+        hasDraft = true;
+    }
+
+    private async Task ClearDraftAsync()
+    {
+        await localStorage.RemoveItemAsync(DraftKey);
+        AddEditModel = new PatientGroupTitle();
+        HistoryList = new List<PatientHistory>();
+        PersonList = new List<PatientGroupPerson>();
+        _date = DateTime.Now;
+        hasDraft = false;
+        _snackBar.Add("Черновик удален", Severity.Info);
+        StateHasChanged();
+    }
+
+    public async Task RemoveResulRowAsync(long Id)
+    {
+        var remove = HistoryList.Where(p => p.PatientId.Equals(Id)).FirstOrDefault();
+        if (remove != null)
+        {
+            HistoryList.Remove(remove);
+            await SaveDraftAsync();
+        }
+    }
+
+    public async Task RemovePersonRowAsync(long Id)
+    {
+        var remove = PersonList.Where(p => p.Id.Equals(Id)).FirstOrDefault();
+        if (remove != null)
+        {
+            PersonList.Remove(remove);
+            await SaveDraftAsync();
+        }
+    }
+
+    public async Task AddNewPatientRowAsync(long groupId)
+    {
+        HistoryList.Add(new PatientHistory()
+            {
+                GroupFromId = groupId
+            });
+        await SaveDraftAsync();
+    }
+    public async Task AddNewPersonRowAsync()
+    {
+        var anResult = new PatientGroupPerson();
+        if (PersonList.Count > 0)
+        {
+            long maxId = PersonList.Max(t => t.Id);
+
+            if (maxId != null)
+            {
+                anResult.Id = maxId + 1;
+
+            }
+            else
+            {
+                anResult.Id = 1;
+            }
+        }
+        else
+        {
+            anResult.Id = 1;
+        }
+        PersonList.Add(anResult);
+        await SaveDraftAsync();
+    }
+
+    private async Task LoadGroupDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allgroups");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<PatientGroup>>();
+        GroupList = mappedData.Data;
+    }
+
+    private async Task LoadReasonDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allreason");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<GroupReason>>();
+        ReasonList = mappedData.Data;
+    }
+
+    private async Task LoadLPUDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/alllpu");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<GroupLPU>>();
+        LPUList = mappedData.Data;
+    }
+
+    private async Task LoadPTitleDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allpersontitle");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<GroupPersonTitle>>();
+        TitleList = mappedData.Data;
+    }
+
+    private async Task LoadPatientsAsync()
+    {
+        var response = await Http.GetAsync("api/patient/allpatientsbox");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<PatientBoxDto>>();
+        PatientList = mappedData.Data;
+    }
+
+
+
+    private async Task SaveAsync()
+    {
+        var postModel = new GroupProtocolArgs();
+        AddEditModel.CreatedOn = (_date ?? DateTime.Now).AddMinutes(1);
+        postModel.PatientGroupTitle = AddEditModel;
+        postModel.PatientGroupPerson = PersonList;
+        postModel.PatientHistory = HistoryList;
+
+        var response = await Http.PostAsJsonAsync("api/patient/addprotocol", postModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+        
+        }
+        else
+        {
+            await localStorage.RemoveItemAsync(DraftKey);
+            _snackBar.Add("Успешно", Severity.Success);
+            _navigationManager.NavigateTo("/protocol");
+        }
+    }
+
+    public class ProtocolDraft
+    {
+        public PatientGroupTitle AddEditModel { get; set; }
+        public List<PatientHistory> HistoryList { get; set; }
+        public List<PatientGroupPerson> PersonList { get; set; }
+        public DateTime? Date { get; set; }
+    }
+    private async Task InfoAndFiles(long id = 0)
+    {
+        var parameters = new DialogParameters
+        {
+            { "_patientId", id}
+        };
+        var title   = "Информация и файлы пациента";
+        var options = new DialogOptions
+        {
+            CloseButton        = true,
+            MaxWidth           = MaxWidth.Medium,
+            FullWidth          = true,
+            DisableBackdropClick = true,
+            Position           = DialogPosition.TopCenter
+        };
+        var dialog  = _dialogService.Show<ProtocolUploadedFiles>(title, parameters, options);
+        var result  = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            StateHasChanged();
+        }
+    }
+    private async Task UploadFles(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("id", id);
+
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<ProtocolFileAddEdit>("Добавить файлы", parameters, options);
+        var result = await dialog.Result;
+    }
+}
+

@@ -1,0 +1,155 @@
+﻿<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+<MudForm Model="@AddEditModel" @ref="form">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+             <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            <MudGrid>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Soznanye" Label="Сознаные" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Rech" Label="Речь" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Pohodka" Label="Походка" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Golovokrujenie" Label="Головокружение" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Litso" Label="Лицо(симметрия)" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Glaznye" Label="Глазные шели" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Zrachki" Label="Зрачки" Lines="2" Variant="Variant.Outlined"/>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Dvijenie" Label="Движение глазных(яблок)" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+               
+                <MudItem xs="12" md="12">
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Glotochnyi" Label="Глоточный и небный рефлексы" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Yazyk" Label="Язык при высовывании" Lines="3" Variant="Variant.Outlined"/>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Poverhnostnye" Label="Поверхностные и глуб. рефлексы" Lines="3" Variant="Variant.Outlined"/>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="AddEditModel.Potologicheskie" Label="Патологические рефлексы" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="AddEditModel.Date1" Label="Дата" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Sindrom" Label="Синдром Паркинсонизма"  Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Meningealnye" Label="Менингеальные симптомы"  Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Kerniga" Label="Симптом Кернига" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Romberga" Label="Симптом Ромберга" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+                 <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="AddEditModel.Date2" Label="Дата" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Intellect" Label="Интелект" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Pamiat" Label="Память" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Mnitelnost" Label="Мнительность"  Lines="3" Variant="Variant.Outlined"/>
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="AddEditModel.Vnushaemost" Label="Внушаемость"  Lines="3" Variant="Variant.Outlined"/>
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.StatusOfArteriovenous" Required="true" Label="Состояние артерио-венозной фистулы (локальный статус)" Lines="4" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                </MudItem>
+            </MudGrid>
+
+            </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+</MudContainer>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public long MedCardId { get; set; }
+    [Parameter] public FirstNeuro AddEditModel { get; set; }
+    //public FirstNeuro AddEditModel { get; set; } = new FirstNeuro();
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addneuro", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

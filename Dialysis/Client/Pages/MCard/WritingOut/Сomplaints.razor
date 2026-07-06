@@ -1,0 +1,205 @@
+﻿@page "/complaints"
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <AuthorizeView Roles="medcard_add">
+            <MudItem xs="12" md="12">
+                <MudButton Variant="Variant.Filled" @onclick="@(()=> AddComplaints())" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info">Добавить жалобу </MudButton>
+            </MudItem>
+        </AuthorizeView>
+    </MudGrid>
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="4" md="4">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="4" md="4">
+                <MudSelect T="long" Label="Мед. центр" @bind-Value="@searchModel.MedCenterId" AnchorOrigin="Origin.BottomCenter">
+                    @{
+                    if (IsOnlyCenter == false)
+                    {
+                    <MudSelectItem T="long" Value="0">-------</MudSelectItem>
+                    }
+                    @foreach (var medItem in UserCenters)
+                    {
+                    <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                    }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="4" md="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск жалобы</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+
+    @if (showTable)
+    {
+    <MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<ComplaintDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Жалобы на пациента</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString1" Immediate="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>ФИО</MudTh>
+            <MudTh>ИНН</MudTh>
+            <MudTh>Телефон/Адрес</MudTh>
+            <MudTh>Дата</MudTh>
+            <MudTh>&nbsp;</MudTh>
+            <MudTh>&nbsp;</MudTh>
+
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Patient.LastName  <br />@context.Patient.FirstName</MudTd>
+            <MudTd>@context.Patient.Inn</MudTd>
+            <MudTd>@context.Patient.Phone <br />@context.Patient.Address</MudTd>
+            <MudTd>@context.Complaint.CreatedOn.ToString("dd.MM.yyyy")</MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Filled"
+                           @onclick="@(async() => await DetailModal(context.Complaint.Id))"
+                           StartIcon="@Icons.Material.Filled.FileOpen"
+                           Size="Size.Small" Color="Color.Info">
+                    Подробности
+                </MudButton>
+            </MudTd>
+            <MudTd></MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    }
+
+</MudContainer>
+
+
+@code {
+    
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private bool showTable = false;
+    private bool tableLoading = false;
+    private bool IsOnlyCenter = true;
+    private string searchString1 = "";
+    private ComplaintDto selectedItem1 = null;
+    public SearchtDto searchModel = new SearchtDto();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private IEnumerable<ComplaintDto> Elements = new List<ComplaintDto>();
+    private bool FilterFunc1(ComplaintDto element) => FilterFunc(element, searchString1);
+    private bool FilterFunc(ComplaintDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (!string.IsNullOrWhiteSpace(element.Patient.FirstName))
+        {
+            if (element.Patient.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrWhiteSpace(element.Patient.LastName))
+        {
+            if (element.Patient.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrWhiteSpace(element.Patient.Inn))
+        {
+            if (element.Patient.Inn.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+    return false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserCentersAsync();
+        if (Elements != null)
+        {
+            if(Elements.Count() > 0)
+            {
+                showTable = true;
+            }
+        }
+        await SearchAsync();
+        StateHasChanged();
+    }
+
+    public async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();
+        if (UserCenters != null)
+        {
+            if (UserCenters.Count() > 1)
+            {
+                IsOnlyCenter = false;
+                searchModel.MedCenterId = 0;
+            }
+            else
+            {
+                searchModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+            }
+        }
+    }
+
+    private async Task DetailModal(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        if (id != 0)
+        {
+            var selItem = Elements.Where(t => t.Complaint.Id == id).FirstOrDefault();
+            parameters.Add("AddEditModel", selItem);
+        }
+        else
+        {
+            var newModel = new ComplaintDto();
+            parameters.Add("AddEditModel", newModel);
+        }
+        parameters.Add("WritingOutId", id);
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<ComplaintsDetail>("Подробности", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await SearchAsync();
+        }
+    }
+    private async Task SearchAsync()
+    {
+        tableLoading = true;
+        showTable = true;
+        string searchParams = "";
+        bool isFirst = false;
+        if(!String.IsNullOrEmpty(searchModel.Inn)){
+            searchParams = "&Inn=" + searchModel.Inn;
+        }
+        var response = await Http.GetAsync("api/patient/searchcomplaint?MedCenterId=" + searchModel.MedCenterId + "" + searchParams);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<ComplaintDto>>();
+        Elements = mappedData.Data;
+        if (Elements != null)
+        {
+            tableLoading = false;
+        }
+    }
+    private async Task AddComplaints()
+    {
+        var parameters = new DialogParameters();
+        var newModel = new Complaint();
+        parameters.Add("AddEditModel", newModel);
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<ComplaintsAddEdit>("", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await SearchAsync();
+        }
+    }
+}

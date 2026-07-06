@@ -1,0 +1,124 @@
+﻿@page "/codemkblist"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@attribute [Authorize]
+
+<MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" RowsPerPage=100 Filter="new Func<CodeMKB,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6"> Код МКБ</MudText>
+        &nbsp;&nbsp;
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Hotel" Size="Size.Small" Color="Color.Info" @onclick="@(() => AddEditModal(0))">Добавить</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Код</MudTh>
+        <MudTh>Наименование</MudTh>
+        <MudTh>AgeProperty</MudTh>
+        <MudTh>Пол</MudTh>
+        <MudTh>Дата</MudTh>
+        <MudTh>&nbsp;</MudTh>
+
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id</MudTd>
+        <MudTd>@context.Code</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.AgeProperty</MudTd>
+        <MudTd>@context.Pol</MudTd>
+        <MudTd>@context.CreatedOn?.ToString("dd.MM.yyyy")</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Редактировать"
+                           @onclick="@(async() => await AddEditModal(context.Id))"
+                           Size="Size.Small"
+                           Color="Color.Warning">
+
+            </MudIconButton>
+
+
+        </MudTd>
+
+
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private bool tableLoading = false;
+    private CodeMKB selectedItem1 = null;
+    private HashSet<CodeMKB>
+    selectedItems = new HashSet<CodeMKB>();
+
+    private IEnumerable<CodeMKB> Elements = new List<CodeMKB>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        tableLoading = true;
+        await LoadDataAsync();
+    }
+
+
+
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/allcodemkbs");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<CodeMKB>>();
+        Elements = mappedData.Data;
+        tableLoading = false;
+    }
+
+    private bool FilterFunc1(CodeMKB element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(CodeMKB element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Code.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        /*if (element.Adress.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;*/
+        return false;
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        if (id != 0)
+        {
+            var selItem = Elements.Where(t => t.Id == id).FirstOrDefault();
+            parameters.Add("AddEditModel", selItem);
+        }
+        else
+        {
+            var newModel = new CodeMKB();
+            parameters.Add("AddEditModel", newModel);
+        }
+        parameters.Add("id", id);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<CodeMKBAddEdit>(id == 0 ? "Добавить анализ" : "Редактировать анализ", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+
+}
+

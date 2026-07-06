@@ -1,0 +1,69 @@
+﻿@page "/qualityexam"
+@using System.Net.Http.Json
+@inject HttpClient Http
+<style>
+    .mud-tooltip-root.mud-tooltip-inline {
+        max-width: 330px;
+    }
+
+</style>
+<MudTabs Color="@Color.Info" Outlined="true" @bind-ActivePanelIndex="activeTab">
+
+   
+        <MudTabPanel Text="1. Акт медицинской экспертизы проведенных сеансов диализа
+                форма №11 ОМС/у" />
+    <MudTabPanel Text="2. Акт медицинской экспертизы проведенных  сеансов диализа без выявленных дефектов  форма №11-1 ОМС/у" />
+    <MudTabPanel Text="3. Экспертиза качества проведенных сеансов ГД/ГДФ
+                Форма №11 ОМС/о" />
+</MudTabs>
+@{
+    if (activeTab == 0)
+    {
+        <Dialysis.Client.Pages.QualityEx.ExamPage1 MedCardId=MedCardId />
+    }
+    else if (activeTab == 1)
+    {
+
+        <Dialysis.Client.Pages.QualityEx.ExamPage2 MedCardId=MedCardId />
+       
+    }
+    else 
+    {
+        <Dialysis.Client.Pages.QualityEx.ExamPage3 MedCardId=MedCardId />
+    }
+   
+}
+
+@code {
+    // [Parameter]
+    // public long MedCardId { get; set; }
+
+    // public long IsCard { get; set; } = 0;
+    public long MedCardId { get; set; } = 0;
+    int activeTab = 0;
+    protected override async Task OnInitializedAsync()
+    {
+        // if (MedCardId > 0)
+        // {
+        //     await LoadMCardAsync();
+        // }
+        // else
+        // {
+        //     _navigationManager.NavigateTo("/medcardlist");
+        // }
+        //Elements = await Http.GetFromJsonAsync<ProcessDto[]>("temp_data/process.json");
+    }
+
+    public async Task LoadMCardAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/isaccesscard?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<long>();
+        //IsCard = mappedData.Data;
+    }
+
+}

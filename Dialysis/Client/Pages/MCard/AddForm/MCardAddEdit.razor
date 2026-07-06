@@ -1,0 +1,275 @@
+﻿@page "/formmcardadd"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+
+    <EditForm Model="@searchModel">
+        <MudGrid>           
+             <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                   Добавить мед. карта
+                </MudText>
+                </MudItem>
+            <MudItem xs="6" md="4">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>           
+            <MudItem xs="12" md="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+
+
+
+    <MudForm @ref="form" Model="@AddEditModel" @bind-IsValid="@IsValid">
+       
+            <MudGrid>
+                 
+                <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Inn)" Required="true" @bind-Value="AddEditModel.Inn" Label="ИНН" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField For="@(() => Fio)" Required="true" @bind-Value="Fio" Label="ФИО" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="long" Label="Мед. центр"  Required="true"  @bind-Value="@AddEditModel.MedCenterId" AnchorOrigin="Origin.BottomCenter">
+                    @{
+                        if (IsOnlyCenter==false)
+                        {
+                            <MudSelectItem T="long" Value="0">-------</MudSelectItem>
+                            
+                        }
+                        @foreach (var medItem in UserCenters)
+                        {
+                        <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                        }
+                    }
+                    </MudSelect>
+                </MudItem>
+            <MudItem xs="12" md="6">
+                           
+            </MudItem>
+                 <MudItem xs="12" md="4">
+                <MudDatePicker Label="Дата направления на ПГД" Required="true" @bind-Date="date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                <MudDatePicker Label="Дата поступления" Required="true" @bind-Date="date1" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Blood)" Required="true" @bind-Value="AddEditModel.Blood" Label="Группа крови" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Resus)" Required="true" @bind-Value="AddEditModel.Resus" Label="Резус-принадлежность" />
+            </MudItem>
+             <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.AllergoAnamez)" Required="true" @bind-Value="AddEditModel.AllergoAnamez" Label="Аллергологический анамнез" />
+            </MudItem>
+         
+                <MudItem xs="12" md="12">
+                <MudTextField For="@(() => AddEditModel.MainDiagnosis)"  Required="true" @bind-Value="AddEditModel.MainDiagnosis" Label="Основной диагноз" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Complication1)"  Required="true" @bind-Value="AddEditModel.Complication1" Label="Осложнения основного заболевания 1" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Complication2)" Required="true" @bind-Value="AddEditModel.Complication2" Label="Осложнения основного заболевания 2" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Complication3)" Required="true" @bind-Value="AddEditModel.Complication3" Label="Осложнения основного заболевания 3" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Diagnosis1)"  Required="true" @bind-Value="AddEditModel.Diagnosis1" Label="Сопутств. Диагноз 1" Lines="3" Variant="Variant.Outlined" />
+            </MudItem>
+                <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Diagnosis2)" Required="true" @bind-Value="AddEditModel.Diagnosis2" Label="Сопутств. Диагноз 2" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Diagnosis3)" Required="true" @bind-Value="AddEditModel.Diagnosis3" Label="Сопутств. Диагноз 3" Lines="3" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudTextField For="@(() => AddEditModel.OtherAB)"  Required="true" @bind-Value="AddEditModel.OtherAB" Label="Другое" Lines="2" Variant="Variant.Outlined" />
+            </MudItem>
+                <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Pedikulez)"  Required="true" @bind-Value="AddEditModel.Pedikulez" Label="Педикулез"  />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Chesotka)"  Required="true" @bind-Value="AddEditModel.Chesotka" Label="Чесотка"  />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Vassermana)"  Required="true" @bind-Value="AddEditModel.Vassermana" Label="Вассермана"  />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Fluorografia)"  Required="true" @bind-Value="AddEditModel.Fluorografia" Label="Флюорография"  />
+                </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField For="@(() => AddEditModel.Alchohol)" Required="true" @bind-Value="AddEditModel.Alchohol" Label="Алкоголь" />
+            </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Vgv)"  Required="true" @bind-Value="AddEditModel.Vgv" Label=" статус на ВГВ" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                <MudDatePicker Label="Дата ВГВ" @bind-Date="date2"  Required="true" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+                </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Vgs)"  Required="true" @bind-Value="AddEditModel.Vgs" Label=" статус на ВГС" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Дата ВГС" @bind-Date="date3"  Required="true" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Vich)"  Required="true" @bind-Value="AddEditModel.Vich" Label="антитела к ВИЧ" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Дата ВИЧ" @bind-Date="date4" Required="true" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </MudItem>                
+               
+            <MudItem xs="12" md="12">
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Disabled="@GetDisable()" Color="Color.Success">Далее</MudButton>
+            </MudItem>
+
+            </MudGrid>
+      
+</MudForm>
+
+</MudContainer>
+
+                @code {
+
+    MudForm form;
+
+    public MedCardSearch searchModel = new MedCardSearch();
+    public string Fio = "";
+
+    [Parameter] public MedCard AddEditModel { get; set; } = new();
+
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+
+    private bool IsOnlyCenter = true;
+
+    private bool IsDisabled = true;
+    private bool IsValid;
+
+    DateTime? date = null;
+    DateTime? date1 = null;
+    DateTime? date2 = null;
+    DateTime? date3 = null;
+    DateTime? date4 = null;
+
+    private bool GetDisable()
+    {
+        if (IsDisabled == false && IsValid == true)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await LoadMedcentersAsync();
+        await LoadUserCentersAsync();
+        var local = await _commonService.LocalMedCard0Async(null);
+        if (local != null)
+        {
+            AddEditModel = local;
+            date = AddEditModel.DirectionDate;
+            date1 = AddEditModel.ReceiptDate;
+            date2 = AddEditModel.VgvDate;
+            date3 = AddEditModel.VgsDate;
+            date4 = AddEditModel.VichDate;
+            searchModel.Inn = AddEditModel.Inn;
+            await SearchAsync();
+        }
+        StateHasChanged();
+    }
+
+    private async Task SearchAsync()
+    {
+        IsDisabled = true;
+        var response = await Http.GetAsync("api/patient/searchpatient?Inn=" + searchModel.Inn);
+        var mappedData = await response.ToResult<Patient>();
+       
+        if (mappedData != null)
+        {
+            AddEditModel.Inn = mappedData.Data.Inn;
+            Fio = mappedData.Data!.LastName + " " + mappedData.Data!.FirstName +" "+ mappedData.Data!.MiddleName;
+            AddEditModel.PatientId = mappedData.Data.Id;
+            IsDisabled = false;
+        }
+        else
+        {
+            _snackBar.Add(mappedData.Messages[0], Severity.Error);
+        }
+    }
+
+    public async Task LoadUserCentersAsync()
+    {
+        var response = await Http.GetAsync("api/medcenter/relmedcenters");
+        var mappedData = await response.ToResult<List<MedCenter>>();
+        UserCenters = mappedData.Data;
+        if(UserCenters != null)
+        {
+            if(UserCenters.Count() > 1)
+            {
+                IsOnlyCenter = false;
+                AddEditModel.MedCenterId = 0;
+            }
+            else
+            {
+                AddEditModel.MedCenterId = UserCenters.Select(t=>t.Id).FirstOrDefault();
+            }
+        }
+    }
+
+
+    public void Cancel()
+    {
+        _navigationManager.NavigateTo("/medcardlist");
+    }
+
+
+    private async Task SaveAsync()
+    {
+        if (IsValid == true)
+        {
+            AddEditModel.IsDeleted = false;
+            AddEditModel.DirectionDate = date;
+            AddEditModel.ReceiptDate = date1;
+            AddEditModel.VgvDate = date2;
+            AddEditModel.VgsDate = date3;
+            AddEditModel.VichDate = date4;
+
+            await _commonService.LocalMedCard0Async(AddEditModel);
+            _navigationManager.NavigateTo("/mcardadd1");
+
+            /*var response = await _httpClient.PostAsJsonAsync("api/medcard/addcard", AddEditModel);
+            var result = await response.ToResult();
+            if (!result.Succeeded)
+            {
+                _snackBar.Add(result.Messages[0], Severity.Error);
+            }
+            else
+            {
+                _snackBar.Add("Успешно", Severity.Success);
+                _navigationManager.NavigateTo("/medcardlist");
+            }*/
+        }
+        else
+        {
+            Console.WriteLine("Not valid");
+        }
+    }
+}

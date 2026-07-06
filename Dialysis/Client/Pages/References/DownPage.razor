@@ -1,0 +1,50 @@
+﻿@page "/downpage"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+
+
+    <MudGrid>
+        <MudItem xs="12" md="12">
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                Экспертиза качества
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" md="12">
+            <MudLink Href="https://theunicode.com/files/Акт_медицинской_экспертизы_форма11.docx" Target="_blank">
+                1. Акт медицинской экспертизы проведенных сеансов диализа
+                форма №11 ОМС/у
+            </MudLink>
+        </MudItem>
+        <MudItem xs="12" md="12">
+            <MudLink Href="https://theunicode.com/files/Акт_медицинской_экспертизы_форма11_1.docx" Target="_blank">
+                2. Акт медицинской экспертизы проведенных  сеансов диализа без выявленных дефектов  форма №11-1 ОМС/у
+            </MudLink>         
+            </MudItem>
+        <MudItem xs="12" md="12">
+            <MudLink Href="https://theunicode.com/files/Акт_медицинской_экспертизы_форма11_2.docx" Target="_blank">
+                3. Экспертиза качества проведенных сеансов ГД/ГДФ
+                Форма №11 ОМС/о (по итогам полугодия)
+            </MudLink>
+            </MudItem>
+        
+    </MudGrid>
+    
+
+    
+
+</MudContainer>
+
+
+@code {   
+    protected override async Task OnInitializedAsync()
+    {          
+    }   
+
+
+}
+

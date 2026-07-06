@@ -1,0 +1,150 @@
+@page "/admin/logsettings"
+@using Dialysis.Shared.Models
+@attribute [Authorize(Roles = "admin")]
+
+<MudText Typo="Typo.h4" Class="my-4">Настройки логирования</MudText>
+
+@if (!_loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">HTTP логирование</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                         <MudSwitch T="bool" @bind-Checked="_settings.LogHttpEnabled" Color="Color.Primary" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Class="mb-3">Выберите методы для логирования:</MudText>
+                    <MudStack Row="true" Wrap="Wrap.Wrap">
+                        @foreach (var method in _allMethods)
+                        {
+                            <MudCheckBox T="bool" 
+                                        Checked="@IsChecked(method)" 
+                                        CheckedChanged="@((v) => ToggleMethod(method, v))"
+                                        Label="@method" 
+                                        Color="Color.Primary"
+                                        Disabled="!_settings.LogHttpEnabled" />
+                        }
+                    </MudStack>
+
+                    <MudNumericField T="int" Label="Макс длина тела запроса (символов)"
+                                     @bind-Value="_settings.MaxBodyLength"
+                                     Variant="Variant.Outlined"
+                                     Class="mt-4"
+                                     Disabled="!_settings.LogHttpEnabled" />
+                    
+                    <MudNumericField T="int" Label="Срок хранения логов (дней)"
+                                     @bind-Value="_settings.RetentionDays"
+                                     Variant="Variant.Outlined"
+                                     Class="mt-4"
+                                     Disabled="!_settings.LogHttpEnabled" />
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Логирование действий</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudSwitch T="bool" @bind-Checked="_settings.LogActionEnabled" Color="Color.Primary" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">
+                        Логировать важные действия пользователей (создание, изменение, удаление записей).
+                    </MudText>
+                    <MudAlert Severity="Severity.Info" Class="mt-4" Dense="true">
+                        Это помогает отслеживать изменения в медицинских картах и данных пациентов.
+                    </MudAlert>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudPaper Class="pa-4 d-flex justify-end" Elevation="2">
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="SaveSettings"
+                           Size="Size.Large">
+                    Сохранить изменения
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private bool _loaded;
+    private Dialysis.Shared.Models.LogSettings _settings = new();
+    private readonly string[] _allMethods = { "GET", "POST", "PUT", "PATCH", "DELETE" };
+    private List<string> _selectedMethods = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        try
+        {
+            _settings = await _httpClient.GetFromJsonAsync<Dialysis.Shared.Models.LogSettings>("api/audit/httplog/settings") ?? new();
+            _selectedMethods = _settings.LoggedMethods?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(m => m.ToUpper())
+                .ToList() ?? new();
+            _loaded = true;
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка загрузки: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool IsChecked(string method) => _selectedMethods.Contains(method);
+
+    private void ToggleMethod(string method, bool v)
+    {
+        if (v)
+        {
+            if (!_selectedMethods.Contains(method)) _selectedMethods.Add(method);
+        }
+        else
+        {
+            _selectedMethods.Remove(method);
+        }
+        _settings.LoggedMethods = string.Join(",", _selectedMethods);
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/audit/httplog/settings", _settings);
+            if (response.IsSuccessStatusCode)
+            {
+                _snackBar.Add("Настройки сохранены", Severity.Success);
+            }
+            else
+            {
+                _snackBar.Add("Ошибка при сохранении", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+        }
+    }
+}

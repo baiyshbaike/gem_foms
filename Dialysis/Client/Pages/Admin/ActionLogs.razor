@@ -1,0 +1,215 @@
+@page "/admin/actionlogs"
+@attribute [Authorize(Roles = "admin")]
+@using Microsoft.AspNetCore.WebUtilities
+@using Dialysis.Shared.Models
+@using Dialysis.Shared.Params
+@using Dialysis.Shared.Dto
+
+<MudText Typo="Typo.h4" Class="my-4">Логи действий пользователей</MudText>
+
+<MudTable T="ActionLogDto"
+          @ref="_table"
+          Items="@_items"
+          ServerData="@(new Func<TableState, Task<TableData<ActionLogDto>>>(ServerReload))"
+          Loading="@_loading"
+          Dense="true"
+          Hover="true"
+          Bordered="true"
+          Striped="true"
+          FixedHeader="true"
+          Height="600px">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Действия пользователей</MudText>
+        <MudSpacer />
+        <MudButton @onclick="ClearFilters"
+                   StartIcon="@Icons.Material.Filled.Clear"
+                   Size="Size.Small"
+                   Variant="Variant.Outlined"
+                   Color="Color.Warning">
+            Очистить фильтры
+        </MudButton>
+        <MudSpacer />
+        <MudSelect T="string"
+                   Label="Тип действия"
+                   Value="_selectedActionType"
+                   ValueChanged="@(s => { _selectedActionType = s; _table.ReloadServerData(); })"
+                   Variant="Variant.Outlined"
+                   Dense="true"
+                   Clearable="true"
+                   Class="mt-0 mr-2"
+                   Style="min-width: 130px;">
+            @foreach (var a in _actionTypes)
+            {
+                <MudSelectItem Value="@a">@a</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string"
+                   Label="Тип сущности"
+                   Value="_selectedEntityType"
+                   ValueChanged="@(s => { _selectedEntityType = s; _table.ReloadServerData(); })"
+                   Variant="Variant.Outlined"
+                   Dense="true"
+                   Clearable="true"
+                   Class="mt-0 mr-2"
+                   Style="min-width: 130px;">
+            @foreach (var e in _entityTypes)
+            {
+                <MudSelectItem Value="@e">@e</MudSelectItem>
+            }
+        </MudSelect>
+        <MudDatePicker Label="Дата начала"
+                       Date="_dateFrom"
+                       DateChanged="@(d => { _dateFrom = d; _table.ReloadServerData(); })"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       Class="mt-0 mr-2"
+                       Style="min-width: 140px;" />
+        <MudDatePicker Label="Дата конца"
+                       Date="_dateTo"
+                       DateChanged="@(d => { _dateTo = d; _table.ReloadServerData(); })"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       Class="mt-0 mr-2"
+                       Style="min-width: 140px;" />
+        <MudTextField T="string"
+                      Placeholder="Поиск (пользователь, действие...)"
+                      Immediate="true"
+                      ValueChanged="@(s => OnSearch(s))"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mt-0"
+                      Style="min-width: 200px;" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="ActionLogDto" SortLabel="Timestamp">Дата/Время</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ActionLogDto" SortLabel="UserName">Пользователь</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ActionLogDto" SortLabel="ActionType">Действие</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="ActionLogDto" SortLabel="EntityType">Сущность</MudTableSortLabel></MudTh>
+        <MudTh>ID сущности</MudTh>
+        <MudTh>Описание</MudTh>
+        <MudTh>IP</MudTh>
+        <MudTh>Детали</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Дата">@context.Timestamp.ToString("dd.MM.yyyy HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Пользователь">@context.UserName</MudTd>
+        <MudTd DataLabel="Действие">
+            <MudChip T="string" Variant="Variant.Filled"
+                     Color="@GetActionColor(context.ActionType)" Size="Size.Small">
+                @context.ActionType
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Сущность">@context.EntityType</MudTd>
+        <MudTd DataLabel="ID">@context.EntityId</MudTd>
+        <MudTd DataLabel="Описание" Style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">@context.Description</MudTd>
+        <MudTd DataLabel="IP">@context.UserIp</MudTd>
+        <MudTd DataLabel="Детали">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                       OnClick="@(() => ShowDetail(context))">
+                Детали
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100, 1000 }"
+                       RowsPerPageString="Строк на странице:"
+                       InfoFormat="{first_item}-{last_item} из {all_items}"
+                       AllItemsText="Все" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private bool _loading;
+    private MudTable<ActionLogDto> _table;
+    private IEnumerable<ActionLogDto> _items = new List<ActionLogDto>();
+
+    private string _searchString = "";
+    private string? _selectedActionType;
+    private string? _selectedEntityType;
+    private DateTime? _dateFrom;
+    private DateTime? _dateTo;
+
+    private readonly string[] _actionTypes = { "Create", "Update", "Delete", "Login", "Logout", "Export", "View" };
+    private readonly string[] _entityTypes = { "User", "Patient", "HDSession", "MedCard", "MedCenter", "Role", "Profile", "Analysis", "Epicrisis", "QualityExam" };
+
+    private async Task<TableData<ActionLogDto>> ServerReload(TableState state)
+    {
+        try
+        {
+            _loading = true;
+            var queryParams = new Dictionary<string, string>
+            {
+                ["pageNumber"] = (state.Page + 1).ToString(),
+                ["pageSize"] = state.PageSize.ToString(),
+                ["sortBy"] = state.SortLabel ?? "",
+                ["sortAsc"] = (state.SortDirection == SortDirection.Ascending).ToString().ToLower(),
+                ["searchString"] = _searchString ?? ""
+            };
+
+            if (!string.IsNullOrEmpty(_selectedActionType))
+                queryParams["actionType"] = _selectedActionType;
+            if (!string.IsNullOrEmpty(_selectedEntityType))
+                queryParams["entityType"] = _selectedEntityType;
+            if (_dateFrom.HasValue)
+                queryParams["dateFrom"] = _dateFrom.Value.ToString("yyyy-MM-dd");
+            if (_dateTo.HasValue)
+                queryParams["dateTo"] = _dateTo.Value.ToString("yyyy-MM-dd");
+
+            var url = QueryHelpers.AddQueryString("api/audit/actionlog/paged", queryParams);
+            var response = await _httpClient.GetFromJsonAsync<PagedActionLogResponse>(url);
+
+            return new TableData<ActionLogDto>
+            {
+                Items = response?.Items ?? new List<ActionLogDto>(),
+                TotalItems = response?.TotalItems ?? 0
+            };
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+            return new TableData<ActionLogDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedActionType = null;
+        _selectedEntityType = null;
+        _dateFrom = null;
+        _dateTo = null;
+        _searchString = "";
+        await _table.ReloadServerData();
+    }
+
+    private async Task ShowDetail(ActionLogDto log)
+    {
+        var parameters = new DialogParameters { ["Log"] = log };
+        var dialog = _dialogService.Show<ActionLogDetail>("Детали действия", parameters,
+            new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, Position = DialogPosition.TopCenter });
+    }
+
+    private Color GetActionColor(string action) => action.ToLower() switch
+    {
+        "create" => Color.Success,
+        "update" => Color.Warning,
+        "delete" => Color.Error,
+        "login" => Color.Info,
+        "logout" => Color.Tertiary,
+        "export" => Color.Secondary,
+        "view" => Color.Default,
+        _ => Color.Default
+    };
+}

@@ -1,0 +1,100 @@
+﻿@using Dialysis.Shared.Models.Files;
+@inject HttpClient Http
+<MudDialog>
+    <DialogContent>
+        @if (imageList != null && imageList.Count > 0)
+        {
+            <div class="col-12 image-list">
+                <MudTable Items="@imageList" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>File</MudTh>
+                        <MudTh>File Name</MudTh>
+                        <MudTh>Action</MudTh>
+                        <MudTh>Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Id">@context.Id</MudTd>
+                        <MudTd DataLabel="Id">
+                            @if(context.ContentType == "application/pdf")
+                            {
+                                <img src="pdficon.jpg" width="80" height="80">
+                            }
+                            else
+                            {
+                                <img src="@context.Base64File" width="80" height="80">
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="File Name">@context.FileName</MudTd>
+                        <MudTd DataLabel="Action">
+                            <a download="@context.FileName" href="@context.Base64File" target="_blank">
+                                <MudIconButton 
+                                    Icon="@Icons.Material.Filled.Download" 
+                                    Size="Size.Small"
+                                    Color="Color.Warning">>
+                                </MudIconButton>
+                            </a>
+                        </MudTd>
+                        <MudTd DataLabel="Action">
+                            <MudIconButton 
+                                Icon="@Icons.Material.Filled.Delete" 
+                                aria-label="Редактировать"
+                                @onclick="@(async() => await DeleteteFiles(context.Id))"
+                                Size="Size.Small"
+                                Color="Color.Warning">
+                            </MudIconButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        }
+        else
+        {
+            <MudText>not fount</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    IList<ProtocolFile> imageList = new List<ProtocolFile>();
+    [Parameter] public string inn { get; set; }
+    private long maxFileSize = 999999999999;
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUploadFiles();
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    public void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private async Task GetUploadFiles()
+    {
+        var response = await Http.GetAsync("api/patient/getprotocolfilesbyinn?inn=" + inn);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<ProtocolFile>>();
+        imageList = mappedData.Data;
+    }
+    private async Task DeleteteFiles(long id=0)
+    {
+        var selItem = imageList.Where(t => t.Id == id).FirstOrDefault();
+        var response = await Http.PostAsJsonAsync("api/patient/deleteprotocolfile", selItem);
+        var result = await response.ToResult();
+        await GetUploadFiles(); 
+    }
+}

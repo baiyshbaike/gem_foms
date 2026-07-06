@@ -1,0 +1,119 @@
+﻿@inject HttpClient Http
+<EditForm Model="@AddEditModel">
+
+    <MudDialog>
+        <TitleContent>
+    
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Показатели сеанса
+                    </MudText>
+                
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+               
+
+                <MudItem xs="12" md="4">
+                    @hour -й час
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Sys0)" @bind-Value="AddEditModel.Sys0" Label="SYS" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Dia0)" @bind-Value="AddEditModel.Dia0" Label="DIA" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Ritm0)" @bind-Value="AddEditModel.Ritm0" Label="Частота" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Temp0)" @bind-Value="AddEditModel.Temp0" Label="Температура" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    Конец
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Sys0)" @bind-Value="AddEditModel.Sys0" Label="SYS" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Dia0)" @bind-Value="AddEditModel.Dia0" Label="DIA" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Ritm0)" @bind-Value="AddEditModel.Ritm0" Label="Частота" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField For="@(() => AddEditModel.Temp0)" @bind-Value="AddEditModel.Temp0" Label="Температура" />
+                </MudItem>
+
+                
+
+                <MudItem xs="12" md="12">
+
+                </MudItem>
+
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public IndicatorDto AddEditModel { get; set; } = new();
+    [Parameter] public string  hour { get; set; } = "1";
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await LoadDistrictsAsync();
+        //AddEditModel.DistrictId = 1;
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+#pragma warning disable CS8618
+    public class IndicatorDto
+    {
+
+        public string Sys0 { get; set; }
+        public string Dia0 { get; set; }
+        public string Ritm0 { get; set; }
+        public string Temp0 { get; set; }
+
+        public string Sys1 { get; set; }
+        public string Dia1 { get; set; }
+        public string Ritm1 { get; set; }
+        public string Temp1 { get; set; }
+
+        public string Sys2 { get; set; }
+        public string Dia2 { get; set; }
+        public string Ritm2 { get; set; }
+        public string Temp2 { get; set; }
+
+        public string Sys3 { get; set; }
+        public string Dia3 { get; set; }
+        public string Ritm3 { get; set; }
+        public string Temp3 { get; set; }
+
+        public string Sys4 { get; set; }
+        public string Dia4 { get; set; }
+        public string Ritm4 { get; set; }
+        public string Temp4 { get; set; }
+
+        public string Sys5 { get; set; }
+        public string Dia5 { get; set; }
+        public string Ritm5 { get; set; }
+        public string Temp5 { get; set; }
+
+    }
+}

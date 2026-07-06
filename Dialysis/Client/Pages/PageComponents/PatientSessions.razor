@@ -1,0 +1,165 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+
+<MudTable Items="@Elements" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<HDSessionDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <AuthorizeView Roles="hdsession_add">
+            @{
+                if (IsCard > 0)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.AddCard"
+                               @onclick="@(() => StartSession())"
+                               Size="Size.Small"
+                               Color="Color.Info">
+                        Новый протокол сеанса гемодиализа
+                    </MudButton>
+                }
+            }
+        </AuthorizeView>
+         
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>ФИО</MudTh>
+                <MudTh>ИНН</MudTh>
+                <MudTh>Мед. Центр</MudTh>
+                <MudTh>ГД Аппарат</MudTh>
+                <MudTh>Дата Подключения</MudTh>
+                <MudTh>Дата Отключения</MudTh>
+                <MudTh>Время</MudTh>
+                <MudTh></MudTh>
+               
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Patient.LastName  @context.Patient.FirstName</MudTd>
+                <MudTd>@context.Patient.Inn</MudTd>
+                <MudTd>@context.MedCenter.Title</MudTd>
+                <MudTd>@context.MedCenterMachine.Name  @context.MedCenterMachine.Model</MudTd>
+                <MudTd>@context.HDSession.SessionStart?.ToString("dd.MM.yyyy HH:mm")</MudTd>
+                <MudTd>@context.HDSession.SessionEnd?.ToString("dd.MM.yyyy HH:mm")</MudTd>
+               <MudTd>@context.HDSession.TotalHours?.ToString("F") час </MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled"
+                               @onclick="@(async() => await AddEditModal(context.HDSession.Id))" StartIcon="@Icons.Material.Filled.FileOpen"
+                               Size="Size.Small" Color="Color.Info">
+                        Подробности
+                    </MudButton>
+                </MudTd>
+              
+       
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+</MudTable>
+
+
+@code {
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private bool tableLoading = false;
+
+    [Parameter]
+    public long MedCardId { get; set; } = 0;
+
+    private long IsCard { get; set; } = 0;
+    private MedCard ownCard {get; set;}
+    private HDSessionDto selectedItem1 = null;
+    public string Inn { get; set; }
+
+    private IEnumerable<HDSessionDto> Elements = new List<HDSessionDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MedCardId > 0)
+        {
+            await LoadMCardAsync();
+            await LoadSessionsAsync();
+        }        
+    }
+    private async Task LoadSessionsAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/bymedcard?medcardId=" + MedCardId+"&iscard="+IsCard);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+
+        var mappedData = await response.ToResult<List<HDSessionDto>>();
+        Elements = mappedData.Data;
+
+    }
+
+    public async Task LoadMCardAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/isowncard?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<MedCard>();
+        ownCard = mappedData.Data;
+        if (ownCard != null)
+        {
+            IsCard = 99;
+            Inn = ownCard.Inn;
+        }
+        else
+        {
+            _navigationManager.NavigateTo("/medcardlist");
+        }
+
+    }
+
+    private bool FilterFunc1(HDSessionDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(HDSessionDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Patient.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Patient.Inn.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task StartSession()
+    {
+        if (MedCardId > 0)
+        {
+            if (!String.IsNullOrEmpty(Inn))
+            {
+                _navigationManager.NavigateTo("/newsession/" + MedCardId + "/" + Inn);
+            }
+            else
+            {
+                _navigationManager.NavigateTo("/newsession/" + MedCardId);
+            }
+           
+        }
+    }
+
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("HDSessionId", id);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<Dialysis.Client.Pages.Protocols.SessionDetail>("Подробности", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            //await LoadSessionsAsync();
+        }
+    }
+
+}

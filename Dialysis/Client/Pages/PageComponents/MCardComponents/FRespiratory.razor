@@ -1,0 +1,168 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@{
+    <MudGrid>
+    @if (item == null)
+    {
+       
+
+                                   <MudItem xs="12" md="12">
+                                   <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                            Variant="Variant.Filled"
+                            StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                        Size="Size.Small" Color="Color.Info">
+                                Добавить
+                                </MudButton>
+                            </MudItem>
+        
+    }
+    else
+    {
+   
+
+            <MudItem xs="12" md="12" Style="text-align:right;">
+                <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                   Size="Size.Small" Color="Color.Info">
+                    Редактировать
+                </MudButton>
+            </MudItem>
+     
+             <MudItem xs="12" md="12">
+
+        <MudGrid>
+              <MudItem xs="2" md="2" Class="fb600">
+                Носовое дыхание
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Nosovoe
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Грудная клетка
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Grudnoi
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Тип дыхания
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Tip
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Глубина и ритм дых.
+            </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Glubina
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Частота дыхания
+            </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Chastota
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Голосовое дрожание
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Golosovoe
+            </MudItem>
+            <MudItem xs="12" md="12">
+            </MudItem>
+            <MudItem xs="12" md="12"> <MudText Typo="Typo.h6">Перкуссия</MudText> </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Сравнительная
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Sravnitelnaia
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Топографическая
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Topograficheskaia
+            </MudItem>
+            <MudItem xs="12" md="12"> <MudText Typo="Typo.h6">Аускультация</MudText> </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Дыхательные шумы
+                    </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Dyhatelnye
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Хрипы
+            </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Hrip
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Прочее
+            </MudItem>
+            <MudItem xs="10" md="10">
+                @item.Prochee
+            </MudItem>
+            <MudItem xs="12" md="12">
+            </MudItem>
+        </MudGrid>
+            </MudItem>
+ }
+ </MudGrid>
+
+}
+
+
+
+
+@code {
+    [Parameter]
+    public long MedCardId { get; set; }
+
+
+    private FirstRespiratory item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/getrespiratory?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            var mappedData = await response.ToResult<FirstRespiratory>();
+            if (mappedData.Data != null)
+            {
+                item = mappedData.Data;
+            }
+        }
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var locId = 0;
+        var parameters = new DialogParameters();
+        parameters.Add("MedCardId", id);
+        if (item != null)
+        {
+            parameters.Add("AddEditModel", item);
+        }
+        else
+        {
+            parameters.Add("AddEditModel", new FirstRespiratory());
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<FRespiratoryAddEdit>(locId == 0 ? "Добавить" : "Редактировать", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+}

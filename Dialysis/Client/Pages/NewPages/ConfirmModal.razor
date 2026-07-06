@@ -1,0 +1,26 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudText>@message</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Принять</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Inject] 
+    private IDialogService DialogService { get; set; } // for MessageBox
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] 
+    public string message { get; set; }
+    
+    private string _returnValue;
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(_returnValue));
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

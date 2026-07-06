@@ -1,0 +1,115 @@
+﻿@page "/mcardadd2"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.Large">
+
+
+        <MudGrid>           
+             <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                Добавить мед. карта -> Система дыхания
+                </MudText>
+        </MudItem>           
+        </MudGrid>
+
+
+    <MudForm @ref="form" Model="@AddEditModel" @bind-IsValid="@IsValid">
+    
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.Nosovoe" Required="true" Label="Носовое дыхание" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Grudnoi" Required="true" Label="Грудная клетка" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="AddEditModel.Tip" Required="true" Label="Тип дыхания" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.Glubina" Required="true" Label="Глубина и ритм дыхания" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.Chastota" Required="true" Label="Частота дыхания" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                 <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.Golosovoe" Required="true" Label="Голосовое дрожание" Lines="2" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">                    
+                </MudItem>
+
+                <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Перкуссия</MudText> </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Sravnitelnaia" Required="true" Label="Сравнительная" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.Topograficheskaia" Required="true" Label="Топографическая" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+                <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Аускультация</MudText> </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Dyhatelnye" Required="true" Label="Дыхательные шумы" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Hrip" Required="true" Label="Хрипы" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.Prochee"  Label="Прочее" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                </MudItem>
+            <MudItem xs="12" md="12">
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Назад</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Disabled="@(IsValid==false)" Color="Color.Success">Далее</MudButton>
+            </MudItem>
+            </MudGrid>
+
+            
+</MudForm>
+</MudContainer>
+
+@code {
+   
+    //[Parameter]
+    //public long MedCardId { get; set; }
+
+    public FirstRespiratory AddEditModel { get; set; } = new FirstRespiratory();
+    MudForm form;
+    private bool IsDisabled = true;
+    private bool IsValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var local = await _commonService.LocalMedCard2Async(null);
+        if (local != null) AddEditModel = local;
+        StateHasChanged();
+    }
+
+    public void Cancel()
+    {
+        JSRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private async Task SaveAsync()
+    {
+        await _commonService.LocalMedCard2Async(AddEditModel);
+        _navigationManager.NavigateTo("/mcardadd3");
+
+        /*AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addrespiratory", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }*/
+    }
+}

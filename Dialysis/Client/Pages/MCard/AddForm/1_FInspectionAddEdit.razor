@@ -1,0 +1,160 @@
+﻿@page "/mcardadd1"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+
+
+        <MudGrid>           
+             <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                Добавить мед. карта -> Первичный осмотр больного при поступлении
+                </MudText>
+        </MudItem>           
+        </MudGrid>
+
+
+    <MudForm @ref="form" Model="@AddEditModel" @bind-IsValid="@IsValid">
+
+       
+
+            <MudGrid>
+                <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.Complaints" Required="true" Label="Жалобы" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField  @bind-Value="AddEditModel.Anamnez" Required="true" Label="Анамнез болезни" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.AnamnezLive" Required="true" Label="Анамнез жизни" Lines="3" Variant="Variant.Outlined" />
+                </MudItem>
+            <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h5">Объективный статус</MudText>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.GeneralState" Required="true" Label="Общее состояние" Lines="3" Variant="Variant.Outlined" />
+            </MudItem>
+                <MudItem xs="12" md="12">                    
+                </MudItem>
+
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Rost" Required="true" Label="Рост(см)" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Ves" Required="true" Label="Вес(кг)" />
+                </MudItem>
+            <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.BodyT" Required="true" Label="t тела" />
+            </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Grudnoi" Required="true" Label="Антропометриче грудной клетки (см)" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                    <MudTextField @bind-Value="AddEditModel.Kozhnye" Required="true" Label="Кожные покровы" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Svet" Required="true" Label="Цвет" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                    <MudTextField @bind-Value="AddEditModel.Suhost" Required="true" Label="Сухость"  />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Uprugost" Required="true" Label="Упругость" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Syp" Required="true" Label="Наличие сыпи" />
+                </MudItem>
+                <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Pigmentation" Required="true" Label="Пигментаций" />
+                </MudItem>
+            <MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Scars" Required="true" Label="Рубцов" />
+            </MudItem><MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Bedsores" Required="true" Label="Пролежней" />
+                </MudItem><MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Damage" Required="true" Label="Повреждений" />
+            </MudItem><MudItem xs="4" md="4">
+                <MudTextField @bind-Value="AddEditModel.Dermographism" Required="true" Label="Дермографизм" />
+            </MudItem>
+                <MudItem xs="4" md="4">
+                    <MudTextField @bind-Value="AddEditModel.Jivot" Required="true" Label="Окружность живота(см)" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField @bind-Value="AddEditModel.Oteki" Required="true" Label="Отеки" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.Limfaticheskiy" Required="true" Label="Лимфатические узлы" />
+                </MudItem>
+                
+                <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Опорно-двигательный аппарат</MudText> </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.DeformationOfBones" Required="true" Label="Деформация костей, суставов" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.КednessOfJoints" Required="true" Label="Припухание, покраснение суставов" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.Musculature" Required="true" Label="Мускулатура, сила" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="AddEditModel.PainMuscles" Required="true" Label="Боли в мышцах, костях, суставах" />
+                </MudItem>
+                <MudItem xs="12" md="12">
+                <MudTextField @bind-Value="AddEditModel.Other"  Label="Прочее" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                </MudItem>
+
+            <MudItem xs="12" md="12">
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Назад</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Disabled="@(IsValid==false)" Color="Color.Success">Далее</MudButton>
+            </MudItem>
+            </MudGrid>
+</MudForm>
+</MudContainer>
+
+                @code {
+
+
+    //[Parameter] 
+    //public long MedCardId { get; set; }
+
+    public FirstInspection AddEditModel { get; set; } = new FirstInspection();
+    MudForm form;
+    private bool IsDisabled = true;
+    private bool IsValid = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var local = await _commonService.LocalMedCard1Async(null);
+        if (local != null) AddEditModel = local;
+    }
+
+    public void Cancel()
+    {
+        JSRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private async Task SaveAsync()
+    {
+        await _commonService.LocalMedCard1Async(AddEditModel);
+        _navigationManager.NavigateTo("/mcardadd2");
+
+       /**AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addinspection", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }*/
+    }
+}

@@ -1,0 +1,223 @@
+@page "/admin/httplogs"
+@attribute [Authorize(Roles = "admin")]
+@using Microsoft.AspNetCore.WebUtilities
+@using Dialysis.Shared.Models
+@using Dialysis.Shared.Params
+@using Dialysis.Shared.Dto
+
+<MudText Typo="Typo.h4" Class="my-4">HTTP Логи запросов</MudText>
+
+<MudTable T="HttpLogDto"
+          @ref="_table"
+          Items="@_items"
+          ServerData="@(new Func<TableState, Task<TableData<HttpLogDto>>>(ServerReload))"
+          Loading="@_loading"
+          Dense="true"
+          Hover="true"
+          Bordered="true"
+          Striped="true"
+          FixedHeader="true"
+          Height="600px">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">HTTP Запросы</MudText>
+        <MudSpacer />
+        <MudButton @onclick="ClearFilters"
+                   StartIcon="@Icons.Material.Filled.Clear"
+                   Size="Size.Small"
+                   Variant="Variant.Outlined"
+                   Color="Color.Warning">
+            Очистить фильтры
+        </MudButton>
+        <MudSpacer />
+        <MudSelect T="string"
+                   Label="HTTP Метод"
+                   Value="_selectedMethod"
+                   ValueChanged="@(s => { _selectedMethod = s; _table.ReloadServerData(); })"
+                   Variant="Variant.Outlined"
+                   Dense="true"
+                   Clearable="true"
+                   Adornment="Adornment.End"
+                   Class="mt-0 mr-2"
+                   Style="min-width: 120px;">
+            @foreach (var m in _methods)
+            {
+                <MudSelectItem Value="@m">@m</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="int?"
+                   Label="Статус код"
+                   Value="_selectedStatus"
+                   ValueChanged="@(s => { _selectedStatus = s; _table.ReloadServerData(); })"
+                   Variant="Variant.Outlined"
+                   Dense="true"
+                   Clearable="true"
+                   Adornment="Adornment.End"
+                   Class="mt-0 mr-2"
+                   Style="min-width: 120px;">
+            @foreach (var s in _statusCodes)
+            {
+                <MudSelectItem Value="@s">@s</MudSelectItem>
+            }
+        </MudSelect>
+        <MudDatePicker Label="Дата начала"
+                       Date="_dateFrom"
+                       DateChanged="@(d => { _dateFrom = d; _table.ReloadServerData(); })"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       Class="mt-0 mr-2"
+                       Style="min-width: 140px;" />
+        <MudDatePicker Label="Дата конца"
+                       Date="_dateTo"
+                       DateChanged="@(d => { _dateTo = d; _table.ReloadServerData(); })"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       Class="mt-0 mr-2"
+                       Style="min-width: 140px;" />
+        <MudTextField T="string"
+                      Placeholder="Поиск (IP, путь, пользователь...)"
+                      Immediate="true"
+                      ValueChanged="@(s => OnSearch(s))"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mt-0"
+                      Style="min-width: 200px;" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="Timestamp">Дата/Время</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="HttpMethod">Метод</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="Path">Путь</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="StatusCode">Статус</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="DurationMs">Время (мс)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel T="HttpLogDto" SortLabel="IpAddress">IP адрес</MudTableSortLabel></MudTh>
+        <MudTh>Пользователь</MudTh>
+        <MudTh>Детали</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Дата">@context.Timestamp.ToString("dd.MM.yyyy HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Метод">
+            <MudChip T="string" Variant="Variant.Filled"
+                     Color="@GetMethodColor(context.HttpMethod)" Size="Size.Small">
+                @context.HttpMethod
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Путь" Style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">@context.Path</MudTd>
+        <MudTd DataLabel="Статус">
+            <MudChip T="string" Variant="Variant.Filled"
+                     Color="@(context.StatusCode >= 200 && context.StatusCode < 300 ? Color.Success :
+                               context.StatusCode >= 300 && context.StatusCode < 400 ? Color.Info :
+                               context.StatusCode >= 400 && context.StatusCode < 500 ? Color.Warning : Color.Error)"
+                     Size="Size.Small">
+                @context.StatusCode
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Время">@context.DurationMs ms</MudTd>
+        <MudTd DataLabel="IP">@context.IpAddress</MudTd>
+        <MudTd DataLabel="Пользователь">@context.UserName</MudTd>
+        <MudTd DataLabel="Детали">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                       OnClick="@(() => ShowDetail(context))">
+                Детали
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 20, 50, 100, 1000 }"
+                       RowsPerPageString="Строк на странице:"
+                       InfoFormat="{first_item}-{last_item} из {all_items}"
+                       AllItemsText="Все" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private bool _loading;
+    private MudTable<HttpLogDto> _table;
+    private IEnumerable<HttpLogDto> _items = new List<HttpLogDto>();
+
+    private string _searchString = "";
+    private string? _selectedMethod;
+    private int? _selectedStatus;
+    private DateTime? _dateFrom;
+    private DateTime? _dateTo;
+
+    private readonly string[] _methods = { "GET", "POST", "PUT", "PATCH", "DELETE" };
+    private readonly int?[] _statusCodes = { 200, 201, 204, 301, 302, 400, 401, 403, 404, 405, 409, 422, 429, 500, 502, 503 };
+
+    private async Task<TableData<HttpLogDto>> ServerReload(TableState state)
+    {
+        try
+        {
+            _loading = true;
+            var queryParams = new Dictionary<string, string>
+            {
+                ["pageNumber"] = (state.Page + 1).ToString(),
+                ["pageSize"] = state.PageSize.ToString(),
+                ["sortBy"] = state.SortLabel ?? "",
+                ["sortAsc"] = (state.SortDirection == SortDirection.Ascending).ToString().ToLower(),
+                ["searchString"] = _searchString ?? ""
+            };
+
+            if (!string.IsNullOrEmpty(_selectedMethod))
+                queryParams["httpMethod"] = _selectedMethod;
+            if (_selectedStatus.HasValue)
+                queryParams["statusCode"] = _selectedStatus.Value.ToString();
+            if (_dateFrom.HasValue)
+                queryParams["dateFrom"] = _dateFrom.Value.ToString("yyyy-MM-dd");
+            if (_dateTo.HasValue)
+                queryParams["dateTo"] = _dateTo.Value.ToString("yyyy-MM-dd");
+
+            var url = QueryHelpers.AddQueryString("api/audit/httplog/paged", queryParams);
+            var response = await _httpClient.GetFromJsonAsync<PagedHttpLogResponse>(url);
+
+            return new TableData<HttpLogDto>
+            {
+                Items = response?.Items ?? new List<HttpLogDto>(),
+                TotalItems = response?.TotalItems ?? 0
+            };
+        }
+        catch (Exception ex)
+        {
+            _snackBar.Add($"Ошибка: {ex.Message}", Severity.Error);
+            return new TableData<HttpLogDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedMethod = null;
+        _selectedStatus = null;
+        _dateFrom = null;
+        _dateTo = null;
+        _searchString = "";
+        await _table.ReloadServerData();
+    }
+
+    private async Task ShowDetail(HttpLogDto log)
+    {
+        var parameters = new DialogParameters { ["Log"] = log };
+        var dialog = _dialogService.Show<HttpLogDetail>("Детали HTTP запроса", parameters,
+            new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, Position = DialogPosition.TopCenter });
+    }
+
+    private Color GetMethodColor(string method) => method.ToUpper() switch
+    {
+        "GET" => Color.Info,
+        "POST" => Color.Success,
+        "PUT" => Color.Warning,
+        "PATCH" => Color.Tertiary,
+        "DELETE" => Color.Error,
+        _ => Color.Default
+    };
+}

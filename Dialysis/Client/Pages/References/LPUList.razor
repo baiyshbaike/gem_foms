@@ -1,0 +1,113 @@
+﻿@page "/lpus"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@attribute [Authorize]
+
+<MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<GroupLPU,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">ЛПУ</MudText>
+        &nbsp;&nbsp;
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Hotel" Size="Size.Small" Color="Color.Info" @onclick="@(() => AddEditModal(0))">Добавить</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Immediate="true" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Название</MudTh>
+        <MudTh>Дата</MudTh>
+     
+        <MudTh>&nbsp;</MudTh>
+
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Название">@context.Title</MudTd>
+        <MudTd DataLabel="Дата">@context.CreatedOn?.ToString("dd.MM.yyyy")</MudTd>
+        <MudTd DataLabel="">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Редактировать"
+                           @onclick="@(async() => await AddEditModal(context.Id))"
+                           Size="Size.Small"
+                           Color="Color.Warning">
+
+            </MudIconButton>
+
+        </MudTd>
+
+
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private bool tableLoading = false;
+    private GroupLPU selectedItem1 = null;
+    private HashSet<GroupLPU>
+    selectedItems = new HashSet<GroupLPU>();
+
+    private IEnumerable<GroupLPU> Elements = new List<GroupLPU>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        tableLoading = true;
+        await LoadDataAsync();
+    }
+
+  
+
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/status/alllpu");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<GroupLPU>>();
+        Elements = mappedData.Data;
+        tableLoading = false;
+    }
+
+    private bool FilterFunc1(GroupLPU element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(GroupLPU element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;       
+        return false;
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        if (id != 0)
+        {
+            var selItem = Elements.Where(t => t.Id == id).FirstOrDefault();
+            parameters.Add("AddEditModel", selItem);
+        }
+        else
+        {
+            var newModel = new GroupLPU();
+            parameters.Add("AddEditModel", newModel);
+        }
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<LPUAddEdit>(id == 0 ? "Добавить" : "Редактировать", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+
+}
+

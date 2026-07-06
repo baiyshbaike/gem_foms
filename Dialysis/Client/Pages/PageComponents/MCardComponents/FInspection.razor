@@ -1,0 +1,261 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@{
+    <MudGrid>
+    @if (showButton == true)
+    {
+         
+
+                           <MudItem xs="12" md="12">
+                           <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                            Variant="Variant.Filled"
+                            StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                        Size="Size.Small" Color="Color.Info">
+                        Добавить
+                        </MudButton>
+                    </MudItem>
+      
+    }
+    else
+    {
+      
+
+            <MudItem xs="12" md="12" Style="text-align:right;">
+                <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                   Size="Size.Small" Color="Color.Info">
+                    Редактировать
+                </MudButton>
+            </MudItem>
+    <MudItem xs="12" md="12">
+        <MudGrid>
+            <MudItem xs="12" md="12" Class="fb600">
+                Жалобы
+            </MudItem>
+            <MudItem xs="12" md="12">
+                @item.Complaints
+            </MudItem>
+            <MudItem xs="12" md="12" Class="fb600">
+                Анамнез болезни
+            </MudItem>
+            <MudItem xs="12" md="12">
+                @item.Anamnez
+            </MudItem>
+            <MudItem xs="12" md="12" Class="fb600">
+                Анамнез жизни
+            </MudItem>
+            <MudItem xs="12" md="12">
+                @item.AnamnezLive
+            </MudItem>
+            <MudItem xs="12" md="12" Class="fb600">
+                Объективный статус Общее состояние
+            </MudItem>
+            <MudItem xs="12" md="12">
+                @item.GeneralState
+            </MudItem>
+            <MudItem xs="12" md="12">
+            </MudItem>
+
+            <MudItem xs="2" md="2" Class="fb600">
+                Рост(см)
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Rost
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Вес(кг)
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Ves
+            </MudItem>
+
+            <MudItem xs="2" md="2" Class="fb600">
+                Антропометриче грудной клетки
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Grudnoi
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Цвет
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Svet
+            </MudItem>
+
+            <MudItem xs="2" md="2" Class="fb600">
+                Сухость
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Suhost
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Окружность живота(см)
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Jivot
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Кожные покровы
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Kozhnye
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Упругость
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Uprugost
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Наличие сыпи
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Syp
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                t тела
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.BodyT
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Пигментаций
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Pigmentation
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Рубцов
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Scars
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Пролежней
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Bedsores
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Повреждений
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Damage
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Дермографизм
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Dermographism
+            </MudItem>
+            <MudItem xs="12" md="12" Class="fb600">
+                Отеки
+            </MudItem>
+            <MudItem xs="12" md="12">
+                @item.Oteki
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">Опорно-двигательный аппарат</MudText>
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Деформация костей, суставов
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.DeformationOfBones
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Припухание, покраснение суставов
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.КednessOfJoints
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Мускулатура, сила
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Musculature
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Боли в мышцах, костях, суставах
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.PainMuscles
+            </MudItem>
+            <MudItem xs="2" md="2" Class="fb600">
+                Прочее
+            </MudItem>
+            <MudItem xs="4" md="4">
+                @item.Other
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+            </MudItem>
+        </MudGrid>
+            </MudItem>
+    }
+    </MudGrid>
+   
+}
+           
+     
+
+
+@code {
+    [Parameter]
+    public long MedCardId { get; set; }
+
+
+    private FirstInspection item { get; set; }
+    private bool showButton = false;
+
+    protected override async Task OnInitializedAsync()
+    {  
+        await LoadDataAsync();
+    }
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/getinspection?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            var mappedData = await response.ToResult<FirstInspection>();           
+            if (mappedData.Data != null)
+            {
+                item = mappedData.Data;
+            }
+            else
+            {
+                showButton = true;
+            }
+        }
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var locId = 0;
+        var parameters = new DialogParameters();
+        parameters.Add("MedCardId", id);
+        if(item!=null){
+            parameters.Add("AddEditModel", item);
+        }
+        else
+        {
+            parameters.Add("AddEditModel", new FirstInspection());
+        }
+        
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<FInspectionAddEdit>(locId == 0 ? "Добавить" : "Редактировать", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+}

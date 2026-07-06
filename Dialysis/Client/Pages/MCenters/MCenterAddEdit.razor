@@ -1,0 +1,123 @@
+﻿@inject HttpClient Http
+<EditForm Model="@AddEditModel" OnValidSubmit="SaveAsync">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить Мед. Центр
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать   Добавить Мед. Центр
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" md="12">
+                    <MudTextField For="@(() => AddEditModel.Title)" @bind-Value="AddEditModel.Title" Label="Название" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="long" Label="Область" SelectedValuesChanged="LoadDistRegionsAsync" @bind-Value="@AddEditModel.DistrictId" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                        @foreach (var selectItem in Elements)
+                        {
+                            <MudSelectItem T="long" Value="@selectItem.Id">@selectItem.Title</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="long" Label="Район" @bind-Value="@AddEditModel.RegionId" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem T="long" Value="0">---</MudSelectItem>
+                        @foreach (var selectReg in RegionList)
+                        {
+                            <MudSelectItem T="long" Value="@selectReg.Id">@selectReg.Title</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                </MudItem>
+                <MudItem xs="12" md="12">
+                    <MudTextField For="@(() => AddEditModel.Address)" @bind-Value="AddEditModel.Address" Label="Адрес" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.Phone)" @bind-Value="AddEditModel.Phone" Label="Телефон" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.Phone2)" @bind-Value="AddEditModel.Phone2" Label="Телефон 2" />
+                </MudItem>
+
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+
+        @code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public MedCenter AddEditModel { get; set; } = new();
+
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDistrictsAsync();
+        //AddEditModel.DistrictId = 1;
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+        if(Elements != null)
+        {
+            await LoadDistRegionsAsync();
+        }
+    }
+
+    private async Task LoadDistRegionsAsync()
+    {
+        AddEditModel.RegionId = 0;
+        if (AddEditModel.DistrictId>0)
+        {
+            var response = await Http.GetAsync("api/region/alldistregions?Id=" + AddEditModel.DistrictId);
+            var mappedData = await response.ToResult<List<Region>>();
+            RegionList = mappedData.Data;
+        }
+
+    }
+
+    private async Task SaveAsync()
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/medcenter/addnew", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

@@ -1,0 +1,197 @@
+﻿@page "/companeadd"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                    Добавить мед. карта
+                </MudText>
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+    <MudForm @ref="form" Model="@AddEditModel" @bind-IsValid="@IsValid">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => AddEditModel.Inn)" Disabled="true" @bind-Value="AddEditModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField For="@(() => Fio)" Disabled="true" @bind-Value="Fio" Label="ФИО" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField For="@(() => pol)" Disabled="true" @bind-Value="pol" Label="Пол" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker PickerVariant="PickerVariant.Dialog" Label="Дата рож." @bind-Date="date_of_birth" Disabled="true" DateFormat="dd.MM.yyyy" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField For="@(() => age)" Disabled="true" @bind-Value="age" Label="Возраст"/>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField For="@(() => phoneNum1)" Disabled="true" @bind-Value="phoneNum1" Label="Контакты"/>
+            </MudItem>
+            <MudItem xs="12" md="9">
+                <MudTextField For="@(() => address)" Disabled="true" @bind-Value="address" Label="Область/район/село или город проживания" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="long" Label="Мед. центр" @bind-Value="@AddEditModel.MedCenterId" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var medItem in UserCenters)
+                    {
+                    <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudTextField For="@(() => AddEditModel.TextComplaint)" Required="true" @bind-Value="AddEditModel.TextComplaint" Label="text" />
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Disabled="@GetDisable()" Color="Color.Success">Сохранить</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudContainer>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    MudForm form;
+    public string Fio = "";
+    public string pol = "";
+    public DateTime? date_of_birth = DateTime.Today;
+    public int age=0;
+    public string phoneNum1 = "";
+    public string address = "";
+    [Parameter]
+    public Complaint AddEditModel { get; set; } = new();
+    private IEnumerable<District> Elements = new List<District>();
+    private IEnumerable<Region> RegionList = new List<Region>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    public MedCardSearch searchModel = new MedCardSearch();
+    private Patient patient {get;set;} = new();
+    private bool IsOnlyCenter = true;
+    private bool IsDisabled = true;
+    private bool IsValid;
+    private bool GetDisable()
+    {
+        if (IsDisabled == false && IsValid == true)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+    await LoadUserCentersAsync();
+    await SearchAsync();
+    StateHasChanged();
+    }
+    private async Task SearchAsync()
+    {
+        IsDisabled = true;
+        var response = await Http.GetAsync("api/patient/searchpatient?Inn=" + searchModel.Inn);
+        var mappedData = await response.ToResult<Patient>();
+
+        if (mappedData.Data != null)
+        {
+            patient = mappedData.Data;
+            await LoadDistrictsAsync();
+            await LoadDistDefaultRegionsAsync();
+            DateTime datetimenow = DateTime.Now;
+            AddEditModel.Inn = mappedData.Data.Inn;
+            Fio = mappedData.Data!.LastName + " " + mappedData.Data!.FirstName +" "+ mappedData.Data!.MiddleName;
+            pol = mappedData.Data!.Gender ? "Муж" : "Жен";
+            if (mappedData.Data.BirthDate != null)
+            {
+                date_of_birth = (DateTime)mappedData.Data.BirthDate;
+            }
+            var dis = "";
+            var reg = "";
+            foreach (var item in Elements)
+            {
+                if(item.Id == patient.DistrictId)
+                {
+                    dis = item.Title; 
+                }
+            };
+            foreach (var item in RegionList)
+            {
+                if(item.Id == patient.RegionId)
+                {
+                    reg = item.Title;
+                }
+            };
+            age = (int)(datetimenow.Year - ((DateTime)date_of_birth).Year);
+            phoneNum1 = mappedData.Data.Phone;
+            address = dis + " " + reg + " " + patient.Address;
+            AddEditModel.PatientId = mappedData.Data.Id;
+            IsDisabled = false;
+        }
+        else
+        {
+            _snackBar.Add(mappedData.Messages[0], Severity.Error);
+        }
+    }
+    private async Task LoadDistrictsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistricts");
+        var mappedData = await response.ToResult<List<District>>();
+        Elements = mappedData.Data;
+    }
+    private async Task LoadDistDefaultRegionsAsync()
+    {
+        var response = await Http.GetAsync("api/region/alldistregions?Id=" + patient.DistrictId);
+        var mappedData = await response.ToResult<List<Region>>();
+        RegionList = mappedData.Data;
+
+    }
+    public async Task LoadUserCentersAsync()
+    {
+        var response = await Http.GetAsync("api/medcenter/relmedcenters");
+        var mappedData = await response.ToResult<List<MedCenter>>();
+        UserCenters = mappedData.Data;
+        if(UserCenters != null)
+        {
+            if(UserCenters.Count() > 1)
+            {
+                IsOnlyCenter = false;
+            }
+            AddEditModel.MedCenterId = UserCenters.Where(t=>t.Title!=null && t.Title!="").Select(t=>t.Id).FirstOrDefault();
+        }
+    }
+    public void Cancel()
+    {
+        _navigationManager.NavigateTo("/medcardlist");
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.IsDeleted = false;
+        var response = await _httpClient.PostAsJsonAsync("api/patient/addcomplaint", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

@@ -1,0 +1,557 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+@{
+    <MudGrid>
+        @if (item == null)
+        {
+
+
+            <MudItem xs="12" md="12">
+                <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                           Size="Size.Small" Color="Color.Info">
+                    Добавить
+                </MudButton>
+            </MudItem>
+
+        }
+        else
+        {
+
+            <MudItem xs="12" md="12" Style="text-align:right;">
+                <MudButton @onclick="@(async() => await AddEditModal(MedCardId))"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.MapsHomeWork"
+                           Size="Size.Small" Color="Color.Info">
+                    Редактировать
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" md="12">
+                <MudGrid>
+
+                    <MudItem xs="5" md="5">
+
+                        Общий анализ крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An1
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An1Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Общий анализ мочи
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An2
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An2Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ крови на креатинин сыворотки крови_
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An3
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An3Date
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на мочевину сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An4
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An4Date
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на сахар сыворотки крови на тощак
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An5
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An5Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на сахар после нагрузки едой
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An6
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An6Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на гликогемоглобин
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An7
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An7Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на железо сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An8
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An8Date
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на ферритин сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An9
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An9Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на калий сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An10
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An10Date
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на кальций сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An11
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An11Date
+                    </MudItem>
+
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на натрий сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An12
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An12Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на фосфор сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An13
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An13Date
+                    </MudItem>
+
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на общий белок сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An14
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An14Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на альбумины сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An15
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An15Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на общий билирубин сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An16
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An16Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на АЛТ сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An17
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An17Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на ACT
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An18
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An18Date
+                    </MudItem>
+
+                    <MudItem xs="5" md="5">
+
+                        Анализ
+                        крови на параттгормон сыворотки крови
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        @item.An19
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.An19Date
+                    </MudItem>
+
+
+                    <MudItem xs="12" md="12">
+                        Амбулаторные обследования на:
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        @item.Ambulator
+                    </MudItem>
+
+
+
+                    <MudItem xs="3" md="3">
+
+                        ЭКГ: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        @item.Ekg
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.EkgDate
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+
+                        ЭхоКГ: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        @item.Eho
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.EhoDate
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+
+                        Рентгенография ОГК: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        @item.Ogk
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.OgkDate
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        УЗИ внутренних органов: (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        @item.Uzi
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.UziDate
+                    </MudItem>
+
+                    <MudItem xs="3" md="3">
+                        Консультации узких специалистов (эндокринолога, кардиолога, сосудистого хирурга и т.д.): (заключение)
+                    </MudItem>
+                    <MudItem xs="4" md="4">
+                        @item.Uzi2
+                    </MudItem>
+                    <MudItem xs="2" md="2">
+                        <MudText>
+                            дата исследования
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="3" md="3">
+                        @item.UziDate2
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <h4>ОБОСНОВАНИЕ КЛИНИЧЕСКОГО ДИАГНОЗА</h4>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        @item.PlanningDate
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        ПЛАН ОБСЛЕДОВАНИЯ
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        @item.Planning
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        ИНДИВИДУАЛЬНЫЙ ПЛАН ЛЕЧЕНИЯ
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        @item.Individual
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        ПРАКТИЧЕСКИЕ РЕКОМЕНДАЦИИ
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        @item.Recommend
+                    </MudItem>
+
+                    <MudItem xs="12" md="12">
+                    </MudItem>
+                </MudGrid>
+
+            </MudItem>
+        }
+
+    </MudGrid>
+
+}
+
+
+
+
+@code {
+    [Parameter]
+    public long MedCardId { get; set; }
+
+
+    private FirstAnalysis item { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/medcard/getfan?medcardId=" + MedCardId);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            var mappedData = await response.ToResult<FirstAnalysis>();
+            if (mappedData.Data != null)
+            {
+                item = mappedData.Data;
+            }
+        }
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var locId = 0;
+        var parameters = new DialogParameters();
+        parameters.Add("MedCardId", id);
+        if (item != null)
+        {
+            parameters.Add("AddEditModel", item);
+        }
+        else
+        {
+            parameters.Add("AddEditModel", new FirstAnalysis());
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<FAnalysisAddEdit>(locId == 0 ? "Добавить" : "Редактировать", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+}

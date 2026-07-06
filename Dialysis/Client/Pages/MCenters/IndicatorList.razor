@@ -1,0 +1,114 @@
+﻿@page "/indlist/{mid:long}/{MCenterName}"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+@* <MudBreadcrumbs Items="_items"> *@
+@*     <ItemTemplate Context="item"> *@
+@*         <MudLink Href="@item.Href">@item.Text</MudLink> *@
+@*     </ItemTemplate> *@
+@* </MudBreadcrumbs> *@
+
+<MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Индикаторы исполнения договоров</MudText>
+        &nbsp;&nbsp;
+        <AuthorizeView Roles="admin, indicator_access, medcard, medcard_add, medcard_access">
+            <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.AddCard"
+                       @onclick="@(() => AddNew())"
+                       Size="Size.Small"
+                       Color="Color.Info">
+                Добавить индикатор
+            </MudButton>
+         </AuthorizeView>            
+        <MudSpacer />    
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>No:</MudTh>
+        <MudTh>Название</MudTh>
+        <MudTh>Дата</MudTh>       
+        <MudTh>&nbsp;</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id</MudTd>
+        <MudTd>Индикаторы мониторинга исполнения договора за @context.Title</MudTd>
+        <MudTd>@context.CreatedOn?.ToString("dd.MM.yyyy")</MudTd>
+         
+        <MudTd>
+            <MudButton Variant="Variant.Filled"
+                       @onclick="@(async() => await DetailPage(context.Id))"
+                       StartIcon="@Icons.Material.Filled.FileOpen"
+                       Size="Size.Small" Color="Color.Info">
+                Подробности
+            </MudButton> 
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    [Parameter]
+    public long? mid { get; set; }
+    [Parameter]
+    public string MCenterName { get; set; }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Мед. центр и гос. ОЗ", href: "/mcenters")
+    };
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private string quickString = "";
+    private bool hasEditRight = false;
+
+    private bool tableLoading = false;
+
+    private IEnumerable<Indicator> Elements = new List<Indicator>();
+
+    private List<Patient> Data { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (mid == null)
+        {
+            _navigationManager.NavigateTo("/mcenters");
+        }
+
+        tableLoading = true;
+        _items.Add(new BreadcrumbItem(MCenterName, href: null, disabled: false));
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+
+        var response = await Http.GetAsync("api/medcenter/allindicator?id="+mid);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await _authenticationManager.Logout();
+            _navigationManager.NavigateTo("/login");
+        }
+        var mappedData = await response.ToResult<List<Indicator>>();
+        Elements = mappedData.Data;
+        tableLoading = false;
+    }
+
+    private async Task AddNew()
+    {
+        _navigationManager.NavigateTo("/indadd/" + mid + "/" + MCenterName);
+    }
+
+    private async Task DetailPage(long id)
+    {
+        _navigationManager.NavigateTo("/inddetail/" + id + "/" + mid + "/" + MCenterName);
+    }
+
+}

@@ -1,0 +1,16 @@
+﻿@typeparam TValue
+@using System.Linq.Expressions
+
+<MudSelect T=TValue Value=@this.Value ValueChanged=this.ValueChanged ValueExpression=this.ValueExpression Label="Select" HelperText="Choose">
+    @ChildContent
+</MudSelect>
+
+@code {
+    [Parameter] public TValue? Value { get; set; }
+
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+
+    [Parameter] public Expression<Func<TValue>>? ValueExpression { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

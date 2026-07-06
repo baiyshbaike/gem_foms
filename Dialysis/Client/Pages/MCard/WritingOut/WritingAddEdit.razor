@@ -1,0 +1,711 @@
+﻿@using System.Net.Http.Json
+@inject HttpClient Http
+<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+    <EditForm Model="@searchModel">
+        <MudGrid>
+            <MudItem xs="12" md="12">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.MapsHomeWork" Class="mr-3 mb-n1" />
+                    Добавить Выписка из мед.карты гемодиализного пациента
+                </MudText>
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <MudTextField For="@(() => searchModel.Inn)" @bind-Value="searchModel.Inn" Label="ИНН" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small">Поиск пациента</MudButton>
+            </MudItem>
+        </MudGrid>
+    </EditForm>
+    <MudForm @ref="form" Model="@AddEditModel" @bind-IsValid="@IsValid">
+        <style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:0 0 0 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:8.0pt;
+	margin-left:0in;
+	line-height:107%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+.MsoChpDefault
+	{font-family:"Calibri","sans-serif";}
+.MsoPapDefault
+	{margin-bottom:8.0pt;
+	line-height:107%;}
+div.WordSection1
+	{width:100%;}
+-->
+</style>
+
+        <div class=WordSection1>
+
+           <MudItem xs="12" md="6">
+                <MudSelect T="long" Label="Мед. центр" Required="true" @bind-Value="@MedCenterId" AnchorOrigin="Origin.BottomCenter">
+                    @{                        
+                        @foreach (var medItem in UserCenters)
+                        {
+                            <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ИНН  <MudTextField  Required="true" @bind-Value="AddEditModel.Inn"  /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Ф.И.О: <MudTextField  Required="true" @bind-Value="Fio"  />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Дата рождения (число, месяц,год) : <MudDatePicker PickerVariant="PickerVariant.Dialog" Label="" @bind-Date="date_of_birth" DateFormat="dd.MM.yyyy" />
+                    Пол (муж, жен)  <MudTextField For="@(() => pol)" Required="true" @bind-Value="pol" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Группа крови, рез</span><span lang=KY
+                                                         style='font-size:12.0pt;font-family:"Times New Roman","serif"'>у</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    с
+                    фактор <MudTextField Required="true" @bind-Value="AddEditModel.BloodResus" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Адрес домашний: <MudTextField Required="true" @bind-Value="AddEditModel.Address" Label="" />
+                </span>
+             
+            </p>
+
+         
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Дата поступления:</span><MudDatePicker Label="" Required="true" @bind-Date="date1" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Дата выписки: </span><MudDatePicker Label="" Required="true" @bind-Date="date" DateFormat="dd.MM.yyyy" DisableToolbar="true" />
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Основной клинический диагноз: <MudTextField Required="true" @bind-Value="AddEditModel.MainDiagnosis" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Сопутствующий
+                    диагноз <MudTextField Required="true" @bind-Value="AddEditModel.SoputDiagnosis" Label="" />
+                </span>
+                <br /><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>Осложнение<MudTextField Required="true" @bind-Value="AddEditModel.Complication" Label="" /></span>
+                
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Анамнез жизни: <MudTextField Required="true" @bind-Value="AddEditModel.Anamnez" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Анамнез заболевания: <MudTextField Required="true" @bind-Value="AddEditModel.AnamnezZabol" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Аллергические реакции: <MudTextField Required="true" @bind-Value="AddEditModel.Allergo" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Гемотрансфузии: <MudTextField Required="true" @bind-Value="AddEditModel.Gemotrans" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Карта вакцинации против гепатита «В»  <MudTextField Required="true" @bind-Value="AddEditModel.GepatitB" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Сосудистый доступ:(тип доступа, локализация, тип
+                    кровотока, дата создания, осложнение): <MudTextField Required="true" @bind-Value="AddEditModel.Sosud" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Объективный</span><span lang=RU style='font-size:
+12.0pt;font-family:"Times New Roman","serif"'> </span><span lang=RU
+                                                            style='font-size:12.0pt;font-family:"Times New Roman","serif"'>осмотр</span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    : Status
+                    praesens objectivus:
+                    <MudTextField Required="true" @bind-Value="AddEditModel.Objectivus" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>&nbsp;</span></p>
+
+            <p class=MsoNormal><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>&nbsp;</span></p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Результаты лабораторного обследования :(общий анализ
+                    крови, общий анализ мочи, мочевина, креатинин, натрий, калий, кальций, фосфор,
+                    общий белок, альбумин, АСТ, АЛТ паратгормон, трансферрин, ферритин, С-реактивный
+                    белок)
+                    <MudTextField Required="true" @bind-Value="AddEditModel.AllResults" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Обследование на: <MudTextField Required="true" @bind-Value="AddEditModel.ExamFor" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Вирусный гепатит (В, С) <MudTextField Required="true" @bind-Value="AddEditModel.VirusBC" Label="" /> </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>RW</span> <MudTextField Required="true" @bind-Value="AddEditModel.RW" Label="" />
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ВИЧ <MudTextField Required="true" @bind-Value="AddEditModel.Vich" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Результаты инструментального обследования:  <MudTextField Required="true" @bind-Value="AddEditModel.Instrumental" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>УЗИ (внутренних органов) <MudTextField Required="true" @bind-Value="AddEditModel.Uzi" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ЭКГ <MudTextField Required="true" @bind-Value="AddEditModel.Ekg" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>ЭХОКГ <MudTextField Required="true" @bind-Value="AddEditModel.Eho" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Рентгенография грудной клетки  <MudTextField Required="true" @bind-Value="AddEditModel.Rentgen" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Консультация специалистов: <MudTextField Required="true" @bind-Value="AddEditModel.Consulting" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Диализная
+                    программа (количество часов за неделю, гепарин, диализатор площадь, иглы№,
+                </span><span lang=KY style='font-size:12.0pt;font-family:"Times New Roman","serif"'>к</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    ондуктивность,
+                    бикарбонат, скорость потока растворов, скорость потока крови, рециркуляция во
+                    время сеанса диализа) 
+                    <MudTextField Required="true" @bind-Value="AddEditModel.Familiarized" Lines="3" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Отчет по проведенным процедурам ГД, ГДФ (за текущий
+                    месяц):
+                    <MudTextField Required="true" @bind-Value="AddEditModel.Otchet" Lines="2" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>.</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Время процедуры, </span><span style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>URR</span><span lang=RU
+                                                       style='font-size:12.0pt;font-family:"Times New Roman","serif"'>, </span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>Kt</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>/</span><span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>V</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    , междиализная
+                    прибавка (средняя)
+                   
+                </span><span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> </span><span lang=RU style='font-size:12.0pt; 
+font-family:"Times New Roman","serif"'>сухой вес:  <MudTextField Required="true" @bind-Value="AddEditModel.TimeProcedure" Lines="2" Label=""  /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>  </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Гемодинамика АД до ГД, во время ГД, после ГД:  <MudTextField Required="true" @bind-Value="AddEditModel.Gemo" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Состояние АВ фистулы (катетера, протеза), способ
+                    пункции, дата установки:
+                     <MudTextField Required="true" @bind-Value="AddEditModel.Sostoyania" Lines="2" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>
+                    Медикаментозная терапия в отделении (наименование
+                    препарата, способ введения, назначенная дозировка,  периодичность,
+                    продолжительность приема, введено за месяц, дозы)
+                     <MudTextField Required="true" @bind-Value="AddEditModel.Medikamentoz" Lines="2" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>  </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>Госпитализация в другое отделение</span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'> </span><span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    (дата
+                    начала, дата окончания госпитализации, причина госпитализации, примечание)
+                     <MudTextField Required="true" @bind-Value="AddEditModel.Gospital" Lines="2" Label="" />
+                </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'> Рекомендации при выписке:  <MudTextField Required="true" @bind-Value="AddEditModel.Recommend" Lines="2" Label="" /></span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>   </span>
+            </p>
+
+            <p class=MsoNormal>
+                <span lang=RU style='font-size:12.0pt;font-family:
+"Times New Roman","serif"'>&nbsp;</span>
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'> Лечащий врач:</span>
+                </b>
+                 <MudTextField Required="true" @bind-Value="AddEditModel.FIODoctor"  Label="" />
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>&nbsp;</span>
+                </b>
+            </p>
+
+            <p class=MsoNormal>
+                <b>
+                    <span lang=RU style='font-size:12.0pt;
+font-family:"Times New Roman","serif"'>Заведующий отделением</span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'> </span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>гемодиализа</span>
+                </b><b>
+                    <span lang=KY style='font-size:12.0pt;font-family:"Times New Roman","serif"'>:</span>
+                </b><b>
+                    <span lang=RU style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+                    </span>
+                </b>
+                 <MudTextField  @bind-Value="AddEditModel.FIODepartmentHead"  Label="" />
+            </p>
+
+           
+        </div>
+          <MudItem xs="12" md="12">
+                <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+                <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Disabled="@GetDisable()" Color="Color.Success">Сохранить</MudButton>
+                </MudItem>
+
+     </MudForm>
+
+ </MudContainer>
+
+ @code {
+     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+     MudForm form;
+
+
+     public MedCardSearch searchModel = new MedCardSearch();
+     private Patient patient { get; set; } = new();
+     public string Fio = "";
+     public string pol = "";
+     public DateTime? date_of_birth = DateTime.Today;
+
+     public string address = "";
+     [Parameter] public WritingOut AddEditModel { get; set; }
+     //[Parameter] public long? MedCardId { get; set; }
+     private IEnumerable<District> Elements = new List<District>();
+     private IEnumerable<Region> RegionList = new List<Region>();
+     private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+     private IEnumerable<CodeMKB> Codes = new List<CodeMKB>();
+     private bool IsOnlyCenter = true;
+     private bool IsDisabled = true;
+     private bool IsValid;
+     DateTime? date = null;
+     DateTime? date1 = null;
+     DateTime? date2 = null;
+     DateTime? date3 = null;
+     DateTime? date4 = null;
+
+     private long MedCenterId { get; set; } = 0;
+
+     private bool GetDisable()
+     {
+         if (IsDisabled == false && IsValid == true)
+         {
+             return false;
+         }
+         else
+         {
+             return true;
+         }
+     }
+     protected override async Task OnInitializedAsync()
+     {
+
+         await LoadUserCentersAsync();
+         StateHasChanged();
+     }
+     private async Task SearchAsync()
+     {
+         IsDisabled = true;
+         var response = await Http.GetAsync("api/patient/searchpatient?Inn=" + searchModel.Inn);
+         var mappedData = await response.ToResult<Patient>();
+
+         if (mappedData != null)
+         {
+             patient = mappedData.Data;
+             await LoadDistrictsAsync();
+             await LoadDistDefaultRegionsAsync();
+             DateTime datetimenow = DateTime.Now;
+             AddEditModel.Inn = mappedData.Data.Inn;
+             Fio = mappedData.Data!.LastName + " " + mappedData.Data!.FirstName + " " + mappedData.Data!.MiddleName;
+             pol = mappedData.Data!.Gender ? "Муж" : "Жен";
+             if (mappedData.Data != null)
+             {
+                 date_of_birth = (DateTime)mappedData.Data.BirthDate;
+             };
+             var dis = "";
+             var reg = "";
+             foreach (var item in Elements)
+             {
+                 if (item.Id == patient.DistrictId)
+                 {
+                     dis = item.Title;
+                 }
+             };
+             foreach (var item in RegionList)
+             {
+                 if (item.Id == patient.RegionId)
+                 {
+                     reg = item.Title;
+                 }
+             };
+             //age = (int)(datetimenow.Year - ((DateTime)mappedData.Data.BirthDate).Year);
+             //phoneNum1 = mappedData.Data.Phone;
+             address = dis + " " + reg + " " + patient.Address;
+             AddEditModel.PatientId = mappedData.Data.Id;
+             IsDisabled = false;
+         }
+     }
+
+     public async Task LoadUserCentersAsync()
+     {
+         UserCenters = await _commonService.LoadRelMedcentersAsync();
+         if (UserCenters != null)
+         {
+             if (UserCenters.Count() > 1)
+             {
+                 IsOnlyCenter = false;
+                 AddEditModel.MedCenterId = 0;
+                 MedCenterId = 0;
+             }
+             else
+             {
+                 AddEditModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+                 MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+             }
+         }
+     }
+     /*public async Task LoadUserCentersAsync()
+     {
+         var response = await Http.GetAsync("api/medcenter/relmedcenters");
+         var mappedData = await response.ToResult<List<MedCenter>>();
+         UserCenters = mappedData.Data;
+         if (UserCenters != null)
+         {
+             if (UserCenters.Count() > 1)
+             {
+                 IsOnlyCenter = false;
+                 AddEditModel.MedCenterId = 0;
+             }
+             else
+             {
+                 AddEditModel.MedCenterId = UserCenters.Select(t => t.Id).FirstOrDefault();
+             }
+         }
+     }*/
+     public void Cancel()
+     {
+         MudDialog.Cancel();
+     }
+     private async Task SaveAsync()
+     {
+         AddEditModel.IsDeleted = false;
+         AddEditModel.LeaveDate = date;
+         AddEditModel.ReceiptDate = date2;
+         AddEditModel.MedCenterId = MedCenterId;
+
+         var response = await _httpClient.PostAsJsonAsync("api/patient/addwriting", AddEditModel);
+         var result = await response.ToResult();
+         if (!result.Succeeded)
+         {
+             _snackBar.Add(result.Messages[0], Severity.Error);
+             MudDialog.Close(DialogResult.Ok(false));
+         }
+         else
+         {
+             _snackBar.Add("Успешно", Severity.Success);
+             MudDialog.Close(DialogResult.Ok(true));
+         }
+     }
+
+     private async Task LoadDistrictsAsync()
+     {
+         var response = await Http.GetAsync("api/region/alldistricts");
+         var mappedData = await response.ToResult<List<District>>();
+         Elements = mappedData.Data;
+     }
+     private async Task LoadDistDefaultRegionsAsync()
+     {
+         if(patient.DistrictId!=null){
+             var response = await Http.GetAsync("api/region/alldistregions?Id=" + patient.DistrictId);
+             var mappedData = await response.ToResult<List<Region>>();
+             RegionList = mappedData.Data;
+         }
+
+
+     }
+     /*private async Task Selected1(CodeMKB codeMKB)
+     {
+         AddEditModel.MainDiagnosis = codeMKB.Name;
+     }
+     private async Task Selected2(CodeMKB codeMKB)
+     {
+         AddEditModel.Complication1 = codeMKB.Name;
+     }
+     private async Task Selected3(CodeMKB codeMKB)
+     {
+         AddEditModel.Complication2 = codeMKB.Name;
+     }
+     private async Task Selected4(CodeMKB codeMKB)
+     {
+         AddEditModel.Complication3 = codeMKB.Name;
+     }
+     private async Task Selected5(CodeMKB codeMKB)
+     {
+         AddEditModel.Diagnosis1 = codeMKB.Name;
+     }
+     private async Task Selected6(CodeMKB codeMKB)
+     {
+         AddEditModel.Diagnosis2 = codeMKB.Name;
+     }
+     private async Task Selected7(CodeMKB codeMKB)
+     {
+         AddEditModel.Diagnosis3 = codeMKB.Name;
+     }
+     private async Task Selected8(CodeMKB codeMKB)
+     {
+         AddEditModel.OtherAB = codeMKB.Name;
+     }*/
+}

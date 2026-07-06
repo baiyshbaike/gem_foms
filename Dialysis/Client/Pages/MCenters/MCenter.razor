@@ -1,0 +1,149 @@
+@page "/mcenters"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@attribute [Authorize]
+
+
+
+<MudTable Items="@Elements" Loading="@tableLoading" RowsPerPage="200" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<MedCenter,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Мед. центры</MudText>
+        &nbsp;&nbsp;
+        @if (isAdmin)
+        {
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.MapsHomeWork" Size="Size.Small" Color="Color.Info" @onclick="@(() => AddEditModal(0))">Добавить</MudButton>
+        }
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Название</MudTh>
+        <MudTh>Адрес</MudTh>
+        <MudTh>Телефон</MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+      
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Title</MudTd>
+        <MudTd>@context.Address </MudTd>
+        <MudTd>@context.Phone <br />@context.Phone2</MudTd>
+        <MudTd>
+            <MudLink Href=@($"/mcentermachines/{context.Id}/{context.Title}")>1.	Гемодиализные аппараты</MudLink> <br />
+            <MudLink Href=@($"/employeesList/{context.Id}")>2.	Сотрудники</MudLink> <br />
+            <MudLink Href=@($"/indlist/{context.Id}/{context.Title}")>3.	Индикаторы испол. договоров</MudLink> <br />
+            <MudLink Href=@($"/medcardlist/{context.Id}")>4. Список Мед карт</MudLink> <br />
+            <MudLink Href=@($"/allprocess/{context.Id}")>5.	 Список сеансов диализов.</MudLink>  <br />
+            <MudLink Href=@($"/gridanalyses/{context.Id}")>6.	Лабораторные анализы</MudLink>  <br />  
+            <MudLink Href=@($"/accreg/{context.Id}")>7.	Счет-фактуры для оплаты</MudLink>  <br />
+            
+         
+        </MudTd>
+       
+        <MudTd>
+            @if (isAdmin)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Редактировать"
+                               @onclick="@(async() => await AddEditModal(context.Id))"
+                               Size="Size.Small"
+                               Color="Color.Warning">
+
+                </MudIconButton>
+            }
+        </MudTd>
+    </RowTemplate>   
+</MudTable>
+
+@code {
+    private bool tableLoading = false;
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private bool isAdmin = false;
+    private MedCenter selectedItem1 = null;
+    private HashSet<MedCenter> selectedItems = new HashSet<MedCenter>();
+    private IEnumerable<MedCenter> Elements = new List<MedCenter>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        isAdmin = user.IsInRole("admin");
+        tableLoading = true;
+        await LoadDataAsync();
+
+    }
+
+    private async Task LoadDataAsync()
+    {
+        Elements = await _commonService.LoadRelMedcentersAsync();
+        if (Elements == null)
+        {
+            Elements = new List<MedCenter>();
+        }
+        tableLoading = false;
+    }
+
+    private void GoMachines(long id = 0, string distName = "")
+    {
+        _navigationManager.NavigateTo("/mcentermachines/" + id + "/" + distName);
+    }
+
+    private bool FilterFunc1(MedCenter element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(MedCenter element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task OpenMachines(long medcenterId)
+    {
+        var parameters = new DialogParameters();
+        if (medcenterId != 0)
+        {
+            var userSel = Elements.Where(u => u.Id == medcenterId).FirstOrDefault();
+            parameters.Add("AddEditModel", userSel);
+        }
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<MCenterMachine>("Мед. центр", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            //await LoadDataAsync();
+        }
+    }
+
+
+    private async Task AddEditModal(long id = 0)
+    {
+        var parameters = new DialogParameters();
+        if (id != 0)
+        {
+            var userSel = Elements.Where(u => u.Id == id).FirstOrDefault();
+            parameters.Add("AddEditModel", userSel);
+        }
+        else
+        {
+            var userSel = new MedCenter();
+            parameters.Add("AddEditModel", userSel);
+        }
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<MCenterAddEdit>(id == 0 ? "Добавить Мед. центр" : "Редактировать Мед. центр", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+}
+
+

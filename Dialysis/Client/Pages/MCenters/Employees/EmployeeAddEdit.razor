@@ -1,0 +1,160 @@
+﻿@inject HttpClient Http
+<EditForm Model="@AddEditModel" OnValidSubmit="SaveAsync">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить сотрудник
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать сотрудник
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.FirstName)" Required="true" @bind-Value="AddEditModel.FirstName" Label="Фамилия" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.LastName)" Required="true" @bind-Value="AddEditModel.LastName" Label="Имя" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.MiddleName)" @bind-Value="AddEditModel.MiddleName" Label="Отчество" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.JobTitle)" Required="true" @bind-Value="AddEditModel.JobTitle" Label="Должность" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField For="@(() => AddEditModel.PhoneNumber)" @bind-Value="AddEditModel.PhoneNumber" Label="Номер толефона" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="long" Label="Мед. центр" @bind-Value="@AddEditModel.MedCenterId" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var medItem in UserCenters)
+                        {
+                            <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <InputFile id="fileInput" OnChange="UploadFiles" class="d-none" />
+                    <MudButton HtmlTag="label"
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            StartIcon="@Icons.Material.Filled.CloudUpload"
+                            for="fileInput">
+                        Загрузить файл
+                    </MudButton>
+                    @if (!string.IsNullOrEmpty(AddEditModel.UpFile1))
+                    {
+                        <MudText Class="ml-2">@AddEditModel.UpFile1</MudText>
+                    }
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" Color="Color.Success" Disabled="!IsFormValid()">Сохранить</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public MedCenterEmployee AddEditModel { get; set; }
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserCentersAsync();
+        StateHasChanged();
+    }
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    public async Task LoadUserCentersAsync()
+    {
+        var response = await Http.GetAsync("api/medcenter/relmedcenters");
+        var mappedData = await response.ToResult<List<MedCenter>>();
+        UserCenters = mappedData.Data;
+        if(UserCenters != null)
+        {
+            AddEditModel.MedCenterId = UserCenters.Where(t=>t.Title!=null && t.Title!="").Select(t=>t.Id).FirstOrDefault();
+        }
+    }
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            // Dosya uzantısı kontrolü
+            var extension = Path.GetExtension(file.Name).ToLowerInvariant();
+            string[] allowedExtensions = { ".doc", ".docx", ".xls", ".xlsx", ".pdf" };
+            
+            if (!allowedExtensions.Contains(extension))
+            {
+                _snackBar.Add("Недопустимый формат файла", Severity.Error);
+                return;
+            }
+
+            // Dosya içeriğini byte array'e çevir
+            using var ms = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+
+            // Base64 formatına çevir
+            var base64String = Convert.ToBase64String(fileBytes);
+
+            // Model'e dosya adını kaydet
+            AddEditModel.UpFile1 = file.Name;
+            
+            // Dosya içeriğini geçici olarak sakla
+            await _localStorage.SetItemAsync("tempFile", new FileUploadModelDto 
+            { 
+                FileName = file.Name,
+                FileContent = base64String 
+            });
+        }
+    }
+    private bool IsFormValid()
+    {
+        // Zorunlu alanların dolu olup olmadığını kontrol et
+        return !string.IsNullOrEmpty(AddEditModel.FirstName) &&
+               !string.IsNullOrEmpty(AddEditModel.LastName) &&
+               !string.IsNullOrEmpty(AddEditModel.JobTitle);
+    }
+    private async Task SaveAsync()
+{
+    // Dosya içeriğini al
+    var fileData = await _localStorage.GetItemAsync<FileUploadModelDto>("tempFile");
+    if (fileData != null)
+    {
+        AddEditModel.FileContent = fileData.FileContent;
+    }
+
+    var response = await _httpClient.PostAsJsonAsync("api/medcenter/addeditemployee", AddEditModel);
+    var result = await response.ToResult();
+    
+    // Geçici dosya verisini temizle
+    await _localStorage.RemoveItemAsync("tempFile");
+
+    if (!result.Succeeded)
+    {
+        _snackBar.Add(result.Messages[0], Severity.Error);
+        MudDialog.Close(DialogResult.Ok(false));
+    }
+    else
+    {
+        _snackBar.Add("Успешно", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}
+}

@@ -1,0 +1,147 @@
+﻿<MudContainer MaxWidth="MaxWidth.Large" Style="max-height: 500px; overflow-y: scroll">
+<MudForm Model="@AddEditModel" @ref="form">
+    <MudDialog>
+        <TitleContent>
+            @{
+                if (AddEditModel.Id == 0)
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3 mb-n1" />
+                        Добавить
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Update" Class="mr-3 mb-n1" />
+                        Редактировать
+                    </MudText>
+                }
+            }
+        </TitleContent>
+        <DialogContent>
+            <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            
+                <MudGrid>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Perekardilnaia" Required="true" Label="Прекардильная пульсация" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Epigastralnaia" Required="true" Label="Эпигастральная пульсация" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Vidimye" Required="true" Label="Видимые пульсации" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" md="3">
+                            <MudTextField @bind-Value="AddEditModel.Prochee"  Label="Прочее" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Пальпация</MudText> </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Verhushechnaia" Required="true" Label="Верхушечный толчок" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Drojanie" Required="true" Label="Дрожание в области сердца" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Prochee2"  Label="Прочее" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+
+
+                        <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Перкуссия</MudText> </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudTextField @bind-Value="AddEditModel.Granitsa" Required="true" Label="Границы сердца" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="12">
+                            <MudTextField @bind-Value="AddEditModel.Sosudistiy" Required="true" Label="Сосудистый пучок" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                            <MudTextField @bind-Value="AddEditModel.Prochee3"  Label="Прочее" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Аускультация</MudText> </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Ton" Required="true" Label="Тоны серца" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Shum" Required="true" Label="Шумы сердца" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Prochee4"  Label="Прочее" Lines="2" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+                        <MudItem xs="12" md="12"> <MudText Typo="Typo.h5">Артериальное давление, пульс</MudText> </MudItem>
+                        <MudItem xs="4" md="2">
+                            <MudTextField @bind-Value="AddEditModel.Ad" Required="true" Label="АД, мм.рт.ст" Lines="3" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="4" md="2">
+                            <MudTextField @bind-Value="AddEditModel.AdChastota" Required="true" Label="Частота" Lines="3" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="4" md="2">
+                            <MudTextField @bind-Value="AddEditModel.AdRitm" Required="true" Label="Ритм" Lines="3" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="4" md="2">
+                            <MudTextField @bind-Value="AddEditModel.AdDefisit" Required="true" Label="Дефисит" Lines="3" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="AddEditModel.Prochee5" Label="Прочее" Lines="3" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="12">
+                        </MudItem>
+            </MudGrid>
+            
+             </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton DisableElevation Variant="Variant.Filled" OnClick="Cancel">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" @onclick="@(async() => await SaveAsync())" Color="Color.Success">Сохранить</MudButton>
+
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+</MudContainer>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public long MedCardId { get; set; }
+    [Parameter] public FirstCardiovascular AddEditModel { get; set; }
+
+    //public FirstCardiovascular AddEditModel { get; set; } = new FirstCardiovascular();
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        AddEditModel.MedCardId = MedCardId;
+        var response = await _httpClient.PostAsJsonAsync("api/medcard/addcardio", AddEditModel);
+        var result = await response.ToResult();
+        if (!result.Succeeded)
+        {
+            _snackBar.Add(result.Messages[0], Severity.Error);
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+        else
+        {
+            _snackBar.Add("Успешно", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

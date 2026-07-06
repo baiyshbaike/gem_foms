@@ -1,0 +1,350 @@
+﻿@page "/userlist"
+@using Dialysis.Shared.Models.Files
+@inject HttpClient Http
+@attribute [Authorize]
+
+<MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+            <MudSelect T="long" Label="Мед. центр" @bind-Value="@selectedCenter" SelectedValuesChanged="LoadMCenterUsersAsync" AnchorOrigin="Origin.BottomCenter">
+                   <MudSelectItem T="long" Value="0">------</MudSelectItem>
+                    @{
+                        @foreach (var medItem in UserCenters)
+                        {
+                            <MudSelectItem T="long" Value="@medItem.Id">@medItem.Title</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                &nbsp;
+            </MudItem>
+            <MudItem xs="12" md="12">
+                &nbsp;
+            </MudItem>
+        </MudGrid>
+</MudContainer>
+
+<MudTable Items="@Elements" Loading="@tableLoading" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<UserDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Пользователи</MudText>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonPin" Size="Size.Small" Color="Color.Info" @onclick="@(() => AddEditModal(0))">Добавить</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Поиск" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Фио</MudTh>
+        <MudTh>Логин</MudTh>
+        <MudTh>Профиль</MudTh>
+        <MudTh>Мед. центр</MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+        <MudTh>Статус</MudTh>
+        <MudTh>Дата</MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.User.LastName @context.User.FirstName @context.User.MIddleName </MudTd>
+        <MudTd>@context.User.Username</MudTd>        
+        <MudTd>@context.UserProfile?.Title</MudTd>
+        <MudTd>
+            @{
+                if (context.MedCenters!=null)
+                {
+                    foreach (var item in context.MedCenters)
+                    {
+                        <MudText>@item.Title</MudText>
+                        break;
+                    }
+                }               
+            }
+        </MudTd>
+        <MudTd>
+            <MudButton 
+                Variant="Variant.Filled" 
+                StartIcon="@Icons.Material.Filled.Security" 
+                Size="Size.Small" Color="Color.Info" 
+                @onclick="@(()=> OpenRoles(context.User.Id, context.User.FirstName))">
+                Роли
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Security"
+                       Size="Size.Small" Color="Color.Info"
+                       @onclick="@(()=> OpenCenter(context.User.Id, context.User.FirstName))">
+                Мед. центр
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            @{
+                if (context.User.IsActive)
+                {
+                    <MudText>Актив</MudText>
+                }
+                else
+                {
+                    <MudText>Не актив/Архив</MudText>
+                }
+            }
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="Редактировать"
+                           @onclick="@(async() => await AddEditModal(context.User.Id))"
+                           Size="Size.Small"
+                           Color="Color.Warning">
+
+            </MudIconButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.FileOpen" aria-label="Редактировать"
+                           @onclick="@(async() => await UploadFles(context.User.Id))"
+                           Size="Size.Small"
+                           Color="Color.Warning">
+            </MudIconButton>
+        </MudTd>
+        <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context))">@((context.ShowDetails == true) ? "Скрывать" : "Показывать") Подробности о пользователях</MudButton></MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (context.ShowDetails)
+        {
+        <MudTr>
+            <td colspan="12">
+                <MudCard Elevation="0">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1">Address Details for <strong>@context.User.FirstName</strong></MudText>
+                            <MudText Typo="Typo.body1">Address Details for <strong>@context.User.LastName</strong></MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-0">
+                        @if (context.SaveFiles.Count > 0)
+                        {
+                            <MudTable Items="@context.SaveFiles" Context="AddressContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Id</MudTh>
+                                    <MudTh>File</MudTh>
+                                    <MudTh>File Name</MudTh>
+                                    <MudTh>Action</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Id">@AddressContext.Id</MudTd>
+                                    <MudTd DataLabel="Id">
+                                        @if(AddressContext.ContentType == "application/pdf")
+                                        {
+                                        <img src="pdficon.jpg" width="80" height="80">
+                                        }
+                                        else
+                                        {
+                                        <img src="@AddressContext.Base64File" width="80" height="80">
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="File Name">@AddressContext.FileName</MudTd>
+                                    <MudTd DataLabel="Action">
+                                        <a download="@AddressContext.FileName" href="@AddressContext.Base64File" target="_blank">
+                                            <MudIconButton
+                                                Icon="@Icons.Material.Filled.Download"
+                                                Size="Size.Small"
+                                                Color="Color.Warning">>
+                                            </MudIconButton>
+                                        </a>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                            
+                    </MudCardContent>
+                </MudCard>
+            </td>
+        </MudTr>
+        }
+    </ChildRowContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = true;
+    private bool bordered = true;
+    private string searchString1 = "";
+    private UserDto selectedItem1 = null;
+    //private HashSet<UserDto> selectedItems = new HashSet<UserDto>();
+    private bool tableLoading = false;
+
+    private IEnumerable<UserDto> Elements = new List<UserDto>();
+    private IEnumerable<UserDto> DefaultElements = new List<UserDto>();
+    private IEnumerable<MedCenter> UserCenters = new List<MedCenter>();
+    private long selectedCenter = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tableLoading = true;
+        await LoadUserCentersAsync();        
+        await LoadDataAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var response = await Http.GetAsync("api/user/allusers");
+        var mappedData = await response.ToResult<List<UserDto>>();
+        Elements = mappedData.Data;
+        DefaultElements = mappedData.Data;
+        tableLoading = false;
+    }
+
+    public async Task LoadUserCentersAsync()
+    {
+        UserCenters = await _commonService.LoadRelMedcentersAsync();        
+    }
+    private void ShowBtnPress(UserDto nr)
+    {
+        nr.ShowDetails = !nr.ShowDetails;
+    }
+    private async Task LoadMCenterUsersAsync()
+    {
+        if (selectedCenter == 0)
+        {
+            Elements = DefaultElements;
+        }
+        else
+        {
+            var newElements = new List<UserDto>();
+            foreach (var item in DefaultElements)
+            {
+                var oldCenters = item.MedCenters.Count();
+                if (oldCenters < 4)
+                {
+                    var newItem = item.MedCenters.Where(p => p.Id.Equals(selectedCenter)).Count();
+                    if (newItem > 0)
+                    {
+                        Console.WriteLine(newItem);
+                        newElements.Add(item);
+                    }
+                }
+            }
+            Elements = newElements;
+            StateHasChanged();
+        }        
+    }
+
+    private bool FilterFunc1(UserDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(UserDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (!string.IsNullOrEmpty(element.User.FirstName))
+        {
+            if (element.User.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrEmpty(element.User.LastName))
+        {
+            if (element.User.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (!string.IsNullOrEmpty(element.User.MIddleName))
+        {
+            if (element.User.MIddleName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        if (element.UserProfile != null)
+        {
+            if (element.UserProfile.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
+    private async Task OpenRoles(long UserId = 0, string Fio="")
+    {
+        var parameters = new DialogParameters();
+        if (UserId != 0)
+        {
+            var userSel = Elements.Where(u => u.User.Id == UserId).Select(p => p.User).FirstOrDefault();
+            userSel.Password = "";
+            parameters.Add("AddEditModel", userSel);
+        }
+        else
+        {
+            var newUser = new User();
+            parameters.Add("AddEditModel", newUser);
+        }
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<UserRoles>("Роли", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            //await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenCenter(long UserId = 0, string Fio = "")
+    {
+        var parameters = new DialogParameters();
+        if (UserId != 0)
+        {
+            var userSel = Elements.Where(u => u.User.Id == UserId).Select(p => p.User).FirstOrDefault();
+            parameters.Add("AddEditModel", userSel);
+        }
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<UserMedCenter>("Мед. центр", parameters, options);
+        var result = await dialog.Result;
+        if (result.Cancelled)
+        {
+            //await LoadDataAsync();
+        }
+    }
+
+    private async Task AddEditModal(long id = 0)
+    {
+
+        var parameters = new DialogParameters();
+
+        if (id != 0)
+        {
+            var userSel = Elements.Where(u => u.User.Id == id).Select(p => p.User).FirstOrDefault();
+            userSel.Password = "";
+            parameters.Add("AddEditModel", userSel);
+        }
+        else
+        {
+            var newUser = new User();
+            parameters.Add("AddEditModel", newUser);
+        }
+        parameters.Add("id", id);
+       
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<UserAddEdit>(id == 0 ? "Добавить пользователя" : "Редактировать пользователя", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+    private async Task UploadFles(long id = 0)
+    {
+
+        var parameters = new DialogParameters();
+        parameters.Add("id", id);
+
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true, DisableBackdropClick = true, Position = DialogPosition.TopCenter };
+        var dialog = _dialogService.Show<FilesAddEdit>("Редактировать файлы", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+}
