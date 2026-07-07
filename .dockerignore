@@ -1,0 +1,14 @@
+.git/
+.github/
+.vs/
+.idea/
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/TestResults/
+**/coverage/
+Dialysis/
+.env
+.env.*
+!.env.example
