@@ -8,6 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dialysis.Application\Dialysis.Application.csproj" />
+    <ProjectReference Include="..\Dialysis.Infrastructure\Dialysis.Infrastructure.csproj" />
+    <ProjectReference Include="..\Dialysis.Contracts\Dialysis.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

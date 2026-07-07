@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Dialysis.Application\Dialysis.Application.csproj" />
+    <ProjectReference Include="..\Dialysis.Domain\Dialysis.Domain.csproj" />
+  </ItemGroup>
 </Project>
