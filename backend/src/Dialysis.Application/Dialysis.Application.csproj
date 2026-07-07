@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Dialysis.Domain\Dialysis.Domain.csproj" />
     <ProjectReference Include="..\Dialysis.Contracts\Dialysis.Contracts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.11" />
+  </ItemGroup>
 </Project>
