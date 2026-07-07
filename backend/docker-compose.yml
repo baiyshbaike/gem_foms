@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dialysis_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dialysis_dev
+      POSTGRES_USER: dialysis_app
+      POSTGRES_PASSWORD: dialysis_dev_password
+    volumes:
+      - dialysis_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dialysis_app -d dialysis_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dialysis_postgres_data:
