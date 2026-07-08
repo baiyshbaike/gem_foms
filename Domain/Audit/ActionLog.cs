@@ -1,4 +1,4 @@
-﻿namespace Dialysis.Domain.Audit;
+﻿namespace Domain.Audit;
 
 public sealed class ActionLog
 {

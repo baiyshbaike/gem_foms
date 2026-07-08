@@ -1,4 +1,4 @@
-﻿namespace Dialysis.Application;
+﻿namespace Application;
 
 public class Class1
 {

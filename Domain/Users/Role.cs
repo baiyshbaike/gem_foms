@@ -1,4 +1,4 @@
-﻿namespace Dialysis.Domain.Users;
+﻿namespace Domain.Users;
 
 public sealed class Role
 {

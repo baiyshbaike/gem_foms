@@ -1,4 +1,4 @@
-﻿namespace Dialysis.Application.Authorization;
+﻿namespace Application.Authorization;
 
 public static class Permissions
 {

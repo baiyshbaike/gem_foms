@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Dialysis.Infrastructure.Data;
+namespace Infrastructure.Data;
 
 public sealed class AppDbContext : DbContext
 {

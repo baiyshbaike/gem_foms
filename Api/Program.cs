@@ -1,4 +1,4 @@
-using Dialysis.Infrastructure;
+using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

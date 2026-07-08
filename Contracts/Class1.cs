@@ -1,4 +1,4 @@
-﻿namespace Dialysis.Contracts;
+﻿namespace Contracts;
 
 public class Class1
 {

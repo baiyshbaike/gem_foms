@@ -1,4 +1,4 @@
-﻿namespace Dialysis.IntegrationTests;
+﻿namespace IntegrationTests;
 
 public class UnitTest1
 {

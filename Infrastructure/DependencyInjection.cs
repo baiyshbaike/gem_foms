@@ -1,9 +1,9 @@
-﻿using Dialysis.Infrastructure.Data;
+﻿using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dialysis.Infrastructure;
+namespace Infrastructure;
 
 public static class DependencyInjection
 {
