@@ -18,7 +18,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: backend/src/Dialysis.Api/Dockerfile
+      dockerfile: Api/Dockerfile
     container_name: dialysis_api
     restart: unless-stopped
     environment:
