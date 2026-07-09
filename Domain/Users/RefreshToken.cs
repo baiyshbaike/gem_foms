@@ -11,4 +11,6 @@ public sealed class RefreshToken
     public string? CreatedByIp { get; set; }
     public string? RevokedByIp { get; set; }
     public string? UserAgent { get; set; }
+
+    public User User { get; set; } = default!;
 }
