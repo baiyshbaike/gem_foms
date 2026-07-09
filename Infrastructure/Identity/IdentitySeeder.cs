@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Identity;
 
-public class IdentitySeeder
+public static class IdentitySeeder
 {
     private const string AdminRoleCode = "Admin";
 
