@@ -33,10 +33,14 @@ builder.Services.AddHealthChecks().AddNpgSql(connectionString!);
 //builder.Services.AddOpenApi();
 
 var app = builder.Build();
+var seedIdentityEnabled = app.Configuration.GetValue<bool>("SEED_IDENTITY_ENABLED");
 
-if (app.Environment.IsDevelopment())
+if (seedIdentityEnabled)
 {
     await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
+}
+if (app.Environment.IsDevelopment())
+{
     //app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();

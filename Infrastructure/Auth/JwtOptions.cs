@@ -1,4 +1,4 @@
-﻿namespace Contracts.Auth;
+﻿namespace Infrastructure.Auth;
 
 public sealed class JwtOptions
 {
