@@ -1,4 +1,5 @@
-﻿using Domain.Users;
+﻿using Domain.Audit;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -16,6 +17,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<ActionLog> ActionLogs => Set<ActionLog>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -63,6 +65,25 @@ public sealed class AppDbContext : DbContext
                 .WithMany(x => x.RefreshTokens)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ActionLog>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.UsernameSnapshot).HasMaxLength(100);
+            entity.Property(x => x.Action).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Module).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.EntityName).HasMaxLength(100);
+            entity.Property(x => x.EntityId).HasMaxLength(100);
+            entity.Property(x => x.HttpMethod).HasMaxLength(20);
+            entity.Property(x => x.Path).HasMaxLength(500);
+            entity.Property(x => x.IpAddress).HasMaxLength(100);
+            entity.Property(x => x.UserAgent).HasMaxLength(500);
+            entity.Property(x => x.FailureReason).HasMaxLength(500);
+            entity.Property(x => x.CorrelationId).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.CreatedAt);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.Action);
+            entity.HasIndex(x => x.CorrelationId);
         });
     }
 }
