@@ -1,4 +1,6 @@
-﻿using Application.Auth;
+﻿using Application.Audit;
+using Application.Auth;
+using Infrastructure.Audit;
 using Infrastructure.Auth;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IActionLogService, ActionLogService>();
         return services;
     }
 }

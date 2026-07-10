@@ -1,4 +1,6 @@
 using System.Text;
+using Api.Common;
+using Application.Common;
 using Infrastructure;
 using Infrastructure.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -7,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("Default");
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRequestContext,HttpRequestContext>();
 builder.Services.AddControllers();
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
