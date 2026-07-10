@@ -1,14 +1,19 @@
 using System.Text;
+using Api.Auth;
 using Api.Common;
+using Application.Authorization;
 using Application.Common;
 using Infrastructure;
 using Infrastructure.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("Default");
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext,HttpRequestContext>();
 builder.Services.AddControllers();

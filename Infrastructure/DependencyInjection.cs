@@ -1,5 +1,7 @@
-﻿using Application.Audit;
+﻿using Application.Admin;
+using Application.Audit;
 using Application.Auth;
+using Infrastructure.Admin;
 using Infrastructure.Audit;
 using Infrastructure.Auth;
 using Infrastructure.Data;
@@ -19,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IActionLogService, ActionLogService>();
+        services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
         return services;
     }
 }
