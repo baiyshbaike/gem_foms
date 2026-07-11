@@ -1,8 +1,9 @@
 using System.Text;
 using Api.Auth;
 using Api.Common;
-using Application.Authorization;
+using Api.Tenants;
 using Application.Common;
+using Application.Tenants;
 using Infrastructure;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<IRequestContext,HttpRequestContext>();
 builder.Services.AddControllers();
 builder.Services.AddAuthentication("Bearer")

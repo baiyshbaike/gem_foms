@@ -1,4 +1,5 @@
 ﻿using Application.Authorization;
+using Domain.Tenants;
 using Domain.Users;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,8 @@ public static class IdentitySeeder
         var adminROle = await SeedAdminRoleAsync(db);
         var adminUser = await SeedAdminUserAsync(db, configuration);
         await SeedAdminLinkAsync(db, adminUser, adminROle);
+        var tenant = await SeedDefaultTenantAsync(db, configuration);
+        await SeedAdminTenantUserAsync(db, adminUser, tenant);
     }
 
     private static async Task SeedPermissionsAsync(AppDbContext db)
@@ -111,6 +114,48 @@ public static class IdentitySeeder
                 RoleId = role.Id
             });
         }
+        await db.SaveChangesAsync();
+    }
+    private static async Task<Tenant> SeedDefaultTenantAsync(AppDbContext db, IConfiguration configuration)
+    {
+        var tenantId = configuration["SEED_TENANT_ID"] ?? "dev-center";
+        var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId);
+        if (tenant is not null)
+        {
+            return tenant;
+        }
+
+        tenant = new Tenant
+        {
+            Id = tenantId,
+            Code = configuration["SEED_TENANT_CODE"] ?? "DEV",
+            Name = configuration["SEED_TENANT_NAME"] ?? "Development Dialysis Center",
+            Locale = "ru-RU",
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        db.Tenants.Add(tenant);
+        await db.SaveChangesAsync();
+        return tenant;
+    }
+
+    private static async Task SeedAdminTenantUserAsync(AppDbContext db, User adminUser, Tenant tenant)
+    {
+        var exists = await db.TenantUsers.AnyAsync(x => x.UserId == adminUser.Id && x.TenantId == tenant.Id);
+        if (exists)
+        {
+            return;
+        }
+
+        db.TenantUsers.Add(new TenantUser
+        {
+            UserId = adminUser.Id,
+            TenantId = tenant.Id,
+            IsTenantAdmin = true,
+            JoinedAt = DateTimeOffset.UtcNow
+        });
+
         await db.SaveChangesAsync();
     }
 }

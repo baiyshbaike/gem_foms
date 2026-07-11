@@ -1,10 +1,12 @@
 ﻿using Application.Admin;
 using Application.Audit;
 using Application.Auth;
+using Application.Tenants;
 using Infrastructure.Admin;
 using Infrastructure.Audit;
 using Infrastructure.Auth;
 using Infrastructure.Data;
+using Infrastructure.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IActionLogService, ActionLogService>();
         services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
+        services.AddScoped<ITenantService, TenantService>();
         return services;
     }
 }

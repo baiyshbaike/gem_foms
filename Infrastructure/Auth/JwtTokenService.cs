@@ -22,11 +22,12 @@ public sealed class JwtTokenService : IJwtTokenService
             AccessTokenMinutes = int.TryParse(configuration["JWT_ACCESS_TOKEN_MINUTES"], out var minutes) ? minutes : 30
         };
     }
-    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user, IReadOnlyCollection<string> permissions)
+    public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user, IReadOnlyCollection<string> permissions, string? activeTenantId = null)
     {
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -34,6 +35,11 @@ public sealed class JwtTokenService : IJwtTokenService
         };
 
         claims.AddRange(permissions.Select(x => new Claim("permission", x)));
+
+        if (!string.IsNullOrWhiteSpace(activeTenantId))
+        {
+            claims.Add(new Claim("active_tenant", activeTenantId));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,

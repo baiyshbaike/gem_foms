@@ -1,4 +1,5 @@
 ﻿using Domain.Audit;
+using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<ActionLog> ActionLogs => Set<ActionLog>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -84,6 +87,35 @@ public sealed class AppDbContext : DbContext
             entity.HasIndex(x => x.UserId);
             entity.HasIndex(x => x.Action);
             entity.HasIndex(x => x.CorrelationId);
+        });
+        
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasMaxLength(100);
+            entity.Property(x => x.Code).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Locale).HasMaxLength(20).IsRequired();
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<TenantUser>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.UserId }).IsUnique();
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany(x => x.TenantUsers)
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.TenantUsers)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

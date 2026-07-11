@@ -1,4 +1,6 @@
-﻿namespace Domain.Users;
+﻿using Domain.Tenants;
+
+namespace Domain.Users;
 
 public sealed class User
 {
@@ -16,6 +18,7 @@ public sealed class User
     
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();
 }
 
 
