@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Domain.Audit;
 using Domain.Common;
+using Domain.Patients;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<ManagerRegionAccess> ManagerRegionAccesses => Set<ManagerRegionAccess>();
+    public DbSet<Patient> Patients => Set<Patient>();
+    public DbSet<PatientGroup> PatientGroups => Set<PatientGroup>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -156,6 +159,105 @@ public sealed class AppDbContext : DbContext
                 .WithMany(x => x.ManagerRegionAccesses)
                 .HasForeignKey(x => x.RegionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<PatientGroup>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureAuditable();
+            entity.ConfigureActive();
+
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.IsSystem).IsRequired();
+
+            entity.HasIndex(x => x.Code).IsUnique();
+
+            var seedDate = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+            entity.HasData(
+                new PatientGroup
+                {
+                    Id = PatientGroupIds.New,
+                    Code = PatientGroupCodes.New,
+                    Name = "New",
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = seedDate,
+                    CreatedBy = 0
+                },
+                new PatientGroup
+                {
+                    Id = PatientGroupIds.Fresenius,
+                    Code = PatientGroupCodes.Fresenius,
+                    Name = "Fresenius",
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = seedDate,
+                    CreatedBy = 0
+                },
+                new PatientGroup
+                {
+                    Id = PatientGroupIds.Archive,
+                    Code = PatientGroupCodes.Archive,
+                    Name = "Archive",
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = seedDate,
+                    CreatedBy = 0
+                },
+                new PatientGroup
+                {
+                    Id = PatientGroupIds.Foms,
+                    Code = PatientGroupCodes.Foms,
+                    Name = "Other",
+                    IsSystem = true,
+                    IsActive = true,
+                    CreatedAt = seedDate,
+                    CreatedBy = 0
+                });
+        });
+        modelBuilder.Entity<Patient>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureAuditable();
+            entity.ConfigureSoftDelete();
+            entity.ConfigureActive();
+
+            entity.Property(x => x.Inn).HasMaxLength(14).IsRequired();
+            entity.Property(x => x.FirstName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.LastName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.MiddleName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.BirthDate).IsRequired();
+            entity.Property(x => x.Gender).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Address).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Address2).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Phone).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.DistrictId).IsRequired();
+            entity.Property(x => x.RegionId).IsRequired();
+            entity.Property(x => x.GroupId).IsRequired();
+            entity.Property(x => x.SpecialStatus).HasDefaultValue(false).IsRequired();
+
+            entity.HasIndex(x => x.Inn)
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            entity.HasIndex(x => x.GroupId);
+            entity.HasIndex(x => x.RegionId);
+            entity.HasIndex(x => x.DistrictId);
+
+            entity.HasOne(x => x.Group)
+                .WithMany(x => x.Patients)
+                .HasForeignKey(x => x.GroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Patients_Inn_Length", "length(\"Inn\") = 14");
+                t.HasCheckConstraint("CK_Patients_Inn_Digits", "\"Inn\" ~ '^[0-9]{14}$'");
+                t.HasCheckConstraint("CK_Patients_Gender", "\"Gender\" IN (1, 2)");
+            });
         });
     }
     public override int SaveChanges()

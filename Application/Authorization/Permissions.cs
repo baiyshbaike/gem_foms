@@ -18,6 +18,12 @@ public static class Permissions
     public const string TenantAccessAssigned = "tenant.access_assigned";
     public const string TenantAccessOwn = "tenant.access_own";
     
+    public const string PatientLookup = "patient.lookup";
+    public const string PatientRead = "patient.read";
+    public const string PatientCreate = "patient.create";
+    public const string PatientUpdate = "patient.update";
+    public const string PatientDelete = "patient.delete";
+    
     public static readonly string[] All =
     [
         AdminUsers,
@@ -33,5 +39,10 @@ public static class Permissions
         TenantAccessAll,
         TenantAccessAssigned,
         TenantAccessOwn,
+        PatientLookup,
+        PatientRead,
+        PatientCreate,
+        PatientUpdate,
+        PatientDelete,
     ];
 }
