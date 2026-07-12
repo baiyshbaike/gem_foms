@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IMedCardService, MedCardService>();
         services.AddScoped<IHdSessionService, HdSessionService>();
+        services.AddHostedService<HdSessionWorkflowWorker>();
         return services;
     }
 }
