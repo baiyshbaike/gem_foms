@@ -3,6 +3,7 @@ using Application.Audit;
 using Application.Auth;
 using Application.MedCards;
 using Application.Patients;
+using Application.Sessions;
 using Application.Tenants;
 using Infrastructure.Admin;
 using Infrastructure.Audit;
@@ -10,6 +11,7 @@ using Infrastructure.Auth;
 using Infrastructure.Data;
 using Infrastructure.MedCards;
 using Infrastructure.Patients;
+using Infrastructure.Sessions;
 using Infrastructure.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantAccessService, TenantAccessService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IMedCardService, MedCardService>();
+        services.AddScoped<IHdSessionService, HdSessionService>();
         return services;
     }
 }
