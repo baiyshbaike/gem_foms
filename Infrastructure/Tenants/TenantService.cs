@@ -12,27 +12,29 @@ public sealed class TenantService : ITenantService
     private readonly AppDbContext _db;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IActionLogService _actionLogService;
+    private readonly ITenantAccessService _tenantAccessService;
 
     public TenantService(
         AppDbContext db,
         IJwtTokenService jwtTokenService,
-        IActionLogService actionLogService)
+        IActionLogService actionLogService,
+        ITenantAccessService tenantAccessService)
     {
         _db = db;
         _jwtTokenService = jwtTokenService;
         _actionLogService = actionLogService;
+        _tenantAccessService = tenantAccessService;
     }
 
     public async Task<IReadOnlyList<TenantDto>> GetMyTenantsAsync(long userId, CancellationToken cancellationToken)
     {
-        return await _db.TenantUsers
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && x.LeftAt == null && x.Tenant.IsActive)
-            .Select(x => new TenantDto(x.Tenant.Id, x.Tenant.Code, x.Tenant.Name))
-            .ToListAsync(cancellationToken);
+        return await _tenantAccessService.GetAccessibleTenantsAsync(userId, cancellationToken);
     }
 
-    public async Task<SwitchTenantResponse?> SwitchAsync(long userId, string tenantId, CancellationToken cancellationToken)
+    public async Task<SwitchTenantResponse?> SwitchAsync(
+        long userId,
+        string tenantId,
+        CancellationToken cancellationToken)
     {
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
         if (user is null || !user.IsActive)
@@ -40,16 +42,17 @@ public sealed class TenantService : ITenantService
             return null;
         }
 
-        var tenant = await _db.TenantUsers
-            .Where(x => x.UserId == userId && x.TenantId == tenantId && x.LeftAt == null && x.Tenant.IsActive)
-            .Select(x => x.Tenant)
-            .FirstOrDefaultAsync(cancellationToken);
+        var canAccessTenant = await _tenantAccessService.CanAccessTenantAsync(
+            userId,
+            tenantId,
+            cancellationToken);
 
-        if (tenant is null)
+        if (!canAccessTenant)
         {
             await _actionLogService.AddAsync(new ActionLogRequest
             {
                 UserId = userId,
+                UsernameSnapshot = user.Username,
                 Action = "TenantSwitchFailed",
                 Module = "tenant",
                 EntityName = "Tenant",
@@ -60,6 +63,15 @@ public sealed class TenantService : ITenantService
             }, cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
+            return null;
+        }
+
+        var tenant = await _db.Tenants
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == tenantId && x.IsActive, cancellationToken);
+
+        if (tenant is null)
+        {
             return null;
         }
 
@@ -86,6 +98,10 @@ public sealed class TenantService : ITenantService
         }, cancellationToken);
 
         await _db.SaveChangesAsync(cancellationToken);
-        return new SwitchTenantResponse(token.Token, token.ExpiresAt, new TenantDto(tenant.Id, tenant.Code, tenant.Name));
+
+        return new SwitchTenantResponse(
+            token.Token,
+            token.ExpiresAt,
+            new TenantDto(tenant.Id, tenant.Code, tenant.Name));
     }
 }

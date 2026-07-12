@@ -1,4 +1,5 @@
-﻿using Application.Tenants;
+﻿using Application.Authorization;
+using Application.Tenants;
 using Contracts.Tenants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpGet("my")]
+    [Authorize(Policy = "Permission:" + Permissions.TenantRead)]
     public async Task<ActionResult<IReadOnlyList<TenantDto>>> My(CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -31,6 +33,7 @@ public sealed class TenantsController : ControllerBase
     }
 
     [HttpPost("{tenantId}/switch")]
+    [Authorize(Policy = "Permission:" + Permissions.TenantSwitch)]
     public async Task<ActionResult<SwitchTenantResponse>> Switch(string tenantId, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();

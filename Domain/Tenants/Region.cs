@@ -1,15 +1,14 @@
 ﻿namespace Domain.Tenants;
 
-public sealed class Tenant
+public sealed class Region
 {
     public string Id { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public string Locale { get; set; } = "ru-RU";
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? DisabledAt { get; set; }
-    public ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();
-    public string? RegionId { get; set; }
-    public Region? Region { get; set; }
+
+    public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
+    public ICollection<ManagerRegionAccess> ManagerRegionAccesses { get; set; } = new List<ManagerRegionAccess>();
 }

@@ -21,6 +21,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<ActionLog> ActionLogs => Set<ActionLog>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
+    public DbSet<Region> Regions => Set<Region>();
+    public DbSet<ManagerRegionAccess> ManagerRegionAccesses => Set<ManagerRegionAccess>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -97,6 +99,12 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Locale).HasMaxLength(20).IsRequired();
             entity.HasIndex(x => x.Code).IsUnique();
+            entity.Property(x => x.RegionId).HasMaxLength(100);
+            entity.HasIndex(x => x.RegionId);
+            entity.HasOne(x => x.Region)
+                .WithMany(x => x.Tenants)
+                .HasForeignKey(x => x.RegionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<TenantUser>(entity =>
@@ -115,6 +123,34 @@ public sealed class AppDbContext : DbContext
             entity.HasOne(x => x.User)
                 .WithMany(x => x.TenantUsers)
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        modelBuilder.Entity<Region>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasMaxLength(100);
+            entity.Property(x => x.Code).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+        
+        modelBuilder.Entity<ManagerRegionAccess>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RegionId).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.RegionId);
+            entity.HasIndex(x => new { x.UserId, x.RegionId }).IsUnique();
+
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.ManagerRegionAccesses)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Region)
+                .WithMany(x => x.ManagerRegionAccesses)
+                .HasForeignKey(x => x.RegionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

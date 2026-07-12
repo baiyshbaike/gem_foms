@@ -1,6 +1,7 @@
 using System.Text;
 using Api.Auth;
 using Api.Common;
+using Api.Swagger;
 using Api.Tenants;
 using Application.Common;
 using Application.Tenants;
@@ -8,6 +9,7 @@ using Infrastructure;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +40,26 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Dialysis API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Description = "Paste only the JWT access token. Do not include 'Bearer '."
+    });
+
+    options.OperationFilter<AuthorizeCheckOperationFilter>();
+});
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHealthChecks().AddNpgSql(connectionString!);
 //builder.Services.AddOpenApi();

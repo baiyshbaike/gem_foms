@@ -19,6 +19,7 @@ public sealed class User
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();
+    public ICollection<ManagerRegionAccess> ManagerRegionAccesses { get; set; } = new List<ManagerRegionAccess>();
 }
 
 

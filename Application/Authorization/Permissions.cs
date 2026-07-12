@@ -12,6 +12,12 @@ public static class Permissions
     public const string AuthLogout = "auth.logout";
     public const string AuthMe = "auth.me";
     
+    public const string TenantRead = "tenant.read";
+    public const string TenantSwitch = "tenant.switch";
+    public const string TenantAccessAll = "tenant.access_all";
+    public const string TenantAccessAssigned = "tenant.access_assigned";
+    public const string TenantAccessOwn = "tenant.access_own";
+    
     public static readonly string[] All =
     [
         AdminUsers,
@@ -21,6 +27,11 @@ public static class Permissions
         AuthLogin,
         AuthRefresh,
         AuthLogout,
-        AuthMe
+        AuthMe,
+        TenantRead,
+        TenantSwitch,
+        TenantAccessAll,
+        TenantAccessAssigned,
+        TenantAccessOwn,
     ];
 }

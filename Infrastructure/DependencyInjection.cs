@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IActionLogService, ActionLogService>();
         services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<ITenantAccessService, TenantAccessService>();
         return services;
     }
 }
