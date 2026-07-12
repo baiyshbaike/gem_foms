@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Domain.Audit;
 using Domain.Common;
+using Domain.MedCards;
 using Domain.Patients;
 using Domain.Tenants;
 using Domain.Users;
@@ -30,6 +31,12 @@ public sealed class AppDbContext : DbContext
     public DbSet<ManagerRegionAccess> ManagerRegionAccesses => Set<ManagerRegionAccess>();
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<PatientGroup> PatientGroups => Set<PatientGroup>();
+    public DbSet<MedCard> MedCards => Set<MedCard>();
+    public DbSet<MedCardClinicalInfo> MedCardClinicalInfos => Set<MedCardClinicalInfo>();
+    public DbSet<MedCardDiagnosis> MedCardDiagnoses => Set<MedCardDiagnosis>();
+    public DbSet<MedCardInfectionScreening> MedCardInfectionScreenings => Set<MedCardInfectionScreening>();
+    public DbSet<MedCardApproval> MedCardApprovals => Set<MedCardApproval>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -259,6 +266,129 @@ public sealed class AppDbContext : DbContext
                 t.HasCheckConstraint("CK_Patients_Gender", "\"Gender\" IN (1, 2)");
             });
         });
+        modelBuilder.Entity<MedCard>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+            entity.ConfigureSoftDelete();
+
+            entity.Property(x => x.CardNumber)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.Status)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(x => x.OpenedAt)
+                .IsRequired();
+
+            entity.HasIndex(x => new { x.TenantId, x.CardNumber })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            entity.HasIndex(x => new { x.TenantId, x.PatientId })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            entity.HasOne(x => x.Patient)
+                .WithMany(x => x.MedCards)
+                .HasForeignKey(x => x.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        modelBuilder.Entity<MedCardClinicalInfo>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.BloodGroup).HasMaxLength(20);
+            entity.Property(x => x.RhFactor).HasMaxLength(20);
+
+            entity.HasIndex(x => x.MedCardId).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.MedCard)
+                .WithOne(x => x.ClinicalInfo)
+                .HasForeignKey<MedCardClinicalInfo>(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MedCardDiagnosis>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.Type)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(x => x.Text)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            entity.Property(x => x.Code)
+                .HasMaxLength(50);
+
+            entity.HasIndex(x => new { x.MedCardId, x.Type, x.SortOrder });
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.MedCard)
+                .WithMany(x => x.Diagnoses)
+                .HasForeignKey(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MedCardInfectionScreening>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.Pediculosis).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Scabies).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Wasserman).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Fluorography).HasConversion<int>().IsRequired();
+            entity.Property(x => x.AlcoholUse).HasConversion<int>().IsRequired();
+            entity.Property(x => x.HepatitisB).HasConversion<int>().IsRequired();
+            entity.Property(x => x.HepatitisC).HasConversion<int>().IsRequired();
+            entity.Property(x => x.Hiv).HasConversion<int>().IsRequired();
+
+            entity.HasIndex(x => x.MedCardId).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.MedCard)
+                .WithOne(x => x.InfectionScreening)
+                .HasForeignKey<MedCardInfectionScreening>(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MedCardApproval>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.DoctorNameSnapshot).HasMaxLength(200);
+            entity.Property(x => x.DirectorNameSnapshot).HasMaxLength(200);
+
+            entity.HasIndex(x => x.MedCardId).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.MedCard)
+                .WithOne(x => x.Approval)
+                .HasForeignKey<MedCardApproval>(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
     }
     public override int SaveChanges()
     {

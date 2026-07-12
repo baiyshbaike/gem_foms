@@ -24,6 +24,11 @@ public static class Permissions
     public const string PatientUpdate = "patient.update";
     public const string PatientDelete = "patient.delete";
     
+    public const string MedCardRead = "medcard.read";
+    public const string MedCardCreate = "medcard.create";
+    public const string MedCardUpdate = "medcard.update";
+    public const string MedCardDelete = "medcard.delete";
+    
     public static readonly string[] All =
     [
         AdminUsers,
@@ -44,5 +49,9 @@ public static class Permissions
         PatientCreate,
         PatientUpdate,
         PatientDelete,
+        MedCardRead,
+        MedCardCreate,
+        MedCardUpdate,
+        MedCardDelete,
     ];
 }

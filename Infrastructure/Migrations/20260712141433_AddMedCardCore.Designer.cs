@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260712141433_AddMedCardCore")]
+    partial class AddMedCardCore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,271 +178,6 @@ namespace Infrastructure.Migrations
                         .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("MedCards");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardApproval", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DirectorId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DirectorNameSnapshot")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTimeOffset?>("DirectorSignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("DoctorId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DoctorNameSnapshot")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTimeOffset?>("DoctorSignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("MedCardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset?>("PatientFamiliarizedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("MedCardId")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("MedCardApprovals");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardClinicalInfo", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("AllergyHistory")
-                        .HasColumnType("text");
-
-                    b.Property<string>("BloodGroup")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("IndividualPlan")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Justification")
-                        .HasColumnType("text");
-
-                    b.Property<long>("MedCardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OutTreatment")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Plan")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Recommendation")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RhFactor")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("MedCardId")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("MedCardClinicalInfos");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardDiagnosis", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset?>("DiagnosedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("MedCardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("MedCardId", "Type", "SortOrder");
-
-                    b.ToTable("MedCardDiagnoses");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardInfectionScreening", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<int>("AlcoholUse")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Fluorography")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("HepatitisB")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("HepatitisBCheckedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("HepatitisC")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("HepatitisCCheckedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Hiv")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("HivCheckedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("MedCardId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Pediculosis")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Scabies")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Wasserman")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("MedCardId")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("MedCardInfectionScreenings");
                 });
 
             modelBuilder.Entity("Domain.Patients.Patient", b =>
@@ -984,50 +722,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("Domain.MedCards.MedCardApproval", b =>
-                {
-                    b.HasOne("Domain.MedCards.MedCard", "MedCard")
-                        .WithOne("Approval")
-                        .HasForeignKey("Domain.MedCards.MedCardApproval", "MedCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedCard");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardClinicalInfo", b =>
-                {
-                    b.HasOne("Domain.MedCards.MedCard", "MedCard")
-                        .WithOne("ClinicalInfo")
-                        .HasForeignKey("Domain.MedCards.MedCardClinicalInfo", "MedCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedCard");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardDiagnosis", b =>
-                {
-                    b.HasOne("Domain.MedCards.MedCard", "MedCard")
-                        .WithMany("Diagnoses")
-                        .HasForeignKey("MedCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedCard");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCardInfectionScreening", b =>
-                {
-                    b.HasOne("Domain.MedCards.MedCard", "MedCard")
-                        .WithOne("InfectionScreening")
-                        .HasForeignKey("Domain.MedCards.MedCardInfectionScreening", "MedCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedCard");
-                });
-
             modelBuilder.Entity("Domain.Patients.Patient", b =>
                 {
                     b.HasOne("Domain.Patients.PatientGroup", "Group")
@@ -1134,17 +828,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Domain.MedCards.MedCard", b =>
-                {
-                    b.Navigation("Approval");
-
-                    b.Navigation("ClinicalInfo");
-
-                    b.Navigation("Diagnoses");
-
-                    b.Navigation("InfectionScreening");
                 });
 
             modelBuilder.Entity("Domain.Patients.Patient", b =>
