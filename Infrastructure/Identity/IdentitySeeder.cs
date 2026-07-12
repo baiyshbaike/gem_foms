@@ -32,14 +32,19 @@ public static class IdentitySeeder
         {
             Permissions.TenantRead,
             Permissions.TenantSwitch,
-            Permissions.TenantAccessAssigned
+            Permissions.TenantAccessAssigned,
+            Permissions.MedCenterMachineRead,
+            Permissions.MedCenterMachineCreate,
+            Permissions.MedCenterMachineUpdate,
+            Permissions.MedCenterMachineDelete,
         });
 
         await SeedRolePermissionsAsync(db, doctorRole, new[]
         {
             Permissions.TenantRead,
             Permissions.TenantSwitch,
-            Permissions.TenantAccessOwn
+            Permissions.TenantAccessOwn,
+            Permissions.MedCenterMachineRead,
         });
 
         var adminUser = await SeedAdminUserAsync(db, configuration);
@@ -203,7 +208,7 @@ public static class IdentitySeeder
         Region region)
     {
         var tenantId = configuration["SEED_TENANT_ID"] ?? "dev-center";
-
+        
         var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId);
         if (tenant is not null)
         {
@@ -221,6 +226,7 @@ public static class IdentitySeeder
             Id = tenantId,
             Code = configuration["SEED_TENANT_CODE"] ?? "DEV",
             Name = configuration["SEED_TENANT_NAME"] ?? "Development Dialysis Center",
+            TimeZoneId = configuration["SEED_TENANT_TIME_ZONE"] ?? "Asia/Bishkek",
             Locale = "ru-RU",
             RegionId = region.Id,
             IsActive = true,

@@ -2,6 +2,7 @@
 using Domain.Audit;
 using Domain.Common;
 using Domain.MedCards;
+using Domain.MedCenters;
 using Domain.Patients;
 using Domain.Sessions;
 using Domain.Tenants;
@@ -41,6 +42,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<SessionWorkflowSettings> SessionWorkflowSettings => Set<SessionWorkflowSettings>();
     public DbSet<HdSessionMeasurement> HdSessionMeasurements => Set<HdSessionMeasurement>();
     public DbSet<HdSessionPause> HdSessionPauses => Set<HdSessionPause>();
+    public DbSet<MedCenterMachine> MedCenterMachines => Set<MedCenterMachine>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -124,6 +126,9 @@ public sealed class AppDbContext : DbContext
                 .WithMany(x => x.Tenants)
                 .HasForeignKey(x => x.RegionId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(x => x.TimeZoneId)
+                .HasMaxLength(100)
+                .IsRequired();
         });
 
         modelBuilder.Entity<TenantUser>(entity =>
@@ -423,6 +428,14 @@ public sealed class AppDbContext : DbContext
                 .WithMany(x => x.Sessions)
                 .HasForeignKey(x => x.MedCardId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Machine)
+                .WithMany(x => x.Sessions)
+                .HasForeignKey(x => x.MachineId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.TenantId, x.MachineId })
+                .IsUnique()
+                .HasDatabaseName("UX_HdSessions_ActiveMachine")
+                .HasFilter("\"MachineId\" IS NOT NULL AND \"Status\" IN (2, 3)");
         });
 
         modelBuilder.Entity<SessionWorkflowSettings>(entity =>
@@ -490,6 +503,57 @@ public sealed class AppDbContext : DbContext
                 .HasForeignKey(x => x.HdSessionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+        modelBuilder.Entity<MedCenterMachine>(entity =>
+{
+    entity.HasKey(x => x.Id);
+    entity.ToTable("MedCenterMachines");
+
+    entity.ConfigureTenant();
+    entity.ConfigureAuditable();
+    entity.ConfigureSoftDelete();
+    entity.ConfigureActive();
+
+    entity.Property(x => x.AcquisitionType)
+        .HasConversion<int>()
+        .IsRequired();
+
+    entity.Property(x => x.InventoryNumber).HasMaxLength(50).IsRequired();
+    entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+    entity.Property(x => x.Model).HasMaxLength(100).IsRequired();
+    entity.Property(x => x.SerialNumber).HasMaxLength(100).IsRequired();
+
+    entity.Property(x => x.Manufacturer).HasMaxLength(200).IsRequired();
+    entity.Property(x => x.ManufacturingCountry).HasMaxLength(100);
+    entity.Property(x => x.ManufactureYear).IsRequired();
+
+    entity.Property(x => x.CertificateHolder).HasMaxLength(200);
+    entity.Property(x => x.CertificateHolderCountry).HasMaxLength(100);
+    entity.Property(x => x.CertificateNumber).HasMaxLength(100);
+    entity.Property(x => x.CertificateCountry).HasMaxLength(100);
+    entity.Property(x => x.CertificateIssuedAt).IsRequired();
+
+    entity.Property(x => x.PermitName).HasMaxLength(200);
+    entity.Property(x => x.PermitNumber).HasMaxLength(100);
+    entity.Property(x => x.PermitSeries).HasMaxLength(100);
+    entity.Property(x => x.PermitExpiresAt).IsRequired();
+
+    entity.Property(x => x.DailySessionLimit).IsRequired();
+    entity.Property(x => x.BetweenSessionCooldownMinutes).IsRequired();
+    entity.Property(x => x.DailyLimitCooldownMinutes).IsRequired();
+    entity.Property(x => x.IsApproved).IsRequired();
+
+    entity.HasIndex(x => new { x.TenantId, x.InventoryNumber })
+        .IsUnique()
+        .HasFilter("\"IsDeleted\" = false");
+
+    entity.HasIndex(x => x.SerialNumber)
+        .IsUnique()
+        .HasFilter("\"IsDeleted\" = false");
+
+    entity.HasIndex(x => new { x.TenantId, x.IsActive });
+    entity.HasIndex(x => new { x.TenantId, x.IsApproved });
+    entity.HasIndex(x => x.PermitExpiresAt);
+});
         
     }
     public override int SaveChanges()

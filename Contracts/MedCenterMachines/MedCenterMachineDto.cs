@@ -1,0 +1,27 @@
+﻿namespace Contracts.MedCenterMachines;
+
+public sealed record MedCenterMachineDto(
+    long Id,
+    string TenantId,
+    MachineAcquisitionTypeDto AcquisitionType,
+    string InventoryNumber,
+    string Name,
+    string Model,
+    string SerialNumber,
+    string Manufacturer,
+    string? ManufacturingCountry,
+    int ManufactureYear,
+    string? CertificateHolder,
+    string? CertificateHolderCountry,
+    string? CertificateNumber,
+    string? CertificateCountry,
+    DateOnly CertificateIssuedAt,
+    string? PermitName,
+    string? PermitNumber,
+    string? PermitSeries,
+    DateOnly PermitExpiresAt,
+    int DailySessionLimit,
+    int BetweenSessionCooldownMinutes,
+    int DailyLimitCooldownMinutes,
+    bool IsApproved,
+    bool IsActive);

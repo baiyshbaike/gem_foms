@@ -2,6 +2,7 @@
 using Application.Audit;
 using Application.Auth;
 using Application.MedCards;
+using Application.MedCenterMachines;
 using Application.Patients;
 using Application.Sessions;
 using Application.Tenants;
@@ -10,6 +11,7 @@ using Infrastructure.Audit;
 using Infrastructure.Auth;
 using Infrastructure.Data;
 using Infrastructure.MedCards;
+using Infrastructure.MedCenterMachines;
 using Infrastructure.Patients;
 using Infrastructure.Sessions;
 using Infrastructure.Tenants;
@@ -36,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IMedCardService, MedCardService>();
         services.AddScoped<IHdSessionService, HdSessionService>();
         services.AddHostedService<HdSessionWorkflowWorker>();
+        services.AddScoped<IMedCenterMachineService, MedCenterMachineService>();
         return services;
     }
 }

@@ -43,6 +43,11 @@ public static class Permissions
     public const string SessionOverrideTimeLimits = "session.override_time_limits";
     public const string SessionSettingsManage = "session.settings.manage";
     
+    public const string MedCenterMachineRead = "medcenter.machine.read";
+    public const string MedCenterMachineCreate = "medcenter.machine.create";
+    public const string MedCenterMachineUpdate = "medcenter.machine.update";
+    public const string MedCenterMachineDelete = "medcenter.machine.delete";
+    
     public static readonly string[] All =
     [
         AdminUsers,
@@ -80,6 +85,9 @@ public static class Permissions
         SessionMeasurementUpdate,
         SessionOverrideTimeLimits,
         SessionSettingsManage,
-        
+        MedCenterMachineRead,
+        MedCenterMachineCreate,
+        MedCenterMachineUpdate,
+        MedCenterMachineDelete,
     ];
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.MedCards;
+using Domain.MedCenters;
 using Domain.Patients;
 
 namespace Domain.Sessions;
@@ -31,4 +32,5 @@ public sealed class HdSession : TenantAuditableEntityBase
     public MedCard MedCard { get; set; } = default!;
     public ICollection<HdSessionMeasurement> Measurements { get; set; } = new List<HdSessionMeasurement>();
     public ICollection<HdSessionPause> Pauses { get; set; } = new List<HdSessionPause>();
+    public MedCenterMachine? Machine { get; set; }
 }

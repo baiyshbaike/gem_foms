@@ -12,4 +12,5 @@ public sealed class Tenant
     public ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();
     public string? RegionId { get; set; }
     public Region? Region { get; set; }
+    public string TimeZoneId { get; set; } = "Asia/Bishkek";
 }

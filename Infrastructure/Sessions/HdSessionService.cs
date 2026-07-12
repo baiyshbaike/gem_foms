@@ -7,6 +7,7 @@ using Domain.Patients;
 using Domain.Sessions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Domain.MedCenters;
 
 namespace Infrastructure.Sessions;
 
@@ -301,9 +302,79 @@ public sealed class HdSessionService : IHdSessionService
         {
             return new SessionCommandResult<SessionDto>(SessionCommandStatus.Conflict);
         }
+        var machine = await _db.MedCenterMachines
+            .AsNoTracking()
+            .Where(x =>
+                x.Id == request.MachineId &&
+                x.TenantId == tenantId &&
+                !x.IsDeleted)
+            .Select(x => new
+            {
+                x.Id,
+                x.IsActive,
+                x.IsApproved,
+                x.DailySessionLimit
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-        // Machine entity henuz yoksa burada sadece active session cakismasi kontrol edilir.
-        // Machine modeli eklendikten sonra tenant/active machine varlik kontrolu bu metoda eklenir.
+        if (machine is null)
+        {
+            await AddActionLogAsync(
+                userId,
+                "SessionStartFailed",
+                session.Id.ToString(),
+                404,
+                false,
+                "Machine not found in active tenant",
+                $$"""{"tenantId":"{{tenantId}}","machineId":{{request.MachineId}}}""",
+                cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            return new SessionCommandResult<SessionDto>(SessionCommandStatus.NotFound);
+        }
+
+        if (!machine.IsActive || !machine.IsApproved)
+        {
+            await AddActionLogAsync(
+                userId,
+                "SessionStartFailed",
+                session.Id.ToString(),
+                409,
+                false,
+                "Machine is inactive or not approved",
+                $$"""{"tenantId":"{{tenantId}}","machineId":{{request.MachineId}}}""",
+                cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            return new SessionCommandResult<SessionDto>(SessionCommandStatus.Conflict);
+        }
+
+        var dayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
+        var dayEnd = dayStart.AddDays(1);
+
+        var machineSessionCountToday = await _db.HdSessions.CountAsync(x =>
+                x.TenantId == tenantId &&
+                x.MachineId == request.MachineId &&
+                x.StartedAt >= dayStart &&
+                x.StartedAt < dayEnd &&
+                x.Status != SessionStatus.Cancelled,
+            cancellationToken);
+
+        if (machineSessionCountToday >= machine.DailySessionLimit)
+        {
+            await AddActionLogAsync(
+                userId,
+                "SessionStartFailed",
+                session.Id.ToString(),
+                409,
+                false,
+                "Machine daily session limit reached",
+                $$"""{"tenantId":"{{tenantId}}","machineId":{{request.MachineId}},"dailySessionLimit":{{machine.DailySessionLimit}}}""",
+                cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            return new SessionCommandResult<SessionDto>(SessionCommandStatus.Conflict);
+        }
         session.MachineId = request.MachineId;
         session.Status = SessionStatus.Started;
         session.StartedAt ??= now;
