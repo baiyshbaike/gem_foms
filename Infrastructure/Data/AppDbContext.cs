@@ -1,4 +1,6 @@
-﻿using Domain.Audit;
+﻿using Application.Common;
+using Domain.Audit;
+using Domain.Common;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -7,9 +9,11 @@ namespace Infrastructure.Data;
 
 public sealed class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    private const long SystemUserId = 0;
+    private readonly IRequestContext? _requestContext;
+    public AppDbContext(DbContextOptions<AppDbContext> options,IRequestContext? requestContext = null) : base(options)
     {
-        
+        _requestContext = requestContext;
     }
     
     public DbSet<User> Users => Set<User>();
@@ -153,5 +157,70 @@ public sealed class AppDbContext : DbContext
                 .HasForeignKey(x => x.RegionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+    }
+    public override int SaveChanges()
+    {
+        ApplyAuditFields();
+        return base.SaveChanges();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyAuditFields();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyAuditFields();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        ApplyAuditFields();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ApplyAuditFields()
+    {
+        ChangeTracker.DetectChanges();
+
+        var now = DateTimeOffset.UtcNow;
+        var userId = _requestContext?.UserId ?? SystemUserId;
+
+        foreach (var entry in ChangeTracker.Entries<IAuditableEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                if (entry.Entity.CreatedAt == default)
+                {
+                    entry.Entity.CreatedAt = now;
+                }
+
+                if (entry.Entity.CreatedBy == default)
+                {
+                    entry.Entity.CreatedBy = userId;
+                }
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedBy = userId;
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<ISoftDeletableEntity>())
+        {
+            if (entry.State == EntityState.Modified &&
+                entry.Entity.IsDeleted &&
+                entry.Entity.DeletedAt is null)
+            {
+                entry.Entity.DeletedAt = now;
+            }
+        }
     }
 }
