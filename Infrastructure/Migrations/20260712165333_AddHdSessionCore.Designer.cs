@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260712165333_AddHdSessionCore")]
+    partial class AddHdSessionCore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -739,129 +742,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("HdSessions", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Sessions.HdSessionMeasurement", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Dia")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<long>("HdSessionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset?>("MeasuredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("Point")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Ritm")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Sys")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Temp")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("HdSessionId", "Point")
-                        .IsUnique();
-
-                    b.ToTable("HdSessionMeasurements", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Sessions.HdSessionPause", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset?>("EndedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("HdSessionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("PausedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<long?>("ResumedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("HdSessionId")
-                        .IsUnique()
-                        .HasFilter("\"EndedAt\" IS NULL");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("HdSessionPauses", (string)null);
-                });
-
             modelBuilder.Entity("Domain.Sessions.SessionWorkflowSettings", b =>
                 {
                     b.Property<long>("Id")
@@ -1323,28 +1203,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("Domain.Sessions.HdSessionMeasurement", b =>
-                {
-                    b.HasOne("Domain.Sessions.HdSession", "HdSession")
-                        .WithMany("Measurements")
-                        .HasForeignKey("HdSessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("HdSession");
-                });
-
-            modelBuilder.Entity("Domain.Sessions.HdSessionPause", b =>
-                {
-                    b.HasOne("Domain.Sessions.HdSession", "HdSession")
-                        .WithMany("Pauses")
-                        .HasForeignKey("HdSessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("HdSession");
-                });
-
             modelBuilder.Entity("Domain.Tenants.ManagerRegionAccess", b =>
                 {
                     b.HasOne("Domain.Tenants.Region", "Region")
@@ -1465,13 +1323,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Patients.PatientGroup", b =>
                 {
                     b.Navigation("Patients");
-                });
-
-            modelBuilder.Entity("Domain.Sessions.HdSession", b =>
-                {
-                    b.Navigation("Measurements");
-
-                    b.Navigation("Pauses");
                 });
 
             modelBuilder.Entity("Domain.Tenants.Region", b =>

@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Patients;
+using Domain.Sessions;
 
 namespace Domain.MedCards;
 
@@ -17,4 +18,5 @@ public sealed class MedCard : TenantSoftDeletableAuditableEntityBase
     public MedCardInfectionScreening? InfectionScreening { get; set; }
     public MedCardApproval? Approval { get; set; }
     public ICollection<MedCardDiagnosis> Diagnoses { get; set; } = new List<MedCardDiagnosis>();
+    public ICollection<HdSession> Sessions { get; set; } = new List<HdSession>();
 }

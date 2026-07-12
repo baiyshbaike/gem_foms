@@ -29,6 +29,20 @@ public static class Permissions
     public const string MedCardUpdate = "medcard.update";
     public const string MedCardDelete = "medcard.delete";
     
+    public const string SessionRead = "session.read";
+    public const string SessionCreate = "session.create";
+    public const string SessionStart = "session.start";
+    public const string SessionPause = "session.pause";
+    public const string SessionResume = "session.resume";
+    public const string SessionFinish = "session.finish";
+    public const string SessionEndIdentify = "session.end_identify";
+    public const string SessionSendToPay = "session.send_to_pay";
+    public const string SessionMarkPaid = "session.mark_paid";
+    public const string SessionArchive = "session.archive";
+    public const string SessionMeasurementUpdate = "session.measurement.update";
+    public const string SessionOverrideTimeLimits = "session.override_time_limits";
+    public const string SessionSettingsManage = "session.settings.manage";
+    
     public static readonly string[] All =
     [
         AdminUsers,
@@ -53,5 +67,19 @@ public static class Permissions
         MedCardCreate,
         MedCardUpdate,
         MedCardDelete,
+        SessionRead ,
+        SessionCreate ,
+        SessionStart,
+        SessionPause,
+        SessionResume,
+        SessionFinish,
+        SessionEndIdentify,
+        SessionSendToPay,
+        SessionMarkPaid,
+        SessionArchive,
+        SessionMeasurementUpdate,
+        SessionOverrideTimeLimits,
+        SessionSettingsManage,
+        
     ];
 }

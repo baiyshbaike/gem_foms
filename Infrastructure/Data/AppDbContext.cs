@@ -3,6 +3,7 @@ using Domain.Audit;
 using Domain.Common;
 using Domain.MedCards;
 using Domain.Patients;
+using Domain.Sessions;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,10 @@ public sealed class AppDbContext : DbContext
     public DbSet<MedCardDiagnosis> MedCardDiagnoses => Set<MedCardDiagnosis>();
     public DbSet<MedCardInfectionScreening> MedCardInfectionScreenings => Set<MedCardInfectionScreening>();
     public DbSet<MedCardApproval> MedCardApprovals => Set<MedCardApproval>();
+    public DbSet<HdSession> HdSessions => Set<HdSession>();
+    public DbSet<SessionWorkflowSettings> SessionWorkflowSettings => Set<SessionWorkflowSettings>();
+    public DbSet<HdSessionMeasurement> HdSessionMeasurements => Set<HdSessionMeasurement>();
+    public DbSet<HdSessionPause> HdSessionPauses => Set<HdSessionPause>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -386,6 +391,103 @@ public sealed class AppDbContext : DbContext
             entity.HasOne(x => x.MedCard)
                 .WithOne(x => x.Approval)
                 .HasForeignKey<MedCardApproval>(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<HdSession>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("HdSessions");
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.Status)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(x => x.IdentifiedAt).IsRequired();
+            entity.Property(x => x.StatusChangedAt).IsRequired();
+            entity.Property(x => x.StatusReason).HasMaxLength(500);
+
+            entity.HasIndex(x => new { x.TenantId, x.PatientId });
+            entity.HasIndex(x => new { x.TenantId, x.MedCardId });
+            entity.HasIndex(x => new { x.TenantId, x.MachineId });
+            entity.HasIndex(x => new { x.TenantId, x.Status });
+
+            entity.HasOne(x => x.Patient)
+                .WithMany(x => x.Sessions)
+                .HasForeignKey(x => x.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.MedCard)
+                .WithMany(x => x.Sessions)
+                .HasForeignKey(x => x.MedCardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SessionWorkflowSettings>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("SessionWorkflowSettings");
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.HasIndex(x => x.TenantId).IsUnique();
+
+            entity.Property(x => x.IdentificationStartLimitMinutes).IsRequired();
+            entity.Property(x => x.AutoFinishActiveMinutes).IsRequired();
+            entity.Property(x => x.EndIdentificationLimitMinutes).IsRequired();
+            entity.Property(x => x.SendToPayLimitMinutes).IsRequired();
+        });
+        modelBuilder.Entity<HdSessionMeasurement>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("HdSessionMeasurements");
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.Point)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(x => x.Sys).HasMaxLength(20);
+            entity.Property(x => x.Dia).HasMaxLength(20);
+            entity.Property(x => x.Temp).HasMaxLength(20);
+            entity.Property(x => x.Ritm).HasMaxLength(20);
+            entity.Property(x => x.Note).HasMaxLength(1000);
+
+            entity.HasIndex(x => new { x.HdSessionId, x.Point }).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+
+            entity.HasOne(x => x.HdSession)
+                .WithMany(x => x.Measurements)
+                .HasForeignKey(x => x.HdSessionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<HdSessionPause>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("HdSessionPauses");
+
+            entity.ConfigureTenant();
+            entity.ConfigureAuditable();
+
+            entity.Property(x => x.StartedAt).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(1000);
+
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.HdSessionId);
+
+            entity.HasIndex(x => x.HdSessionId)
+                .IsUnique()
+                .HasFilter("\"EndedAt\" IS NULL");
+
+            entity.HasOne(x => x.HdSession)
+                .WithMany(x => x.Pauses)
+                .HasForeignKey(x => x.HdSessionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
         

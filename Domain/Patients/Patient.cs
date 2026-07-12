@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.MedCards;
+using Domain.Sessions;
 
 namespace Domain.Patients;
 
@@ -23,4 +24,5 @@ public sealed class Patient : ActiveSoftDeletableAuditableEntityBase
 
     public PatientGroup Group { get; set; } = default!;
     public ICollection<MedCard> MedCards { get; set; } = new List<MedCard>();
+    public ICollection<HdSession> Sessions { get; set; } = new List<HdSession>();
 }
