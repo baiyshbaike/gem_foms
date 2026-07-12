@@ -1,4 +1,5 @@
 ﻿using Domain.Sessions;
+using Application.Audit;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,16 +42,17 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var actionLogService = scope.ServiceProvider.GetRequiredService<IActionLogService>();
         var now = DateTimeOffset.UtcNow;
 
         var settingsByTenant = await db.SessionWorkflowSettings
             .AsNoTracking()
             .ToDictionaryAsync(x => x.TenantId, cancellationToken);
 
-        await ExpireIdentificationsAsync(db, settingsByTenant, now, cancellationToken);
-        await AutoFinishStartedSessionsAsync(db, settingsByTenant, now, cancellationToken);
-        await MarkEndIdentificationOverdueAsync(db, settingsByTenant, now, cancellationToken);
-        await MarkSendToPayOverdueAsync(db, settingsByTenant, now, cancellationToken);
+        await ExpireIdentificationsAsync(db, actionLogService, settingsByTenant, now, cancellationToken);
+        await AutoFinishStartedSessionsAsync(db, actionLogService, settingsByTenant, now, cancellationToken);
+        await MarkEndIdentificationOverdueAsync(db, actionLogService, settingsByTenant, now, cancellationToken);
+        await MarkSendToPayOverdueAsync(db, actionLogService, settingsByTenant, now, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -73,6 +75,7 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
 
     private static async Task ExpireIdentificationsAsync(
         AppDbContext db,
+        IActionLogService actionLogService,
         IReadOnlyDictionary<string, SessionWorkflowSettings> settingsByTenant,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -94,11 +97,19 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
             session.Status = SessionStatus.IdentificationExpired;
             session.StatusChangedAt = now;
             session.StatusReason = "Identification start time limit expired";
+
+            await AddSystemActionLogAsync(
+                actionLogService,
+                "SessionIdentificationExpired",
+                session,
+                "Identification start time limit expired",
+                cancellationToken);
         }
     }
 
     private static async Task AutoFinishStartedSessionsAsync(
         AppDbContext db,
+        IActionLogService actionLogService,
         IReadOnlyDictionary<string, SessionWorkflowSettings> settingsByTenant,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -129,11 +140,19 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
             session.ActiveMinutes = (int)Math.Round(activeDuration.TotalMinutes);
             session.PauseMinutes = (int)Math.Round(pauseDuration.TotalMinutes);
             session.StatusReason = "Auto finished by active duration limit";
+
+            await AddSystemActionLogAsync(
+                actionLogService,
+                "SessionAutoFinished",
+                session,
+                "Auto finished by active duration limit",
+                cancellationToken);
         }
     }
 
     private static async Task MarkEndIdentificationOverdueAsync(
         AppDbContext db,
+        IActionLogService actionLogService,
         IReadOnlyDictionary<string, SessionWorkflowSettings> settingsByTenant,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -155,11 +174,19 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
             session.Status = SessionStatus.EndIdentificationOverdue;
             session.StatusChangedAt = now;
             session.StatusReason = "End identification time limit expired";
+
+            await AddSystemActionLogAsync(
+                actionLogService,
+                "SessionEndIdentificationOverdue",
+                session,
+                "End identification time limit expired",
+                cancellationToken);
         }
     }
 
     private static async Task MarkSendToPayOverdueAsync(
         AppDbContext db,
+        IActionLogService actionLogService,
         IReadOnlyDictionary<string, SessionWorkflowSettings> settingsByTenant,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -181,6 +208,34 @@ public sealed class HdSessionWorkflowWorker : BackgroundService
             session.Status = SessionStatus.SendToPayOverdue;
             session.StatusChangedAt = now;
             session.StatusReason = "Send to pay time limit expired";
+
+            await AddSystemActionLogAsync(
+                actionLogService,
+                "SessionSendToPayOverdue",
+                session,
+                "Send to pay time limit expired",
+                cancellationToken);
         }
+    }
+
+    private static async Task AddSystemActionLogAsync(
+        IActionLogService actionLogService,
+        string action,
+        HdSession session,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        await actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = 0,
+            UsernameSnapshot = "system",
+            Action = action,
+            Module = "session",
+            EntityName = "HdSession",
+            EntityId = session.Id.ToString(),
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = $$"""{"tenantId":"{{session.TenantId}}","status":"{{session.Status}}","reason":"{{reason}}"}"""
+        }, cancellationToken);
     }
 }

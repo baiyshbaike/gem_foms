@@ -34,10 +34,22 @@ public sealed class MedCardService : IMedCardService
         var filter = await _tenantAccessService.ResolveTenantFilterAsync(userId, tenantIds, cancellationToken);
         if (!filter.Succeeded)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardsViewFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant filter contains forbidden tenant"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.MedCards
+        var medCards = await _db.MedCards
             .AsNoTracking()
             .Where(x => filter.TenantIds.Contains(x.TenantId) && !x.IsDeleted)
             .OrderByDescending(x => x.OpenedAt)
@@ -51,6 +63,20 @@ public sealed class MedCardService : IMedCardService
                 (ContractStatus)x.Status,
                 x.Notes))
             .ToListAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = userId,
+            Action = "MedCardsViewed",
+            Module = "medcard",
+            EntityName = "MedCard",
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = $$"""{"tenantCount":{{filter.TenantIds.Count}},"resultCount":{{medCards.Count}}}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return medCards;
     }
 
     public async Task<MedCardDto?> GetByIdAsync(
@@ -61,10 +87,24 @@ public sealed class MedCardService : IMedCardService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardViewFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant access denied",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.MedCards
+        var medCard = await _db.MedCards
             .AsNoTracking()
             .Where(x => x.Id == id && x.TenantId == tenantId && !x.IsDeleted)
             .Select(x => new MedCardDto(
@@ -77,6 +117,22 @@ public sealed class MedCardService : IMedCardService
                 (ContractStatus)x.Status,
                 x.Notes))
             .FirstOrDefaultAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = userId,
+            Action = medCard is null ? "MedCardViewFailed" : "MedCardViewed",
+            Module = "medcard",
+            EntityName = "MedCard",
+            EntityId = id.ToString(),
+            StatusCode = medCard is null ? 404 : 200,
+            Succeeded = medCard is not null,
+            FailureReason = medCard is null ? "MedCard not found" : null,
+            MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return medCard;
     }
 
     public async Task<MedCardCommandResult<MedCardDto>> CreateAsync(
@@ -87,6 +143,19 @@ public sealed class MedCardService : IMedCardService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardCreateFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant access denied",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}","patientId":{{request.PatientId}}}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<MedCardDto>(MedCardCommandStatus.Forbidden);
         }
 
@@ -201,6 +270,20 @@ public sealed class MedCardService : IMedCardService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardUpdateFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant access denied",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<MedCardDto>(MedCardCommandStatus.Forbidden);
         }
 
@@ -209,12 +292,40 @@ public sealed class MedCardService : IMedCardService
 
         if (medCard is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardUpdateFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 404,
+                Succeeded = false,
+                FailureReason = "MedCard not found",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<MedCardDto>(MedCardCommandStatus.NotFound);
         }
 
         var status = (DomainStatus)request.Status;
         if ((status is DomainStatus.Closed or DomainStatus.Archived) && request.ClosedAt is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardUpdateFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 409,
+                Succeeded = false,
+                FailureReason = "ClosedAt is required for closed or archived medcard",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}","status":"{{status}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<MedCardDto>(MedCardCommandStatus.Conflict);
         }
 
@@ -227,6 +338,20 @@ public sealed class MedCardService : IMedCardService
 
         if (duplicateCardNumber)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardUpdateFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 409,
+                Succeeded = false,
+                FailureReason = "Card number already exists in active tenant",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<MedCardDto>(MedCardCommandStatus.Conflict);
         }
 
@@ -260,6 +385,20 @@ public sealed class MedCardService : IMedCardService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardDeleteFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant access denied",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<bool>(MedCardCommandStatus.Forbidden, false);
         }
 
@@ -268,6 +407,20 @@ public sealed class MedCardService : IMedCardService
 
         if (medCard is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MedCardDeleteFailed",
+                Module = "medcard",
+                EntityName = "MedCard",
+                EntityId = id.ToString(),
+                StatusCode = 404,
+                Succeeded = false,
+                FailureReason = "MedCard not found",
+                MetadataJson = $$"""{"tenantId":"{{tenantId}}"}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCardCommandResult<bool>(MedCardCommandStatus.NotFound, false);
         }
 

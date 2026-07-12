@@ -28,7 +28,21 @@ public sealed class TenantService : ITenantService
 
     public async Task<IReadOnlyList<TenantDto>> GetMyTenantsAsync(long userId, CancellationToken cancellationToken)
     {
-        return await _tenantAccessService.GetAccessibleTenantsAsync(userId, cancellationToken);
+        var tenants = await _tenantAccessService.GetAccessibleTenantsAsync(userId, cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = userId,
+            Action = "MyTenantsViewed",
+            Module = "tenant",
+            EntityName = "Tenant",
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = $$"""{"resultCount":{{tenants.Count}}}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return tenants;
     }
 
     public async Task<SwitchTenantResponse?> SwitchAsync(
@@ -39,6 +53,19 @@ public sealed class TenantService : ITenantService
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
         if (user is null || !user.IsActive)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "TenantSwitchFailed",
+                Module = "tenant",
+                EntityName = "Tenant",
+                EntityId = tenantId,
+                StatusCode = 401,
+                Succeeded = false,
+                FailureReason = "User not found or inactive"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
@@ -72,6 +99,20 @@ public sealed class TenantService : ITenantService
 
         if (tenant is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                UsernameSnapshot = user.Username,
+                Action = "TenantSwitchFailed",
+                Module = "tenant",
+                EntityName = "Tenant",
+                EntityId = tenantId,
+                StatusCode = 404,
+                Succeeded = false,
+                FailureReason = "Tenant not found or inactive"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 

@@ -35,10 +35,21 @@ public sealed class HdSessionService : IHdSessionService
         var filter = await _tenantAccessService.ResolveTenantFilterAsync(userId, tenantIds, cancellationToken);
         if (!filter.Succeeded)
         {
+            await AddActionLogAsync(
+                userId,
+                "SessionsViewFailed",
+                null,
+                403,
+                false,
+                "Tenant filter contains forbidden tenant",
+                null,
+                cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.HdSessions
+        var sessions = await _db.HdSessions
             .AsNoTracking()
             .Where(x => filter.TenantIds.Contains(x.TenantId))
             .OrderByDescending(x => x.Id)
@@ -58,6 +69,19 @@ public sealed class HdSessionService : IHdSessionService
                 x.ActiveMinutes,
                 x.PauseMinutes))
             .ToListAsync(cancellationToken);
+
+        await AddActionLogAsync(
+            userId,
+            "SessionsViewed",
+            null,
+            200,
+            true,
+            null,
+            $$"""{"tenantCount":{{filter.TenantIds.Count}},"resultCount":{{sessions.Count}}}""",
+            cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return sessions;
     }
 
     public async Task<SessionDto?> GetByIdAsync(
@@ -68,10 +92,21 @@ public sealed class HdSessionService : IHdSessionService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await AddActionLogAsync(
+                userId,
+                "SessionViewFailed",
+                id.ToString(),
+                403,
+                false,
+                "Tenant access denied",
+                $$"""{"tenantId":"{{tenantId}}"}""",
+                cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.HdSessions
+        var session = await _db.HdSessions
             .AsNoTracking()
             .Where(x => x.Id == id && x.TenantId == tenantId)
             .Select(x => new SessionDto(
@@ -90,6 +125,19 @@ public sealed class HdSessionService : IHdSessionService
                 x.ActiveMinutes,
                 x.PauseMinutes))
             .FirstOrDefaultAsync(cancellationToken);
+
+        await AddActionLogAsync(
+            userId,
+            session is null ? "SessionViewFailed" : "SessionViewed",
+            id.ToString(),
+            session is null ? 404 : 200,
+            session is not null,
+            session is null ? "Session not found" : null,
+            $$"""{"tenantId":"{{tenantId}}"}""",
+            cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return session;
     }
 
     public async Task<SessionCommandResult<SessionDto>> CreateIdentifiedAsync(

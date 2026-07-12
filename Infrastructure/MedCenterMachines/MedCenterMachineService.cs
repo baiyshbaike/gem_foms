@@ -35,10 +35,22 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
         var filter = await _tenantAccessService.ResolveTenantFilterAsync(userId, tenantIds, cancellationToken);
         if (!filter.Succeeded)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "MachinesViewFailed",
+                Module = "medcenter",
+                EntityName = "MedCenterMachine",
+                StatusCode = 403,
+                Succeeded = false,
+                FailureReason = "Tenant filter contains forbidden tenant"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.MedCenterMachines
+        var machines = await _db.MedCenterMachines
             .AsNoTracking()
             .Where(x => filter.TenantIds.Contains(x.TenantId) && !x.IsDeleted)
             .OrderBy(x => x.TenantId)
@@ -69,6 +81,20 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
                 x.IsApproved,
                 x.IsActive))
             .ToListAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = userId,
+            Action = "MachinesViewed",
+            Module = "medcenter",
+            EntityName = "MedCenterMachine",
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = $$"""{"tenantCount":{{filter.TenantIds.Count}},"resultCount":{{machines.Count}}}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return machines;
     }
 
     public async Task<MedCenterMachineDto?> GetByIdAsync(
@@ -79,10 +105,12 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await AddMachineLogAsync(userId, "MachineViewFailed", id.ToString(), 403, false, "Tenant access denied", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
-        return await _db.MedCenterMachines
+        var machine = await _db.MedCenterMachines
             .AsNoTracking()
             .Where(x => x.Id == id && x.TenantId == tenantId && !x.IsDeleted)
             .Select(x => new MedCenterMachineDto(
@@ -111,6 +139,19 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
                 x.IsApproved,
                 x.IsActive))
             .FirstOrDefaultAsync(cancellationToken);
+
+        await AddMachineLogAsync(
+            userId,
+            machine is null ? "MachineViewFailed" : "MachineViewed",
+            id.ToString(),
+            machine is null ? 404 : 200,
+            machine is not null,
+            machine is null ? "Machine not found" : null,
+            tenantId,
+            cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return machine;
     }
 
     public async Task<MedCenterMachineCommandResult<MedCenterMachineDto>> CreateAsync(
@@ -121,6 +162,8 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await AddMachineLogAsync(userId, "MachineCreateFailed", null, 403, false, "Tenant access denied", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCenterMachineCommandResult<MedCenterMachineDto>(MedCenterMachineCommandStatus.Forbidden);
         }
 
@@ -165,6 +208,8 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await AddMachineLogAsync(userId, "MachineUpdateFailed", id.ToString(), 403, false, "Tenant access denied", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCenterMachineCommandResult<MedCenterMachineDto>(MedCenterMachineCommandStatus.Forbidden);
         }
 
@@ -173,6 +218,8 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
 
         if (machine is null)
         {
+            await AddMachineLogAsync(userId, "MachineUpdateFailed", id.ToString(), 404, false, "Machine not found", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCenterMachineCommandResult<MedCenterMachineDto>(MedCenterMachineCommandStatus.NotFound);
         }
 
@@ -208,6 +255,8 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
     {
         if (!await _tenantAccessService.CanAccessTenantAsync(userId, tenantId, cancellationToken))
         {
+            await AddMachineLogAsync(userId, "MachineDeleteFailed", id.ToString(), 403, false, "Tenant access denied", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCenterMachineCommandResult<bool>(MedCenterMachineCommandStatus.Forbidden);
         }
 
@@ -216,6 +265,8 @@ public sealed class MedCenterMachineService : IMedCenterMachineService
 
         if (machine is null)
         {
+            await AddMachineLogAsync(userId, "MachineDeleteFailed", id.ToString(), 404, false, "Machine not found", tenantId, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
             return new MedCenterMachineCommandResult<bool>(MedCenterMachineCommandStatus.NotFound);
         }
 

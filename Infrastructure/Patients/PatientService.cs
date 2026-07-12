@@ -47,7 +47,20 @@ public sealed class PatientService : IPatientService
             .OrderBy(x => x.LastName)
             .ThenBy(x => x.FirstName);
 
-        return await ProjectToDto(query).ToListAsync(cancellationToken);
+        var patients = await ProjectToDto(query).ToListAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            Action = "PatientsViewed",
+            Module = "patient",
+            EntityName = "Patient",
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = $$"""{"hasSearch":{{(!string.IsNullOrWhiteSpace(search)).ToString().ToLowerInvariant()}},"groupId":{{(groupId?.ToString() ?? "null")}},"resultCount":{{patients.Count}}}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return patients;
     }
 
     public async Task<PatientDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -56,7 +69,21 @@ public sealed class PatientService : IPatientService
             .AsNoTracking()
             .Where(x => x.Id == id && !x.IsDeleted);
 
-        return await ProjectToDto(query).FirstOrDefaultAsync(cancellationToken);
+        var patient = await ProjectToDto(query).FirstOrDefaultAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            Action = patient is null ? "PatientViewFailed" : "PatientViewed",
+            Module = "patient",
+            EntityName = "Patient",
+            EntityId = id.ToString(),
+            StatusCode = patient is null ? 404 : 200,
+            Succeeded = patient is not null,
+            FailureReason = patient is null ? "Patient not found" : null
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return patient;
     }
 
     public async Task<PatientDto?> GetByInnAsync(string inn, CancellationToken cancellationToken)
@@ -65,7 +92,22 @@ public sealed class PatientService : IPatientService
             .AsNoTracking()
             .Where(x => x.Inn == inn && !x.IsDeleted);
 
-        return await ProjectToDto(query).FirstOrDefaultAsync(cancellationToken);
+        var patient = await ProjectToDto(query).FirstOrDefaultAsync(cancellationToken);
+
+        await _actionLogService.AddAsync(new ActionLogRequest
+        {
+            Action = patient is null ? "PatientLookupFailed" : "PatientLookupSucceeded",
+            Module = "patient",
+            EntityName = "Patient",
+            EntityId = patient?.Id.ToString(),
+            StatusCode = patient is null ? 404 : 200,
+            Succeeded = patient is not null,
+            FailureReason = patient is null ? "Patient not found by INN" : null,
+            MetadataJson = $$"""{"lookup":"inn","found":{{(patient is not null).ToString().ToLowerInvariant()}}}"""
+        }, cancellationToken);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return patient;
     }
 
     public async Task<PatientDto?> CreateAsync(
@@ -144,6 +186,19 @@ public sealed class PatientService : IPatientService
 
         if (patient is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "PatientUpdateFailed",
+                Module = "patient",
+                EntityName = "Patient",
+                EntityId = id.ToString(),
+                StatusCode = 404,
+                Succeeded = false,
+                FailureReason = "Patient not found"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
@@ -155,6 +210,19 @@ public sealed class PatientService : IPatientService
 
         if (duplicateInn)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "PatientUpdateFailed",
+                Module = "patient",
+                EntityName = "Patient",
+                EntityId = id.ToString(),
+                StatusCode = 409,
+                Succeeded = false,
+                FailureReason = "Patient with same INN already exists"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
@@ -165,6 +233,20 @@ public sealed class PatientService : IPatientService
 
         if (!groupExists)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "PatientUpdateFailed",
+                Module = "patient",
+                EntityName = "Patient",
+                EntityId = id.ToString(),
+                StatusCode = 409,
+                Succeeded = false,
+                FailureReason = "Patient group not found or inactive",
+                MetadataJson = $$"""{"groupId":{{request.GroupId}}}"""
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return null;
         }
 
@@ -206,6 +288,19 @@ public sealed class PatientService : IPatientService
 
         if (patient is null)
         {
+            await _actionLogService.AddAsync(new ActionLogRequest
+            {
+                UserId = userId,
+                Action = "PatientDeleteFailed",
+                Module = "patient",
+                EntityName = "Patient",
+                EntityId = id.ToString(),
+                StatusCode = 404,
+                Succeeded = false,
+                FailureReason = "Patient not found"
+            }, cancellationToken);
+
+            await _db.SaveChangesAsync(cancellationToken);
             return false;
         }
 
