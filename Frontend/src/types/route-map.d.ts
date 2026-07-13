@@ -59,6 +59,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/audit-logs/': RouteRecordInfo<
+      '/audit-logs/',
+      '/audit-logs',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/auth': RouteRecordInfo<
       '/auth',
       '/auth',
@@ -188,6 +195,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/machines/': RouteRecordInfo<
+      '/machines/',
+      '/machines',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/marketing/': RouteRecordInfo<
       '/marketing/',
       '/marketing',
@@ -202,9 +216,30 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/med-cards/': RouteRecordInfo<
+      '/med-cards/',
+      '/med-cards',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/patients/': RouteRecordInfo<
+      '/patients/',
+      '/patients',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/prop-components/': RouteRecordInfo<
       '/prop-components/',
       '/prop-components',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/sessions/': RouteRecordInfo<
+      '/sessions/',
+      '/sessions',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -247,6 +282,13 @@ declare module 'vue-router/auto-routes' {
     '/tasks/': RouteRecordInfo<
       '/tasks/',
       '/tasks',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/user/': RouteRecordInfo<
+      '/user/',
+      '/user',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -298,6 +340,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/apps/index.vue': {
       routes:
         | '/apps/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/audit-logs/index.vue': {
+      routes:
+        | '/audit-logs/'
       views:
         | never
       pathParamNames:
@@ -451,6 +501,14 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/machines/index.vue': {
+      routes:
+        | '/machines/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/marketing/index.vue': {
       routes:
         | '/marketing/'
@@ -467,9 +525,33 @@ declare module 'vue-router/auto-routes' {
       pathParamNames:
         | never
     }
+    'src/pages/med-cards/index.vue': {
+      routes:
+        | '/med-cards/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/patients/index.vue': {
+      routes:
+        | '/patients/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
     'src/pages/prop-components/index.vue': {
       routes:
         | '/prop-components/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/sessions/index.vue': {
+      routes:
+        | '/sessions/'
       views:
         | never
       pathParamNames:
@@ -518,6 +600,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/tasks/index.vue': {
       routes:
         | '/tasks/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/user/index.vue': {
+      routes:
+        | '/user/'
       views:
         | never
       pathParamNames:

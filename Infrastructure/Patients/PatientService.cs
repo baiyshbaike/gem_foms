@@ -341,6 +341,8 @@ public sealed class PatientService : IPatientService
             patient.Group.Code,
             patient.Group.Name,
             patient.SpecialStatus,
+            patient.CreatedAt,
+            patient.UpdatedAt,
             patient.IsActive));
     }
 }

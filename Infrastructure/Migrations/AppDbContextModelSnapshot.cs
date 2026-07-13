@@ -442,6 +442,148 @@ namespace Infrastructure.Migrations
                     b.ToTable("MedCardInfectionScreenings");
                 });
 
+            modelBuilder.Entity("Domain.MedCenters.MedCenterMachine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AcquisitionType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BetweenSessionCooldownMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CertificateCountry")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CertificateHolder")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CertificateHolderCountry")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateOnly>("CertificateIssuedAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CertificateNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DailyLimitCooldownMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DailySessionLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InventoryNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ManufactureYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Manufacturer")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ManufacturingCountry")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("PermitExpiresAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PermitName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PermitNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PermitSeries")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("PermitExpiresAt");
+
+                    b.HasIndex("SerialNumber")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "InventoryNumber")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.HasIndex("TenantId", "IsApproved");
+
+                    b.ToTable("MedCenterMachines", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Patients.Patient", b =>
                 {
                     b.Property<long>("Id")
@@ -644,6 +786,694 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Regions.District", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("RegionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("RegionId");
+
+                    b.HasIndex("RegionId", "Name")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("Districts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Баткенский район",
+                            RegionId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Кадамжайский район",
+                            RegionId = 1L
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Лейлекский район",
+                            RegionId = 1L
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Аламудунский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Чуйский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Жайылский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Кеминский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Московский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Панфиловский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Сокулукский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 11L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ысык-Атинский район",
+                            RegionId = 2L
+                        },
+                        new
+                        {
+                            Id = 12L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ак-Суйский район",
+                            RegionId = 3L
+                        },
+                        new
+                        {
+                            Id = 13L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Иссык-Кульский район",
+                            RegionId = 3L
+                        },
+                        new
+                        {
+                            Id = 14L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Джети-Огузский район",
+                            RegionId = 3L
+                        },
+                        new
+                        {
+                            Id = 15L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Тонский район",
+                            RegionId = 3L
+                        },
+                        new
+                        {
+                            Id = 16L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Тюпский район",
+                            RegionId = 3L
+                        },
+                        new
+                        {
+                            Id = 17L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Аксыйский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 18L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ала-Букинский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 19L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Базар-Коргонский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 20L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Чаткальский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 21L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ноокенский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 22L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Сузакский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 23L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Токтогульский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 24L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Тогуз-Тороуский район",
+                            RegionId = 4L
+                        },
+                        new
+                        {
+                            Id = 25L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ак-Талинский район",
+                            RegionId = 5L
+                        },
+                        new
+                        {
+                            Id = 26L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ат-Башинский район",
+                            RegionId = 5L
+                        },
+                        new
+                        {
+                            Id = 27L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Жумгальский район",
+                            RegionId = 5L
+                        },
+                        new
+                        {
+                            Id = 28L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Кочкорский район",
+                            RegionId = 5L
+                        },
+                        new
+                        {
+                            Id = 29L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Нарынский район",
+                            RegionId = 5L
+                        },
+                        new
+                        {
+                            Id = 30L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Алайский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 31L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Араванский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 32L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Чон-Алайский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 33L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Кара-Кульджинский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 34L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Кара-Сууский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 35L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ноокатский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 36L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Узгенский район",
+                            RegionId = 6L
+                        },
+                        new
+                        {
+                            Id = 37L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Айтматовский район",
+                            RegionId = 7L
+                        },
+                        new
+                        {
+                            Id = 38L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Бакай-Атинский район",
+                            RegionId = 7L
+                        },
+                        new
+                        {
+                            Id = 39L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Манасский район",
+                            RegionId = 7L
+                        },
+                        new
+                        {
+                            Id = 40L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Таласский район",
+                            RegionId = 7L
+                        },
+                        new
+                        {
+                            Id = 41L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Первомайский район",
+                            RegionId = 8L
+                        },
+                        new
+                        {
+                            Id = 42L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ленинский район",
+                            RegionId = 8L
+                        },
+                        new
+                        {
+                            Id = 43L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Октябрьский район",
+                            RegionId = 8L
+                        },
+                        new
+                        {
+                            Id = 44L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Свердловский район",
+                            RegionId = 8L
+                        },
+                        new
+                        {
+                            Id = 45L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Амир-Тимур",
+                            RegionId = 9L
+                        },
+                        new
+                        {
+                            Id = 46L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Керме-Тоо",
+                            RegionId = 9L
+                        },
+                        new
+                        {
+                            Id = 47L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Курманжан-Датка",
+                            RegionId = 9L
+                        },
+                        new
+                        {
+                            Id = 48L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Манас-Ата",
+                            RegionId = 9L
+                        },
+                        new
+                        {
+                            Id = 49L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Сулайман-Тоо",
+                            RegionId = 9L
+                        },
+                        new
+                        {
+                            Id = 50L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Туран",
+                            RegionId = 9L
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Regions.Region", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("GeoRegions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Баткенская область"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Чуйская область"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Иссык-Кульская область"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Джалал-Абадская область"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Нарынская область"
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ошская область"
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Таласская область"
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Город Бишкек"
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = 0L,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Город Ош"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Sessions.HdSession", b =>
                 {
                     b.Property<long>("Id")
@@ -722,13 +1552,18 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedAt");
 
+                    b.HasIndex("MachineId");
+
                     b.HasIndex("MedCardId");
 
                     b.HasIndex("PatientId");
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("TenantId", "MachineId");
+                    b.HasIndex("TenantId", "MachineId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_HdSessions_ActiveMachine")
+                        .HasFilter("\"MachineId\" IS NOT NULL AND \"Status\" IN (2, 3)");
 
                     b.HasIndex("TenantId", "MedCardId");
 
@@ -917,6 +1752,12 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("DistrictId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("GeoRegionId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTimeOffset>("GrantedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -935,6 +1776,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DistrictId");
+
+                    b.HasIndex("GeoRegionId");
 
                     b.HasIndex("RegionId");
 
@@ -996,6 +1841,12 @@ namespace Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("DisabledAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long>("DistrictId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("GeoRegionId")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1013,10 +1864,19 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
                         .IsUnique();
+
+                    b.HasIndex("DistrictId");
+
+                    b.HasIndex("GeoRegionId");
 
                     b.HasIndex("RegionId");
 
@@ -1295,17 +2155,49 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Patients.Patient", b =>
                 {
+                    b.HasOne("Domain.Regions.District", "District")
+                        .WithMany("Patients")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Domain.Patients.PatientGroup", "Group")
                         .WithMany("Patients")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Regions.Region", "Region")
+                        .WithMany("Patients")
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("District");
+
                     b.Navigation("Group");
+
+                    b.Navigation("Region");
+                });
+
+            modelBuilder.Entity("Domain.Regions.District", b =>
+                {
+                    b.HasOne("Domain.Regions.Region", "Region")
+                        .WithMany("Districts")
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Region");
                 });
 
             modelBuilder.Entity("Domain.Sessions.HdSession", b =>
                 {
+                    b.HasOne("Domain.MedCenters.MedCenterMachine", "Machine")
+                        .WithMany("Sessions")
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.MedCards.MedCard", "MedCard")
                         .WithMany("Sessions")
                         .HasForeignKey("MedCardId")
@@ -1317,6 +2209,8 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Machine");
 
                     b.Navigation("MedCard");
 
@@ -1347,6 +2241,16 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Tenants.ManagerRegionAccess", b =>
                 {
+                    b.HasOne("Domain.Regions.District", "District")
+                        .WithMany("ManagerRegionAccesses")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Regions.Region", "GeoRegion")
+                        .WithMany("ManagerRegionAccesses")
+                        .HasForeignKey("GeoRegionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Tenants.Region", "Region")
                         .WithMany("ManagerRegionAccesses")
                         .HasForeignKey("RegionId")
@@ -1359,6 +2263,10 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("District");
+
+                    b.Navigation("GeoRegion");
+
                     b.Navigation("Region");
 
                     b.Navigation("User");
@@ -1366,10 +2274,26 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Tenants.Tenant", b =>
                 {
+                    b.HasOne("Domain.Regions.District", "District")
+                        .WithMany("Tenants")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Regions.Region", "GeoRegion")
+                        .WithMany("Tenants")
+                        .HasForeignKey("GeoRegionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Domain.Tenants.Region", "Region")
                         .WithMany("Tenants")
                         .HasForeignKey("RegionId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("District");
+
+                    b.Navigation("GeoRegion");
 
                     b.Navigation("Region");
                 });
@@ -1455,6 +2379,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Sessions");
                 });
 
+            modelBuilder.Entity("Domain.MedCenters.MedCenterMachine", b =>
+                {
+                    b.Navigation("Sessions");
+                });
+
             modelBuilder.Entity("Domain.Patients.Patient", b =>
                 {
                     b.Navigation("MedCards");
@@ -1465,6 +2394,26 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Patients.PatientGroup", b =>
                 {
                     b.Navigation("Patients");
+                });
+
+            modelBuilder.Entity("Domain.Regions.District", b =>
+                {
+                    b.Navigation("ManagerRegionAccesses");
+
+                    b.Navigation("Patients");
+
+                    b.Navigation("Tenants");
+                });
+
+            modelBuilder.Entity("Domain.Regions.Region", b =>
+                {
+                    b.Navigation("Districts");
+
+                    b.Navigation("ManagerRegionAccesses");
+
+                    b.Navigation("Patients");
+
+                    b.Navigation("Tenants");
                 });
 
             modelBuilder.Entity("Domain.Sessions.HdSession", b =>

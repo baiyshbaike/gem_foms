@@ -33,6 +33,8 @@ public static class IdentitySeeder
             Permissions.TenantRead,
             Permissions.TenantSwitch,
             Permissions.TenantAccessAssigned,
+            Permissions.RegionRead,
+            Permissions.DistrictRead,
             Permissions.MedCenterMachineRead,
             Permissions.MedCenterMachineCreate,
             Permissions.MedCenterMachineUpdate,
@@ -44,6 +46,8 @@ public static class IdentitySeeder
             Permissions.TenantRead,
             Permissions.TenantSwitch,
             Permissions.TenantAccessOwn,
+            Permissions.RegionRead,
+            Permissions.DistrictRead,
             Permissions.MedCenterMachineRead,
         });
 
@@ -208,13 +212,49 @@ public static class IdentitySeeder
         Region region)
     {
         var tenantId = configuration["SEED_TENANT_ID"] ?? "dev-center";
+        var defaultDistrict = await db.Districts
+            .Include(x => x.Region)
+            .Where(x => x.IsActive && !x.IsDeleted && x.Region.IsActive && !x.Region.IsDeleted)
+            .OrderBy(x => x.Region.Name)
+            .ThenBy(x => x.Name)
+            .FirstOrDefaultAsync();
+
+        if (defaultDistrict is null)
+        {
+            throw new InvalidOperationException("At least one active district is required before tenant seed.");
+        }
         
         var tenant = await db.Tenants.FirstOrDefaultAsync(x => x.Id == tenantId);
         if (tenant is not null)
         {
+            var hasChanges = false;
+
             if (tenant.RegionId is null)
             {
                 tenant.RegionId = region.Id;
+                hasChanges = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(tenant.TimeZoneId))
+            {
+                tenant.TimeZoneId = configuration["SEED_TENANT_TIME_ZONE"] ?? "Asia/Bishkek";
+                hasChanges = true;
+            }
+
+            if (tenant.GeoRegionId <= 0)
+            {
+                tenant.GeoRegionId = defaultDistrict.RegionId;
+                hasChanges = true;
+            }
+
+            if (tenant.DistrictId <= 0)
+            {
+                tenant.DistrictId = defaultDistrict.Id;
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
                 await db.SaveChangesAsync();
             }
 
@@ -229,6 +269,8 @@ public static class IdentitySeeder
             TimeZoneId = configuration["SEED_TENANT_TIME_ZONE"] ?? "Asia/Bishkek",
             Locale = "ru-RU",
             RegionId = region.Id,
+            GeoRegionId = defaultDistrict.RegionId,
+            DistrictId = defaultDistrict.Id,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };

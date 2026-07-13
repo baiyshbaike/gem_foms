@@ -60,6 +60,38 @@ public sealed class TenantAccessService : ITenantAccessService
             {
                 tenantIds.Add(tenantId);
             }
+
+            var managerGeoRegionTenantIds = await (
+                from access in _db.ManagerRegionAccesses.AsNoTracking()
+                from tenant in _db.Tenants.AsNoTracking()
+                where access.UserId == userId &&
+                      access.RevokedAt == null &&
+                      access.GeoRegionId != null &&
+                      tenant.GeoRegionId == access.GeoRegionId &&
+                      tenant.IsActive
+                select tenant.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var tenantId in managerGeoRegionTenantIds)
+            {
+                tenantIds.Add(tenantId);
+            }
+
+            var managerDistrictTenantIds = await (
+                from access in _db.ManagerRegionAccesses.AsNoTracking()
+                from tenant in _db.Tenants.AsNoTracking()
+                where access.UserId == userId &&
+                      access.RevokedAt == null &&
+                      access.DistrictId != null &&
+                      tenant.DistrictId == access.DistrictId &&
+                      tenant.IsActive
+                select tenant.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var tenantId in managerDistrictTenantIds)
+            {
+                tenantIds.Add(tenantId);
+            }
         }
 
         if (permissions.Contains(Permissions.TenantAccessOwn))

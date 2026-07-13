@@ -1,17 +1,15 @@
 import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 
 import { useAuthStore } from '@/stores/auth'
 
 export function useAuth() {
   const router = useRouter()
-
   const authStore = useAuthStore()
-  const { isLogin } = storeToRefs(authStore)
-  const loading = ref(false)
+  const { loading, isLogin } = storeToRefs(authStore)
 
-  function logout() {
-    isLogin.value = false
-
+  async function logout() {
+    await authStore.logout()
     router.push({ path: '/auth/sign-in' })
   }
 
@@ -19,24 +17,28 @@ export function useAuth() {
     router.push({ path: '/dashboard' })
   }
 
-  async function login() {
-    loading.value = true
-    await new Promise(resolve => setTimeout(resolve, 10))
-    // mock login
-    isLogin.value = true
-    loading.value = false
+  async function login(username: string, password: string) {
+    try {
+      await authStore.login(username, password)
 
-    const redirect = router.currentRoute.value.query.redirect as string
-    if (!redirect || redirect.startsWith('//')) {
-      toHome()
+      const redirect = router.currentRoute.value.query.redirect as string | undefined
+      if (!redirect || redirect.startsWith('//')) {
+        toHome()
+      }
+      else {
+        router.push(redirect)
+      }
     }
-    else {
-      router.push(redirect)
+    catch {
+      toast.error('Login failed', {
+        description: 'Username or password is incorrect.',
+      })
     }
   }
 
   return {
     loading,
+    isLogin,
     logout,
     login,
   }

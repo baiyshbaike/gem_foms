@@ -1,6 +1,7 @@
 ﻿using Domain.Common;
 using Domain.MedCards;
 using Domain.Sessions;
+using Domain.Regions;
 
 namespace Domain.Patients;
 
@@ -16,8 +17,11 @@ public sealed class Patient : ActiveSoftDeletableAuditableEntityBase
     public string Address { get; set; } = string.Empty;
     public string Address2 { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    public long DistrictId { get; set; }
     public long RegionId { get; set; }
+    public Region Region { get; set; } = default!;
+    public long DistrictId { get; set; }
+    public District District { get; set; } = default!;
+
 
     public long GroupId { get; set; } = PatientGroupIds.New;
     public bool SpecialStatus { get; set; }

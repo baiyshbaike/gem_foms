@@ -17,4 +17,6 @@ public sealed record PatientDto(
     string GroupCode,
     string GroupName,
     bool SpecialStatus,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? UpdatedAt,
     bool IsActive);

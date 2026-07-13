@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-import { ChevronsUpDownIcon, PlusIcon } from '@lucide/vue'
+import { Building2Icon, ChevronsUpDownIcon } from '@lucide/vue'
+import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 
 import { useSidebar } from '@/components/ui/sidebar'
 
@@ -10,88 +12,83 @@ const { teams } = defineProps<{
 }>()
 
 const { isMobile, open } = useSidebar()
+const authStore = useAuthStore()
+const { activeTenant, isLogin, tenants } = storeToRefs(authStore)
 
-const activeTeam = ref<Team>(teams[0])
-function setActiveTeam(team: Team) {
-  activeTeam.value = team
-}
+const fallbackTeam = computed(() => teams[0])
+const activeLabel = computed(() => activeTenant.value?.name ?? fallbackTeam.value.name)
+const activeSubLabel = computed(() => activeTenant.value?.code ?? fallbackTeam.value.plan)
 
-const isOpen = ref(false)
-
-const showComponent = shallowRef<Component | null>(null)
-type TComponent = 'team-add'
-
-function handleSelect(command: TComponent) {
-  switch (command) {
-    case 'team-add':
-      showComponent.value = defineAsyncComponent(() => import('./nav-team-add.vue'))
-      break
+async function switchTenant(tenantId: string) {
+  try {
+    await authStore.switchTenant(tenantId)
+    toast.success('Tenant changed')
+  }
+  catch {
+    toast.error('Tenant could not be changed')
   }
 }
+
+onMounted(() => {
+  if (isLogin.value) {
+    authStore.loadTenants().catch(() => undefined)
+  }
+})
 </script>
 
 <template>
   <UiSidebarMenu>
     <UiSidebarMenuItem>
-      <UiDialog v-model:open="isOpen">
-        <UiDropdownMenu>
-          <UiDropdownMenuTrigger as-child>
-            <UiSidebarMenuButton
-              size="lg"
-              class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div
-                class="flex items-center justify-center rounded-lg aspect-square size-8 bg-sidebar-primary text-sidebar-primary-foreground"
-              >
-                <component :is="activeTeam.logo" class="size-4" />
-              </div>
-              <div class="grid flex-1 text-sm leading-tight text-left">
-                <span class="font-semibold truncate">{{ activeTeam.name }}</span>
-                <span class="text-xs truncate">{{ activeTeam.plan }}</span>
-              </div>
-              <ChevronsUpDownIcon class="ml-auto" />
-            </UiSidebarMenuButton>
-          </UiDropdownMenuTrigger>
-          <UiDropdownMenuContent
-            class="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            :side="(isMobile || open) ? 'bottom' : 'right'"
-            :side-offset="4"
+      <UiDropdownMenu>
+        <UiDropdownMenuTrigger as-child>
+          <UiSidebarMenuButton
+            size="lg"
+            class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
-            <UiDropdownMenuLabel class="text-xs text-muted-foreground">
-              Teams
-            </UiDropdownMenuLabel>
-            <UiDropdownMenuItem
-              v-for="(team, index) in teams"
-              :key="team.name"
-              class="gap-2 p-2"
-              @click="setActiveTeam(team)"
+            <div
+              class="flex items-center justify-center rounded-lg aspect-square size-8 bg-sidebar-primary text-sidebar-primary-foreground"
             >
-              <div class="flex items-center justify-center border rounded-sm size-6">
-                <component :is="team.logo" class="size-4 shrink-0" />
-              </div>
-              {{ team.name }}
-              <UiDropdownMenuShortcut>⌘{{ index + 1 }}</UiDropdownMenuShortcut>
-            </UiDropdownMenuItem>
-            <UiDropdownMenuSeparator />
-
-            <UiDialogTrigger as-child>
-              <UiDropdownMenuItem class="gap-2 p-2" @click.stop="handleSelect('team-add')">
-                <div class="flex items-center justify-center border rounded-md size-6 bg-background">
-                  <PlusIcon class="size-4" />
-                </div>
-                <div class="font-medium text-muted-foreground">
-                  Add team
-                </div>
-              </UiDropdownMenuItem>
-            </UiDialogTrigger>
-          </UiDropdownMenuContent>
-        </UiDropdownMenu>
-
-        <UiDialogContent>
-          <component :is="showComponent" @close="isOpen = false" />
-        </UiDialogContent>
-      </UiDialog>
+              <Building2Icon class="size-4" />
+            </div>
+            <div class="grid flex-1 text-sm leading-tight text-left">
+              <span class="font-semibold truncate">{{ activeLabel }}</span>
+              <span class="text-xs truncate">{{ activeSubLabel }}</span>
+            </div>
+            <ChevronsUpDownIcon class="ml-auto" />
+          </UiSidebarMenuButton>
+        </UiDropdownMenuTrigger>
+        <UiDropdownMenuContent
+          class="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+          align="start"
+          :side="(isMobile || open) ? 'bottom' : 'right'"
+          :side-offset="4"
+        >
+          <UiDropdownMenuLabel class="text-xs text-muted-foreground">
+            Tenants
+          </UiDropdownMenuLabel>
+          <UiDropdownMenuItem
+            v-if="tenants.length === 0"
+            disabled
+            class="gap-2 p-2"
+          >
+            No tenant access
+          </UiDropdownMenuItem>
+          <UiDropdownMenuItem
+            v-for="tenant in tenants"
+            :key="tenant.id"
+            class="gap-2 p-2"
+            @click="switchTenant(tenant.id)"
+          >
+            <div class="flex items-center justify-center border rounded-sm size-6">
+              <Building2Icon class="size-4 shrink-0" />
+            </div>
+            <div class="grid text-sm leading-tight">
+              <span>{{ tenant.name }}</span>
+              <span class="text-xs text-muted-foreground">{{ tenant.code }}</span>
+            </div>
+          </UiDropdownMenuItem>
+        </UiDropdownMenuContent>
+      </UiDropdownMenu>
     </UiSidebarMenuItem>
   </UiSidebarMenu>
 </template>

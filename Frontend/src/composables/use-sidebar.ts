@@ -1,4 +1,4 @@
-import { BadgeHelpIcon, BellDotIcon, BirdIcon, BoxesIcon, BugIcon, ComponentIcon, CreditCardIcon, LayoutDashboardIcon, ListTodoIcon, PaletteIcon, PictureInPicture2Icon, PodcastIcon, SettingsIcon, SquareUserRoundIcon, UserIcon, UsersIcon, WrenchIcon } from '@lucide/vue'
+import { ActivityIcon, BellDotIcon, ClipboardListIcon, HeartPulseIcon, LayoutDashboardIcon, LogsIcon, MonitorCogIcon, PaletteIcon, PictureInPicture2Icon, SettingsIcon, StethoscopeIcon, UserIcon, UsersIcon, WrenchIcon } from '@lucide/vue'
 
 import type { NavGroup } from '@/components/app-sidebar/types'
 
@@ -13,49 +13,28 @@ export function useSidebar() {
 
   const navData = ref<NavGroup[]> ([
     {
-      title: 'General',
+      title: 'Dialysis',
       items: [
         { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboardIcon },
-        { title: 'Tasks', url: '/tasks', icon: ListTodoIcon },
-        { title: 'Apps', url: '/apps', icon: BoxesIcon },
-        { title: 'Users', url: '/users', icon: UsersIcon },
-        { title: 'Ai Talk Example', url: '/ai-talk', icon: PodcastIcon },
+        { title: 'Patients', url: '/patients', icon: UsersIcon },
+        { title: 'Med Cards', url: '/med-cards', icon: HeartPulseIcon },
+        { title: 'Machines', url: '/machines', icon: MonitorCogIcon },
+        { title: 'Sessions', url: '/sessions', icon: ActivityIcon },
+        { title: 'Audit Logs', url: '/audit-logs', icon: LogsIcon },
       ],
     },
     {
-      title: 'Pages',
+      title: 'Administration',
       items: [
-        {
-          title: 'Auth',
-          icon: SquareUserRoundIcon,
-          items: [
-            { title: 'Sign In', url: '/auth/sign-in' },
-            { title: 'Sign In(2 Col)', url: '/auth/sign-in-2' },
-            { title: 'Sign Up', url: '/auth/sign-up' },
-            { title: 'Forgot Password', url: '/auth/forgot-password' },
-            { title: 'OTP', url: '/auth/otp' },
-          ],
-        },
-        {
-          title: 'Errors',
-          icon: BugIcon,
-          items: [
-            { title: '401 | Unauthorized', url: '/errors/401' },
-            { title: '403 | Forbidden', url: '/errors/403' },
-            { title: '404 | Not Found', url: '/errors/404' },
-            { title: '500 | Internal Server Error', url: '/errors/500' },
-            { title: '503 | Maintenance Error', url: '/errors/503' },
-          ],
-        },
-      ],
-    },
-    {
-      title: 'Other',
-      items: [
+        { title: 'Users', url: '/users', icon: UserIcon },
         { title: 'Settings', items: settingsNavItems, icon: SettingsIcon },
-        { title: 'Prop Components', url: '/prop-components', icon: ComponentIcon },
-        { title: 'Help Center', url: '/help-center', icon: BadgeHelpIcon },
-        { title: 'Outside Page(GitHub)', url: 'https://www.github.com/Whbbit1999/shadcn-vue-admin', icon: BirdIcon },
+      ],
+    },
+    {
+      title: 'Reference',
+      items: [
+        { title: 'Tasks', url: '/tasks', icon: ClipboardListIcon },
+        { title: 'Help Center', url: '/help-center', icon: StethoscopeIcon },
       ],
     },
   ])
@@ -64,7 +43,7 @@ export function useSidebar() {
     {
       title: 'Other',
       items: [
-        { title: 'Plans & Pricing', icon: CreditCardIcon, url: '/billing' },
+        { title: 'Settings', icon: SettingsIcon, url: '/settings' },
       ],
     },
   ])

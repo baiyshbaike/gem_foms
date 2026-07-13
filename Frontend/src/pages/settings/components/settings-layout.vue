@@ -7,7 +7,7 @@ const { settingsNavItems } = useSidebar()
 <template>
   <BasicPage
     title="Settings"
-    description="Manage your store settings."
+    description="Manage tenant settings."
   >
     <TwoColLayout>
       <template #aside>

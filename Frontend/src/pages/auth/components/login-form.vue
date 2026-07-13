@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { useAuth } from '@/composables/use-auth'
 
-import GitHubButton from './github-button.vue'
-import GoogleButton from './google-button.vue'
-import PrivacyPolicyButton from './privacy-policy-button.vue'
-import TermsOfServiceButton from './terms-of-service-button.vue'
-import ToForgotPasswordLink from './to-forgot-password-link.vue'
-
 const { login, loading } = useAuth()
+
+const username = ref('')
+const password = ref('')
+
+async function submit() {
+  await login(username.value, password.value)
+}
 </script>
 
 <template>
@@ -17,51 +18,46 @@ const { login, loading } = useAuth()
         Login
       </UiCardTitle>
       <UiCardDescription>
-        Enter your email and password below to log into your account.
-        Not have an account?
-        <UiButton
-          variant="link" class="px-0 text-muted-foreground"
-          @click="$router.push('/auth/sign-up')"
-        >
-          Sign Up
-        </UiButton>
+        Enter your username and password to continue.
       </UiCardDescription>
     </UiCardHeader>
-    <UiCardContent class="grid gap-4">
-      <div class="grid gap-2">
-        <UiLabel for="email">
-          {{ $t('email') }}
-        </UiLabel>
-        <UiInput id="email" type="email" placeholder="m@example.com" required />
-      </div>
-      <div class="grid gap-2">
-        <div class="flex items-center justify-between">
+    <UiCardContent>
+      <form class="grid gap-4" @submit.prevent="submit">
+        <div class="grid gap-2">
+          <UiLabel for="username">
+            Username
+          </UiLabel>
+          <UiInput
+            id="username"
+            v-model="username"
+            autocomplete="username"
+            placeholder="admin"
+            required
+          />
+        </div>
+        <div class="grid gap-2">
           <UiLabel for="password">
             {{ $t('password') }}
           </UiLabel>
-          <ToForgotPasswordLink />
+          <UiInput
+            id="password"
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            placeholder="********"
+          />
         </div>
-        <UiInput id="password" type="password" required placeholder="*********" />
-      </div>
 
-      <UiButton class="w-full" @click="login">
-        <UiSpinner v-if="loading" class="mr-2" />
-        {{ $t('login') }}
-      </UiButton>
-
-      <UiSeparator label="Or continue with" />
-
-      <div class="flex flex-col items-center justify-between gap-4">
-        <GitHubButton />
-        <GoogleButton />
-      </div>
-
-      <UiCardDescription>
-        By clicking login, you agree to our
-        <TermsOfServiceButton />
-        and
-        <PrivacyPolicyButton />
-      </UiCardDescription>
+        <UiButton
+          type="submit"
+          class="w-full"
+          :disabled="loading || !username || !password"
+        >
+          <UiSpinner v-if="loading" class="mr-2" />
+          {{ $t('login') }}
+        </UiButton>
+      </form>
     </UiCardContent>
   </UiCard>
 </template>

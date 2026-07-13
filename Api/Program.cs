@@ -7,20 +7,47 @@ using Application.Common;
 using Application.Tenants;
 using Infrastructure;
 using Infrastructure.Identity;
+using Infrastructure.Regions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendCorsPolicy = "FrontendCors";
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("Default");
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
+{
+    allowedOrigins =
+    [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174"
+    ];
+}
+
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<IRequestContext,HttpRequestContext>();
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy.AllowAnyHeader()
+            .AllowAnyMethod();
+
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins);
+        }
+    });
+});
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -67,6 +94,8 @@ builder.Services.AddHealthChecks().AddNpgSql(connectionString!);
 var app = builder.Build();
 var seedIdentityEnabled = app.Configuration.GetValue<bool>("SEED_IDENTITY_ENABLED");
 
+await RegionSeeder.SeedAsync(app.Services);
+
 if (seedIdentityEnabled)
 {
     await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
@@ -79,6 +108,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(FrontendCorsPolicy);
 
 //app.UseAuthorization();
 app.UseAuthentication();

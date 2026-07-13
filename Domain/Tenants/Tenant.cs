@@ -1,4 +1,4 @@
-﻿namespace Domain.Tenants;
+namespace Domain.Tenants;
 
 public sealed class Tenant
 {
@@ -12,5 +12,9 @@ public sealed class Tenant
     public ICollection<TenantUser> TenantUsers { get; set; } = new List<TenantUser>();
     public string? RegionId { get; set; }
     public Region? Region { get; set; }
+    public long GeoRegionId { get; set; }
+    public long DistrictId { get; set; }
+    public Domain.Regions.Region GeoRegion { get; set; } = default!;
+    public Domain.Regions.District District { get; set; } = default!;
     public string TimeZoneId { get; set; } = "Asia/Bishkek";
 }

@@ -8,6 +8,8 @@ using Domain.Sessions;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using GeoDistrict = Domain.Regions.District;
+using GeoRegion = Domain.Regions.Region;
 
 namespace Infrastructure.Data;
 
@@ -30,6 +32,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<Region> Regions => Set<Region>();
+    public DbSet<GeoRegion> GeoRegions => Set<GeoRegion>();
+    public DbSet<GeoDistrict> Districts => Set<GeoDistrict>();
     public DbSet<ManagerRegionAccess> ManagerRegionAccesses => Set<ManagerRegionAccess>();
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<PatientGroup> PatientGroups => Set<PatientGroup>();
@@ -126,6 +130,18 @@ public sealed class AppDbContext : DbContext
                 .WithMany(x => x.Tenants)
                 .HasForeignKey(x => x.RegionId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.GeoRegionId);
+            entity.HasIndex(x => x.DistrictId);
+            entity.Property(x => x.GeoRegionId).IsRequired();
+            entity.Property(x => x.DistrictId).IsRequired();
+            entity.HasOne(x => x.GeoRegion)
+                .WithMany(x => x.Tenants)
+                .HasForeignKey(x => x.GeoRegionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.District)
+                .WithMany(x => x.Tenants)
+                .HasForeignKey(x => x.DistrictId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.Property(x => x.TimeZoneId)
                 .HasMaxLength(100)
                 .IsRequired();
@@ -158,6 +174,47 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
             entity.HasIndex(x => x.Code).IsUnique();
         });
+
+        modelBuilder.Entity<GeoRegion>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("GeoRegions");
+
+            entity.ConfigureAuditable();
+            entity.ConfigureSoftDelete();
+            entity.ConfigureActive();
+
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.HasIndex(x => x.Name).IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            var seedDate = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            entity.HasData(GeoRegionSeedData.Regions(seedDate));
+        });
+
+        modelBuilder.Entity<GeoDistrict>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.ToTable("Districts");
+
+            entity.ConfigureAuditable();
+            entity.ConfigureSoftDelete();
+            entity.ConfigureActive();
+
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.RegionId).IsRequired();
+            entity.HasIndex(x => x.RegionId);
+            entity.HasIndex(x => new { x.RegionId, x.Name }).IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            entity.HasOne(x => x.Region)
+                .WithMany(x => x.Districts)
+                .HasForeignKey(x => x.RegionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            var seedDate = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            entity.HasData(GeoRegionSeedData.Districts(seedDate));
+        });
         
         modelBuilder.Entity<ManagerRegionAccess>(entity =>
         {
@@ -165,6 +222,8 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.RegionId).HasMaxLength(100).IsRequired();
             entity.HasIndex(x => x.UserId);
             entity.HasIndex(x => x.RegionId);
+            entity.HasIndex(x => x.GeoRegionId);
+            entity.HasIndex(x => x.DistrictId);
             entity.HasIndex(x => new { x.UserId, x.RegionId }).IsUnique();
 
             entity.HasOne(x => x.User)
@@ -175,6 +234,16 @@ public sealed class AppDbContext : DbContext
             entity.HasOne(x => x.Region)
                 .WithMany(x => x.ManagerRegionAccesses)
                 .HasForeignKey(x => x.RegionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.GeoRegion)
+                .WithMany(x => x.ManagerRegionAccesses)
+                .HasForeignKey(x => x.GeoRegionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.District)
+                .WithMany(x => x.ManagerRegionAccesses)
+                .HasForeignKey(x => x.DistrictId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<PatientGroup>(entity =>
@@ -267,6 +336,16 @@ public sealed class AppDbContext : DbContext
             entity.HasOne(x => x.Group)
                 .WithMany(x => x.Patients)
                 .HasForeignKey(x => x.GroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Region)
+                .WithMany(x => x.Patients)
+                .HasForeignKey(x => x.RegionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.District)
+                .WithMany(x => x.Patients)
+                .HasForeignKey(x => x.DistrictId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.ToTable(t =>

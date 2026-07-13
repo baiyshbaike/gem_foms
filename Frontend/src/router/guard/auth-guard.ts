@@ -10,9 +10,11 @@ export function setupAuthGuard(router: Router) {
     const authStore = useAuthStore(pinia)
     const { isLogin } = storeToRefs(authStore)
 
-    const authPaths = ['/auth/sign-in', '/auth/sign-up']
+    const authPaths = ['/auth/sign-in', '/auth/sign-up', '/auth/forgot-password', '/auth/otp']
+    const publicPrefixes = ['/auth', '/errors', '/marketing']
     const isAuthPage = authPaths.includes(to.path)
     const isFromAuthPage = authPaths.includes(from.path)
+    const isPublicPage = publicPrefixes.some(path => to.path.startsWith(path))
 
     // If logged in, redirect from auth pages to the previous non-auth page (if valid), otherwise redirect to home
     if (isLogin.value && isAuthPage) {
@@ -25,7 +27,7 @@ export function setupAuthGuard(router: Router) {
     }
 
     // If page requires auth but user is not logged in, redirect to sign-in page
-    if (to.meta.auth && !isLogin.value && !isAuthPage) {
+    if (!isLogin.value && !isPublicPage) {
       return {
         name: '/auth/sign-in',
         query: { redirect: to.fullPath },
