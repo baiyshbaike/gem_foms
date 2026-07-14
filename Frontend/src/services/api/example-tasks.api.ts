@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 
-import { useApiFetch } from '@/composables/use-fetch'
+import { apiClient, unwrapData } from '@/services/http'
 
 import type { IResponse } from '../types/response.type'
 
@@ -11,37 +11,25 @@ export interface ITask {
 }
 
 export function useGetTasksQuery() {
-  const { apiFetch } = useApiFetch()
-
   return useQuery<IResponse<ITask[]>, Error>({
     queryKey: ['useGetTasksQuery'],
-    queryFn: async () => await apiFetch<IResponse<ITask[]>>('/tasks', {
-      method: 'get',
-    }),
+    queryFn: () => unwrapData(apiClient.get<IResponse<ITask[]>>('/tasks')),
   })
 }
 
 export function useGetTaskByIdQuery(id: number) {
-  const { apiFetch } = useApiFetch()
-
   return useQuery<IResponse<ITask>, Error>({
     queryKey: ['useGetTaskQuery', id],
-    queryFn: async () => await apiFetch<IResponse<ITask>>(`/tasks/${id}`, {
-      method: 'get',
-    }),
+    queryFn: () => unwrapData(apiClient.get<IResponse<ITask>>(`/tasks/${id}`)),
   })
 }
 
 export function useUpdateTaskMutation(id: number) {
-  const { apiFetch } = useApiFetch()
   const queryClient = useQueryClient()
 
   return useMutation<IResponse<boolean>, Error, Partial<ITask>>({
     mutationKey: ['useUpdateTaskMutation', id],
-    mutationFn: async (data: Partial<ITask>) => await apiFetch<IResponse<boolean>>(`/tasks/${id}`, {
-      method: 'put',
-      body: data,
-    }),
+    mutationFn: data => unwrapData(apiClient.put<IResponse<boolean>>(`/tasks/${id}`, data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['useGetTaskQuery', id] })
       queryClient.invalidateQueries({ queryKey: ['useGetTasksQuery'] })
@@ -50,15 +38,11 @@ export function useUpdateTaskMutation(id: number) {
 }
 
 export function useCreateTaskMutation() {
-  const { apiFetch } = useApiFetch()
   const queryClient = useQueryClient()
 
   return useMutation<IResponse<ITask>, Error, ITask>({
     mutationKey: ['useCreateTaskMutation'],
-    mutationFn: async (data: ITask) => await apiFetch<IResponse<ITask>>('/tasks', {
-      method: 'post',
-      body: data,
-    }),
+    mutationFn: data => unwrapData(apiClient.post<IResponse<ITask>>('/tasks', data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['useGetTasksQuery'] })
     },
@@ -66,14 +50,11 @@ export function useCreateTaskMutation() {
 }
 
 export function useDeleteTaskMutation() {
-  const { apiFetch } = useApiFetch()
   const queryClient = useQueryClient()
 
   return useMutation<IResponse<boolean>, Error, number>({
     mutationKey: ['useDeleteTaskMutation'],
-    mutationFn: async (id: number) => await apiFetch<IResponse<boolean>>(`/tasks/${id}`, {
-      method: 'delete',
-    }),
+    mutationFn: id => unwrapData(apiClient.delete<IResponse<boolean>>(`/tasks/${id}`)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['useGetTasksQuery'] })
     },

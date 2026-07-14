@@ -43,7 +43,7 @@ Forked from [shadcn-admin](https://github.com/satnaing/shadcn-admin)
 | Form Validation      | [TanStack Vue Form](https://tanstack.com/form/latest/docs/overview), [Zod 4+](https://zod.dev/)                                                            |
 | Animation            | [@formkit/auto-animate 0.9+](https://auto-animate.formkit.com/), [motion-v 1+](https://motion-v.vercel.app/)                                               |
 | Internationalization | [vue-i18n 11+](https://vue-i18n.intlify.dev/)                                                                                                              |
-| HTTP Client          | [ofetch](https://github.com/unjs/ofetch)                                                                                                                   |
+| HTTP Client          | [Axios](https://axios-http.com/)                                                                                                                           |
 | Linting & Formatting | [ESLint 9+](https://eslint.org/), [@antfu/eslint-config 7+](https://github.com/antfu/eslint-config)                                                        |
 | Dev Tools            | [vite-plugin-vue-devtools 8+](https://github.com/webfansplz/vite-plugin-vue-devtools)                                                                      |
 | Auto Import          | [unplugin-auto-import 20+](https://github.com/antfu/unplugin-auto-import), [unplugin-vue-components 30+](https://github.com/antfu/unplugin-vue-components) |

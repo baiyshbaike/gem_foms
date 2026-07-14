@@ -120,6 +120,57 @@ export interface Patient {
   isActive: boolean
 }
 
+export interface PatientGridRow extends Patient {
+  fullName: string
+  regionName: string
+  districtName: string
+}
+
+export interface PatientGridLoadRequest {
+  skip: number
+  take: number
+  requireTotalCount: boolean
+  requireGroupCount: boolean
+  isCountQuery: boolean
+  sort: string | null
+  group: string | null
+  filter: string | null
+  totalSummary: string | null
+  groupSummary: string | null
+}
+
+export interface PatientGridExportRequest extends PatientGridLoadRequest {
+  selectedIds: number[]
+}
+
+export interface PatientGridLoadResult {
+  data: unknown[]
+  totalCount: number
+  groupCount: number
+  summary: unknown[] | null
+}
+
+export interface PatientGroup {
+  id: number
+  code: string
+  name: string
+}
+
+export interface District {
+  id: number
+  regionId: number
+  regionName: string
+  name: string
+  isActive: boolean
+}
+
+export interface Region {
+  id: number
+  name: string
+  isActive: boolean
+  districts: District[]
+}
+
 export interface CreatePatientRequest {
   inn: string
   firstName: string

@@ -26,6 +26,7 @@ public static class Permissions
     public const string PatientCreate = "patient.create";
     public const string PatientUpdate = "patient.update";
     public const string PatientDelete = "patient.delete";
+    public const string PatientExport = "patient.export";
     
     public const string MedCardRead = "medcard.read";
     public const string MedCardCreate = "medcard.create";
@@ -73,6 +74,7 @@ public static class Permissions
         PatientCreate,
         PatientUpdate,
         PatientDelete,
+        PatientExport,
         MedCardRead,
         MedCardCreate,
         MedCardUpdate,

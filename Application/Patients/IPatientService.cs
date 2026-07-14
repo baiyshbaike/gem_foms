@@ -4,6 +4,17 @@ namespace Application.Patients;
 
 public interface IPatientService
 {
+    Task<PatientGridLoadResult> LoadGridAsync(
+        PatientGridLoadRequest request,
+        CancellationToken cancellationToken);
+
+    Task<PatientGridLoadResult> ExportGridAsync(
+        PatientGridExportRequest request,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<PatientGroupDto>> GetGroupsAsync(
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<PatientDto>> GetAsync(
         string? search,
         long? groupId,
@@ -17,12 +28,12 @@ public interface IPatientService
         string inn,
         CancellationToken cancellationToken);
 
-    Task<PatientDto?> CreateAsync(
+    Task<PatientCommandResult<PatientDto>> CreateAsync(
         long userId,
         CreatePatientRequest request,
         CancellationToken cancellationToken);
 
-    Task<PatientDto?> UpdateAsync(
+    Task<PatientCommandResult<PatientDto>> UpdateAsync(
         long id,
         long userId,
         UpdatePatientRequest request,

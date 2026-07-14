@@ -2,11 +2,11 @@
 import { EditIcon, PlusIcon, RefreshCwIcon, SaveIcon, Trash2Icon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 
+import type { AdminRole, AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/types/dialysis'
+
 import { BasicPage } from '@/components/global-layout'
 import { formatDateTime } from '@/lib/dialysis'
 import { adminUserApi } from '@/services/api/dialysis.api'
-
-import type { AdminRole, AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/types/dialysis'
 
 const loading = ref(false)
 const saving = ref(false)

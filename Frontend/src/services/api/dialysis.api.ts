@@ -16,7 +16,12 @@ import type {
   MedCard,
   MedCenterMachine,
   Patient,
+  PatientGridExportRequest,
+  PatientGridLoadRequest,
+  PatientGridLoadResult,
+  PatientGroup,
   PauseSessionRequest,
+  Region,
   SessionMeasurement,
   SessionMeasurementPoint,
   SessionWorkflowSettings,
@@ -98,6 +103,20 @@ export const patientApi = {
 
   delete: (id: number) =>
     apiClient.delete(`/patients/${id}`),
+
+  gridQuery: (payload: PatientGridLoadRequest) =>
+    unwrapData(apiClient.post<PatientGridLoadResult>('/patients/grid/query', payload)),
+
+  gridExport: (payload: PatientGridExportRequest) =>
+    unwrapData(apiClient.post<PatientGridLoadResult>('/patients/grid/export', payload)),
+
+  groups: () =>
+    unwrapData(apiClient.get<PatientGroup[]>('/patients/groups')),
+}
+
+export const regionApi = {
+  list: () =>
+    unwrapData(apiClient.get<Region[]>('/regions', { params: { includeInactive: false } })),
 }
 
 export const medCardApi = {

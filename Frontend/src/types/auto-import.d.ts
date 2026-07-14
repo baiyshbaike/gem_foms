@@ -67,7 +67,6 @@ declare global {
   const toValue: typeof import('vue').toValue
   const triggerRef: typeof import('vue').triggerRef
   const unref: typeof import('vue').unref
-  const useApiFetch: typeof import('../composables/use-fetch').useApiFetch
   const useAttrs: typeof import('vue').useAttrs
   const useAuth: typeof import('../composables/use-auth').useAuth
   const useAuthStore: typeof import('../stores/auth').useAuthStore
