@@ -230,6 +230,27 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/patients/patient-editor-popup': RouteRecordInfo<
+      '/patients/patient-editor-popup',
+      '/patients/patient-editor-popup',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/patients/patient-grid-filters': RouteRecordInfo<
+      '/patients/patient-grid-filters',
+      '/patients/patient-grid-filters',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/patients/patient-row-actions': RouteRecordInfo<
+      '/patients/patient-row-actions',
+      '/patients/patient-row-actions',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/prop-components/': RouteRecordInfo<
       '/prop-components/',
       '/prop-components',
@@ -536,6 +557,30 @@ declare module 'vue-router/auto-routes' {
     'src/pages/patients/index.vue': {
       routes:
         | '/patients/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/patients/patient-editor-popup.vue': {
+      routes:
+        | '/patients/patient-editor-popup'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/patients/patient-grid-filters.vue': {
+      routes:
+        | '/patients/patient-grid-filters'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/patients/patient-row-actions.vue': {
+      routes:
+        | '/patients/patient-row-actions'
       views:
         | never
       pathParamNames:

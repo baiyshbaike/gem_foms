@@ -17,9 +17,10 @@ import type {
   MedCenterMachine,
   Patient,
   PatientGridExportRequest,
-  PatientGridLoadRequest,
-  PatientGridLoadResult,
+  PatientGridQueryRequest,
+  PatientGridQueryResult,
   PatientGroup,
+  PatientIdentityLookup,
   PauseSessionRequest,
   Region,
   SessionMeasurement,
@@ -95,6 +96,9 @@ export const patientApi = {
   getByInn: (inn: string) =>
     unwrapData(apiClient.get<Patient>(`/patients/by-inn/${inn}`)),
 
+  lookupIdentity: (inn: string) =>
+    unwrapData(apiClient.get<PatientIdentityLookup>(`/patients/identity-lookup/${encodeURIComponent(inn)}`)),
+
   create: (payload: CreatePatientRequest) =>
     unwrapData(apiClient.post<Patient>('/patients', payload)),
 
@@ -104,11 +108,11 @@ export const patientApi = {
   delete: (id: number) =>
     apiClient.delete(`/patients/${id}`),
 
-  gridQuery: (payload: PatientGridLoadRequest) =>
-    unwrapData(apiClient.post<PatientGridLoadResult>('/patients/grid/query', payload)),
+  gridQuery: (payload: PatientGridQueryRequest) =>
+    unwrapData(apiClient.post<PatientGridQueryResult>('/patients/grid/query', payload)),
 
   gridExport: (payload: PatientGridExportRequest) =>
-    unwrapData(apiClient.post<PatientGridLoadResult>('/patients/grid/export', payload)),
+    unwrapData(apiClient.post<PatientGridQueryResult>('/patients/grid/export', payload)),
 
   groups: () =>
     unwrapData(apiClient.get<PatientGroup[]>('/patients/groups')),

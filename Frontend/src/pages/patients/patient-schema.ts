@@ -43,12 +43,12 @@ const patientBaseSchema = z.object({
   phone: requiredText('Phone', 50),
   regionId: z.number().int().positive('Region is required'),
   districtId: z.number().int().positive('District is required'),
-  specialStatus: z.boolean(),
 })
 
 export const createPatientSchema = patientBaseSchema
 
 export const updatePatientSchema = patientBaseSchema.extend({
   groupId: z.number().int().positive('Group is required'),
+  specialStatus: z.boolean(),
   isActive: z.boolean(),
 })

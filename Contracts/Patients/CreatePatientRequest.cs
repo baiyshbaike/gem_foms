@@ -45,5 +45,4 @@ public sealed class CreatePatientRequest
     [Range(1, long.MaxValue)]
     public long RegionId { get; set; }
 
-    public bool SpecialStatus { get; set; } = false;
 }

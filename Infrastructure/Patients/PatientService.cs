@@ -1,13 +1,11 @@
 ﻿using Application.Audit;
 using Application.Patients;
 using Contracts.Patients;
-using DevExtreme.AspNet.Data;
-using DevExtreme.AspNet.Data.Helpers;
-using DevExtreme.AspNet.Data.ResponseModel;
 using Domain.Patients;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Text.Json;
 using ContractGender = Contracts.Patients.PatientGenderDto;
 using DomainGender = Domain.Patients.PatientGender;
@@ -27,31 +25,46 @@ public sealed class PatientService : IPatientService
         _actionLogService = actionLogService;
     }
 
-    public async Task<PatientGridLoadResult> LoadGridAsync(
-        PatientGridLoadRequest request,
+    public async Task<PatientGridQueryResult> QueryGridAsync(
+        PatientGridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var options = CreateLoadOptions(request, isExport: false);
-        var result = await DataSourceLoader.LoadAsync(
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Clamp(
+            request.PageSize <= 0 ? DefaultGridPageSize : request.PageSize,
+            1,
+            MaxGridPageSize);
+        var filteredQuery = ApplyGridRequest(
             ProjectToGridRow(GetPatientQuery()),
-            options,
+            request);
+        var totalCount = await filteredQuery.CountAsync(cancellationToken);
+        var groups = await LoadGroupSummariesAsync(
+            filteredQuery,
+            request.GroupBy,
             cancellationToken);
+        var items = await ApplySorting(filteredQuery, request.Sorting, request.GroupBy)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
 
         await AddGridActionLogAsync(
             "PatientGridQueried",
             request,
-            options.Take,
+            page,
+            pageSize,
             selectedCount: 0,
             cancellationToken);
 
-        return ToGridLoadResult(result);
+        return new PatientGridQueryResult(items, totalCount, groups);
     }
 
-    public async Task<PatientGridLoadResult> ExportGridAsync(
+    public async Task<PatientGridQueryResult> ExportGridAsync(
         PatientGridExportRequest request,
         CancellationToken cancellationToken)
     {
-        var query = ProjectToGridRow(GetPatientQuery());
+        var query = ApplyGridRequest(
+            ProjectToGridRow(GetPatientQuery()),
+            request);
         var selectedIds = request.SelectedIds
             .Distinct()
             .Take(MaxExportRows)
@@ -62,17 +75,24 @@ public sealed class PatientService : IPatientService
             query = query.Where(x => selectedIds.Contains(x.Id));
         }
 
-        var options = CreateLoadOptions(request, isExport: true);
-        var result = await DataSourceLoader.LoadAsync(query, options, cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var groups = await LoadGroupSummariesAsync(
+            query,
+            request.GroupBy,
+            cancellationToken);
+        var items = await ApplySorting(query, request.Sorting, request.GroupBy)
+            .Take(MaxExportRows)
+            .ToListAsync(cancellationToken);
 
         await AddGridActionLogAsync(
             "PatientGridExported",
             request,
-            options.Take,
+            page: 1,
+            take: items.Count,
             selectedIds.Length,
             cancellationToken);
 
-        return ToGridLoadResult(result);
+        return new PatientGridQueryResult(items, totalCount, groups);
     }
 
     public async Task<IReadOnlyList<PatientGroupDto>> GetGroupsAsync(
@@ -246,7 +266,7 @@ public sealed class PatientService : IPatientService
             DistrictId = request.DistrictId,
             RegionId = request.RegionId,
             GroupId = PatientGroupIds.New,
-            SpecialStatus = request.SpecialStatus,
+            SpecialStatus = false,
             IsActive = true
         };
 
@@ -514,69 +534,488 @@ public sealed class PatientService : IPatientService
         });
     }
 
-    private static DataSourceLoadOptionsBase CreateLoadOptions(
-        PatientGridLoadRequest request,
-        bool isExport)
+    private static IQueryable<PatientGridRowDto> ApplyGridRequest(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridQueryRequest request)
     {
-        var options = new DataSourceLoadOptionsBase();
-        DataSourceLoadOptionsParser.Parse(
-            options,
-            optionName => GetLoadOptionValue(request, optionName));
-
-        options.PrimaryKey = [nameof(PatientGridRowDto.Id)];
-        options.DefaultSort = nameof(PatientGridRowDto.Id);
-        options.StringToLower = true;
-        options.RequireTotalCount = true;
-
-        if (isExport)
+        var search = request.Search?.Trim().ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            options.Skip = 0;
-            options.Take = MaxExportRows;
-        }
-        else
-        {
-            options.Skip = Math.Max(0, options.Skip);
-            options.Take = Math.Clamp(
-                options.Take <= 0 ? DefaultGridPageSize : options.Take,
-                1,
-                MaxGridPageSize);
+            query = query.Where(patient =>
+                patient.Inn.ToLower().Contains(search) ||
+                patient.FullName.ToLower().Contains(search) ||
+                patient.Phone.ToLower().Contains(search) ||
+                patient.RegionName.ToLower().Contains(search) ||
+                patient.DistrictName.ToLower().Contains(search));
         }
 
-        return options;
+        foreach (var filter in (request.Filters ?? []).Take(20))
+        {
+            query = ApplyFilter(query, filter);
+        }
+
+        return query;
     }
 
-    private static string GetLoadOptionValue(
-        PatientGridLoadRequest request,
-        string optionName)
+    private static IQueryable<PatientGridRowDto> ApplyFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter)
     {
-        return optionName switch
+        return NormalizeGridField(filter.Field) switch
         {
-            "skip" => request.Skip.ToString(CultureInfo.InvariantCulture),
-            "take" => request.Take.ToString(CultureInfo.InvariantCulture),
-            "requireTotalCount" => request.RequireTotalCount.ToString(CultureInfo.InvariantCulture),
-            "requireGroupCount" => request.RequireGroupCount.ToString(CultureInfo.InvariantCulture),
-            "isCountQuery" => request.IsCountQuery.ToString(CultureInfo.InvariantCulture),
-            "sort" => request.Sort ?? string.Empty,
-            "group" => request.Group ?? string.Empty,
-            "filter" => request.Filter ?? string.Empty,
-            "totalSummary" => request.TotalSummary ?? string.Empty,
-            "groupSummary" => request.GroupSummary ?? string.Empty,
+            "id" => ApplyLongFilter(query, filter, patient => patient.Id),
+            "inn" => ApplyStringFilter(query, filter, patient => patient.Inn),
+            "firstName" => ApplyStringFilter(query, filter, patient => patient.FirstName),
+            "lastName" => ApplyStringFilter(query, filter, patient => patient.LastName),
+            "middleName" => ApplyStringFilter(query, filter, patient => patient.MiddleName),
+            "fullName" => ApplyStringFilter(query, filter, patient => patient.FullName),
+            "phone" => ApplyStringFilter(query, filter, patient => patient.Phone),
+            "address" => ApplyStringFilter(query, filter, patient => patient.Address),
+            "address2" => ApplyStringFilter(query, filter, patient => patient.Address2),
+            "regionId" => ApplyLongFilter(query, filter, patient => patient.RegionId),
+            "regionName" => ApplyStringFilter(query, filter, patient => patient.RegionName),
+            "districtId" => ApplyLongFilter(query, filter, patient => patient.DistrictId),
+            "districtName" => ApplyStringFilter(query, filter, patient => patient.DistrictName),
+            "groupId" => ApplyLongFilter(query, filter, patient => patient.GroupId),
+            "groupName" => ApplyStringFilter(query, filter, patient => patient.GroupName),
+            "gender" => ApplyGenderFilter(query, filter),
+            "specialStatus" => ApplyBooleanFilter(query, filter, patient => patient.SpecialStatus),
+            "isActive" => ApplyBooleanFilter(query, filter, patient => patient.IsActive),
+            "birthDate" => ApplyDateOnlyFilter(query, filter),
+            "createdAt" => ApplyDateTimeFilter(query, filter, useUpdatedAt: false),
+            "updatedAt" => ApplyDateTimeFilter(query, filter, useUpdatedAt: true),
+            _ => query
+        };
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyStringFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter,
+        Expression<Func<PatientGridRowDto, string>> selector)
+    {
+        var operation = NormalizeOperator(filter.Operator);
+        var value = filter.Value?.Trim().ToLowerInvariant() ?? string.Empty;
+        var loweredSelector = Expression.Call(
+            selector.Body,
+            nameof(string.ToLower),
+            Type.EmptyTypes);
+        Expression? predicate = operation switch
+        {
+            "contains" when value.Length > 0 => Expression.Call(
+                loweredSelector,
+                nameof(string.Contains),
+                Type.EmptyTypes,
+                Expression.Constant(value)),
+            "notContains" when value.Length > 0 => Expression.Not(Expression.Call(
+                loweredSelector,
+                nameof(string.Contains),
+                Type.EmptyTypes,
+                Expression.Constant(value))),
+            "startsWith" when value.Length > 0 => Expression.Call(
+                loweredSelector,
+                nameof(string.StartsWith),
+                Type.EmptyTypes,
+                Expression.Constant(value)),
+            "endsWith" when value.Length > 0 => Expression.Call(
+                loweredSelector,
+                nameof(string.EndsWith),
+                Type.EmptyTypes,
+                Expression.Constant(value)),
+            "equals" => Expression.Equal(loweredSelector, Expression.Constant(value)),
+            "notEquals" => Expression.NotEqual(loweredSelector, Expression.Constant(value)),
+            "isEmpty" => Expression.Equal(selector.Body, Expression.Constant(string.Empty)),
+            "isNotEmpty" => Expression.NotEqual(selector.Body, Expression.Constant(string.Empty)),
+            _ => null
+        };
+
+        if (predicate is null)
+        {
+            return query;
+        }
+
+        return query.Where(Expression.Lambda<Func<PatientGridRowDto, bool>>(
+            predicate,
+            selector.Parameters));
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyLongFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter,
+        Expression<Func<PatientGridRowDto, long>> selector)
+    {
+        if (!long.TryParse(filter.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        {
+            return query;
+        }
+
+        var constant = Expression.Constant(value);
+        Expression? predicate = NormalizeOperator(filter.Operator) switch
+        {
+            "equals" => Expression.Equal(selector.Body, constant),
+            "notEquals" => Expression.NotEqual(selector.Body, constant),
+            "greaterThan" => Expression.GreaterThan(selector.Body, constant),
+            "greaterThanOrEqual" => Expression.GreaterThanOrEqual(selector.Body, constant),
+            "lessThan" => Expression.LessThan(selector.Body, constant),
+            "lessThanOrEqual" => Expression.LessThanOrEqual(selector.Body, constant),
+            _ => null
+        };
+
+        if (predicate is null)
+        {
+            return query;
+        }
+
+        return query.Where(Expression.Lambda<Func<PatientGridRowDto, bool>>(
+            predicate,
+            selector.Parameters));
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyGenderFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter)
+    {
+        return int.TryParse(filter.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            && Enum.IsDefined(typeof(ContractGender), value)
+            ? NormalizeOperator(filter.Operator) == "notEquals"
+                ? query.Where(patient => (int)patient.Gender != value)
+                : query.Where(patient => (int)patient.Gender == value)
+            : query;
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyBooleanFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter,
+        Expression<Func<PatientGridRowDto, bool>> selector)
+    {
+        if (!bool.TryParse(filter.Value, out var value))
+        {
+            return query;
+        }
+
+        var predicate = NormalizeOperator(filter.Operator) == "notEquals"
+            ? Expression.NotEqual(selector.Body, Expression.Constant(value))
+            : Expression.Equal(selector.Body, Expression.Constant(value));
+
+        return query.Where(Expression.Lambda<Func<PatientGridRowDto, bool>>(
+            predicate,
+            selector.Parameters));
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyDateOnlyFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter)
+    {
+        if (!TryParseDate(filter.Value, out var value))
+        {
+            return query;
+        }
+
+        return NormalizeOperator(filter.Operator) switch
+        {
+            "equals" => query.Where(patient => patient.BirthDate == value),
+            "notEquals" => query.Where(patient => patient.BirthDate != value),
+            "greaterThan" => query.Where(patient => patient.BirthDate > value),
+            "greaterThanOrEqual" => query.Where(patient => patient.BirthDate >= value),
+            "lessThan" => query.Where(patient => patient.BirthDate < value),
+            "lessThanOrEqual" => query.Where(patient => patient.BirthDate <= value),
+            "between" when TryParseDate(filter.ValueTo, out var valueTo) =>
+                query.Where(patient => patient.BirthDate >= value && patient.BirthDate <= valueTo),
+            _ => query
+        };
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplyDateTimeFilter(
+        IQueryable<PatientGridRowDto> query,
+        PatientGridFilterDto filter,
+        bool useUpdatedAt)
+    {
+        if (!TryParseDate(filter.Value, out var date))
+        {
+            return query;
+        }
+
+        var start = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var end = start.AddDays(1);
+        var operation = NormalizeOperator(filter.Operator);
+
+        if (useUpdatedAt)
+        {
+            return operation switch
+            {
+                "equals" => query.Where(patient => patient.UpdatedAt >= start && patient.UpdatedAt < end),
+                "notEquals" => query.Where(patient => patient.UpdatedAt < start || patient.UpdatedAt >= end),
+                "greaterThan" => query.Where(patient => patient.UpdatedAt >= end),
+                "greaterThanOrEqual" => query.Where(patient => patient.UpdatedAt >= start),
+                "lessThan" => query.Where(patient => patient.UpdatedAt < start),
+                "lessThanOrEqual" => query.Where(patient => patient.UpdatedAt < end),
+                "between" when TryParseDate(filter.ValueTo, out var dateTo) =>
+                    query.Where(patient => patient.UpdatedAt >= start && patient.UpdatedAt < new DateTimeOffset(dateTo.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero)),
+                "isEmpty" => query.Where(patient => patient.UpdatedAt == null),
+                "isNotEmpty" => query.Where(patient => patient.UpdatedAt != null),
+                _ => query
+            };
+        }
+
+        return operation switch
+        {
+            "equals" => query.Where(patient => patient.CreatedAt >= start && patient.CreatedAt < end),
+            "notEquals" => query.Where(patient => patient.CreatedAt < start || patient.CreatedAt >= end),
+            "greaterThan" => query.Where(patient => patient.CreatedAt >= end),
+            "greaterThanOrEqual" => query.Where(patient => patient.CreatedAt >= start),
+            "lessThan" => query.Where(patient => patient.CreatedAt < start),
+            "lessThanOrEqual" => query.Where(patient => patient.CreatedAt < end),
+            "between" when TryParseDate(filter.ValueTo, out var dateTo) =>
+                query.Where(patient => patient.CreatedAt >= start && patient.CreatedAt < new DateTimeOffset(dateTo.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero)),
+            _ => query
+        };
+    }
+
+    private static IQueryable<PatientGridRowDto> ApplySorting(
+        IQueryable<PatientGridRowDto> query,
+        IReadOnlyList<PatientGridSortDto>? sorting,
+        string? groupBy)
+    {
+        IOrderedQueryable<PatientGridRowDto>? ordered = null;
+        var normalizedGroup = NormalizeGridField(groupBy);
+
+        if (IsGroupField(normalizedGroup))
+        {
+            ordered = ApplySortField(query, ordered, normalizedGroup, descending: false);
+        }
+
+        foreach (var sort in (sorting ?? []).Take(10))
+        {
+            var field = NormalizeGridField(sort.Field);
+            if (field == normalizedGroup)
+            {
+                continue;
+            }
+
+            ordered = ApplySortField(query, ordered, field, sort.Descending) ?? ordered;
+        }
+
+        if (ordered is null)
+        {
+            return query
+                .OrderByDescending(patient => patient.CreatedAt)
+                .ThenByDescending(patient => patient.Id);
+        }
+
+        if (!(sorting ?? []).Any(sort => NormalizeGridField(sort.Field) == "id"))
+        {
+            ordered = ordered.ThenByDescending(patient => patient.Id);
+        }
+
+        return ordered;
+    }
+
+    private static IOrderedQueryable<PatientGridRowDto>? ApplySortField(
+        IQueryable<PatientGridRowDto> query,
+        IOrderedQueryable<PatientGridRowDto>? ordered,
+        string? field,
+        bool descending)
+    {
+        return field switch
+        {
+            "id" => ApplyOrder(query, ordered, patient => patient.Id, descending),
+            "inn" => ApplyOrder(query, ordered, patient => patient.Inn, descending),
+            "firstName" => ApplyOrder(query, ordered, patient => patient.FirstName, descending),
+            "lastName" => ApplyOrder(query, ordered, patient => patient.LastName, descending),
+            "middleName" => ApplyOrder(query, ordered, patient => patient.MiddleName, descending),
+            "fullName" => ApplyOrder(query, ordered, patient => patient.FullName, descending),
+            "birthDate" => ApplyOrder(query, ordered, patient => patient.BirthDate, descending),
+            "gender" => ApplyOrder(query, ordered, patient => patient.Gender, descending),
+            "phone" => ApplyOrder(query, ordered, patient => patient.Phone, descending),
+            "regionName" => ApplyOrder(query, ordered, patient => patient.RegionName, descending),
+            "districtName" => ApplyOrder(query, ordered, patient => patient.DistrictName, descending),
+            "groupName" => ApplyOrder(query, ordered, patient => patient.GroupName, descending),
+            "specialStatus" => ApplyOrder(query, ordered, patient => patient.SpecialStatus, descending),
+            "isActive" => ApplyOrder(query, ordered, patient => patient.IsActive, descending),
+            "createdAt" => ApplyOrder(query, ordered, patient => patient.CreatedAt, descending),
+            "updatedAt" => ApplyOrder(query, ordered, patient => patient.UpdatedAt, descending),
+            _ => null
+        };
+    }
+
+    private static IOrderedQueryable<PatientGridRowDto> ApplyOrder<TKey>(
+        IQueryable<PatientGridRowDto> query,
+        IOrderedQueryable<PatientGridRowDto>? ordered,
+        Expression<Func<PatientGridRowDto, TKey>> selector,
+        bool descending)
+    {
+        if (ordered is null)
+        {
+            return descending
+                ? query.OrderByDescending(selector)
+                : query.OrderBy(selector);
+        }
+
+        return descending
+            ? ordered.ThenByDescending(selector)
+            : ordered.ThenBy(selector);
+    }
+
+    private static async Task<IReadOnlyList<PatientGridGroupSummaryDto>> LoadGroupSummariesAsync(
+        IQueryable<PatientGridRowDto> query,
+        string? groupBy,
+        CancellationToken cancellationToken)
+    {
+        switch (NormalizeGridField(groupBy))
+        {
+            case "regionName":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.RegionName)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderBy(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(group.Key, group.Key, group.Count))
+                    .ToArray();
+            }
+            case "districtName":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.DistrictName)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderBy(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(group.Key, group.Key, group.Count))
+                    .ToArray();
+            }
+            case "groupName":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.GroupName)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderBy(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(group.Key, group.Key, group.Count))
+                    .ToArray();
+            }
+            case "gender":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.Gender)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderBy(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(
+                        ((int)group.Key).ToString(CultureInfo.InvariantCulture),
+                        group.Key == ContractGender.Male ? "Male" : "Female",
+                        group.Count))
+                    .ToArray();
+            }
+            case "specialStatus":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.SpecialStatus)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderByDescending(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(
+                        group.Key.ToString().ToLowerInvariant(),
+                        group.Key ? "Special" : "Standard",
+                        group.Count))
+                    .ToArray();
+            }
+            case "isActive":
+            {
+                var groups = await query
+                    .GroupBy(patient => patient.IsActive)
+                    .Select(group => new { Key = group.Key, Count = group.Count() })
+                    .OrderByDescending(group => group.Key)
+                    .ToListAsync(cancellationToken);
+                return groups
+                    .Select(group => new PatientGridGroupSummaryDto(
+                        group.Key.ToString().ToLowerInvariant(),
+                        group.Key ? "Active" : "Inactive",
+                        group.Count))
+                    .ToArray();
+            }
+            default:
+                return [];
+        }
+    }
+
+    private static bool TryParseDate(string? value, out DateOnly date)
+    {
+        return DateOnly.TryParseExact(
+            value,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out date);
+    }
+
+    private static string NormalizeOperator(string? operation)
+    {
+        return operation?.Trim().ToLowerInvariant() switch
+        {
+            "notcontains" => "notContains",
+            "startswith" => "startsWith",
+            "endswith" => "endsWith",
+            "notequals" => "notEquals",
+            "greaterthan" => "greaterThan",
+            "greaterthanorequal" => "greaterThanOrEqual",
+            "lessthan" => "lessThan",
+            "lessthanorequal" => "lessThanOrEqual",
+            "isempty" => "isEmpty",
+            "isnotempty" => "isNotEmpty",
+            "between" => "between",
+            "equals" => "equals",
+            "contains" => "contains",
             _ => string.Empty
         };
     }
 
-    private static PatientGridLoadResult ToGridLoadResult(LoadResult result)
+    private static string? NormalizeGridField(string? field)
     {
-        return new PatientGridLoadResult(
-            result.data,
-            result.totalCount,
-            result.groupCount,
-            result.summary);
+        return field?.Trim().ToLowerInvariant() switch
+        {
+            "id" => "id",
+            "inn" => "inn",
+            "firstname" => "firstName",
+            "lastname" => "lastName",
+            "middlename" => "middleName",
+            "fullname" => "fullName",
+            "birthdate" => "birthDate",
+            "gender" => "gender",
+            "phone" => "phone",
+            "address" => "address",
+            "address2" => "address2",
+            "regionid" => "regionId",
+            "regionname" => "regionName",
+            "districtid" => "districtId",
+            "districtname" => "districtName",
+            "groupid" => "groupId",
+            "groupname" => "groupName",
+            "specialstatus" => "specialStatus",
+            "isactive" => "isActive",
+            "createdat" => "createdAt",
+            "updatedat" => "updatedAt",
+            _ => null
+        };
+    }
+
+    private static bool IsGroupField(string? field)
+    {
+        return field is "regionName"
+            or "districtName"
+            or "groupName"
+            or "gender"
+            or "specialStatus"
+            or "isActive";
     }
 
     private async Task AddGridActionLogAsync(
         string action,
-        PatientGridLoadRequest request,
+        PatientGridQueryRequest request,
+        int page,
         int take,
         int selectedCount,
         CancellationToken cancellationToken)
@@ -590,11 +1029,12 @@ public sealed class PatientService : IPatientService
             Succeeded = true,
             MetadataJson = JsonSerializer.Serialize(new
             {
-                skip = Math.Max(0, request.Skip),
+                page,
                 take,
-                hasFilter = !string.IsNullOrWhiteSpace(request.Filter),
-                hasSorting = !string.IsNullOrWhiteSpace(request.Sort),
-                hasGrouping = !string.IsNullOrWhiteSpace(request.Group),
+                hasSearch = !string.IsNullOrWhiteSpace(request.Search),
+                filterCount = request.Filters?.Length ?? 0,
+                sortCount = request.Sorting?.Length ?? 0,
+                groupBy = NormalizeGridField(request.GroupBy),
                 selectedCount
             })
         }, cancellationToken);

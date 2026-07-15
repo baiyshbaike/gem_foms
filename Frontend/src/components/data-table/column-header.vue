@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 interface DataTableColumnHeaderProps {
   column: Column<T, any>
   title: string
+  multiSort?: boolean
 }
 
 const props = defineProps<DataTableColumnHeaderProps>()
@@ -48,11 +49,11 @@ export default {
 
       <UiDropdownMenuContent align="start">
         <template v-if="canSorted">
-          <UiDropdownMenuItem @click="props.column.toggleSorting(false)">
+          <UiDropdownMenuItem @click="props.column.toggleSorting(false, props.multiSort)">
             <ArrowUpIcon class="mr-2 size-4 text-muted-foreground/70" />
             Asc
           </UiDropdownMenuItem>
-          <UiDropdownMenuItem @click="props.column.toggleSorting(true)">
+          <UiDropdownMenuItem @click="props.column.toggleSorting(true, props.multiSort)">
             <ArrowDownIcon class="mr-2 size-4 text-muted-foreground/70" />
             Desc
           </UiDropdownMenuItem>

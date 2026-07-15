@@ -33,6 +33,3 @@ stats.html
 .env.development
 .env.test
 .env.production
-
-# Local DevExtreme license. Never commit this file.
-/devextreme-license.ts

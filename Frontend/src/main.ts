@@ -1,9 +1,6 @@
-import config from 'devextreme/core/config'
 import { createApp } from 'vue'
 
-import { licenseKey } from '../devextreme-license'
 import App from './App.vue'
-import { setupDevExtremeTheme } from './lib/devextreme-theme'
 import { setupPlugins } from './plugins'
 
 import '@/assets/index.css'
@@ -14,16 +11,8 @@ import 'vue-sonner/style.css' // vue sonner style
 
 import '@/utils/env'
 
-config({ licenseKey })
+const app = createApp(App)
 
-async function bootstrap() {
-  await setupDevExtremeTheme()
+setupPlugins(app)
 
-  const app = createApp(App)
-
-  setupPlugins(app)
-
-  app.mount('#app')
-}
-
-void bootstrap()
+app.mount('#app')

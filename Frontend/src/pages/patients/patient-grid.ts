@@ -1,10 +1,9 @@
-import type { LoadOptions } from 'devextreme/data'
-
 import type {
   CreatePatientRequest,
   Patient,
   PatientGender,
-  PatientGridLoadRequest,
+  PatientGridFilter,
+  PatientGridQueryRequest,
   UpdatePatientRequest,
 } from '@/services/types/dialysis'
 
@@ -16,38 +15,33 @@ export type PatientEditValues = Partial<Omit<Patient, 'birthDate' | 'districtId'
   regionId?: number | null
 }
 
-const SERIALIZED_LOAD_FIELDS = [
-  'sort',
-  'group',
-  'filter',
-  'totalSummary',
-  'groupSummary',
-] as const
+export interface PatientGridQueryState {
+  pageIndex: number
+  pageSize: number
+  search: string
+  sorting: Array<{ id: string, desc: boolean }>
+  filters: PatientGridFilter[]
+  groupBy: string | null
+}
 
-export function serializePatientGridLoadOptions(
-  loadOptions: LoadOptions,
-): PatientGridLoadRequest {
-  const request: PatientGridLoadRequest = {
-    skip: loadOptions.skip ?? 0,
-    take: loadOptions.take ?? 25,
-    requireTotalCount: loadOptions.requireTotalCount ?? true,
-    requireGroupCount: loadOptions.requireGroupCount ?? false,
-    isCountQuery: false,
-    sort: null,
-    group: null,
-    filter: null,
-    totalSummary: null,
-    groupSummary: null,
+export function createPatientGridQueryRequest(
+  state: PatientGridQueryState,
+): PatientGridQueryRequest {
+  return {
+    page: Math.max(1, state.pageIndex + 1),
+    pageSize: Math.min(100, Math.max(1, state.pageSize)),
+    search: state.search.trim() || null,
+    sorting: state.sorting.map(sort => ({
+      field: sort.id,
+      descending: sort.desc,
+    })),
+    filters: state.filters.map(filter => ({
+      ...filter,
+      value: filter.value?.trim() || null,
+      valueTo: filter.valueTo?.trim() || null,
+    })),
+    groupBy: state.groupBy || null,
   }
-
-  for (const field of SERIALIZED_LOAD_FIELDS) {
-    const value = loadOptions[field]
-    request[field] = value === undefined || value === null
-      ? null
-      : JSON.stringify(value)
-  }
-
-  return request
 }
 
 export function toCreatePatientRequest(values: PatientEditValues): CreatePatientRequest {
@@ -63,7 +57,6 @@ export function toCreatePatientRequest(values: PatientEditValues): CreatePatient
     phone: String(values.phone ?? '').trim(),
     regionId: Number(values.regionId),
     districtId: Number(values.districtId),
-    specialStatus: Boolean(values.specialStatus),
   }
 
   return createPatientSchema.parse(normalized)
@@ -73,6 +66,7 @@ export function toUpdatePatientRequest(values: PatientEditValues): UpdatePatient
   const normalized = {
     ...toCreatePatientRequest(values),
     groupId: Number(values.groupId),
+    specialStatus: Boolean(values.specialStatus),
     isActive: Boolean(values.isActive),
   }
 

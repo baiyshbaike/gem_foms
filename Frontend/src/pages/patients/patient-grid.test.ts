@@ -1,41 +1,40 @@
-import type { LoadOptions } from 'devextreme/data'
-
 import { describe, expect, it } from 'vitest'
 
 import {
-  serializePatientGridLoadOptions,
+  createPatientGridQueryRequest,
   toCreatePatientRequest,
   toUpdatePatientRequest,
 } from './patient-grid'
 
 describe('patient grid request helpers', () => {
-  it('serializes remote data operations without losing nested filters', () => {
-    const loadOptions: LoadOptions = {
-      skip: 25,
-      take: 25,
-      requireTotalCount: true,
-      requireGroupCount: true,
-      sort: [{ selector: 'createdAt', desc: true }],
-      group: [{ selector: 'regionName', desc: false }],
-      filter: [
-        ['lastName', 'contains', 'Ali'],
-        'and',
-        ['isActive', '=', true],
-      ],
-      totalSummary: [{ selector: 'id', summaryType: 'count' }],
-    }
-
-    const result = serializePatientGridLoadOptions(loadOptions)
-
-    expect(result).toMatchObject({
-      skip: 25,
-      take: 25,
-      requireTotalCount: true,
-      requireGroupCount: true,
+  it('creates a normalized producer-independent server query', () => {
+    const result = createPatientGridQueryRequest({
+      pageIndex: 1,
+      pageSize: 25,
+      search: '  Ada  ',
+      sorting: [{ id: 'createdAt', desc: true }],
+      groupBy: 'regionName',
+      filters: [{
+        field: 'lastName',
+        operator: 'contains',
+        value: '  Love ',
+        valueTo: null,
+      }],
     })
-    expect(JSON.parse(result.filter!)).toEqual(loadOptions.filter)
-    expect(JSON.parse(result.sort!)).toEqual(loadOptions.sort)
-    expect(JSON.parse(result.group!)).toEqual(loadOptions.group)
+
+    expect(result).toEqual({
+      page: 2,
+      pageSize: 25,
+      search: 'Ada',
+      sorting: [{ field: 'createdAt', descending: true }],
+      groupBy: 'regionName',
+      filters: [{
+        field: 'lastName',
+        operator: 'contains',
+        value: 'Love',
+        valueTo: null,
+      }],
+    })
   })
 
   it('normalizes create and update payloads', () => {
@@ -61,16 +60,19 @@ describe('patient grid request helpers', () => {
       isActive: false,
     }
 
-    expect(toCreatePatientRequest(patient)).toMatchObject({
+    const createRequest = toCreatePatientRequest(patient)
+    expect(createRequest).toMatchObject({
       inn: '12345678901234',
       firstName: 'Ada',
       birthDate: '1815-12-10',
       regionId: 1,
       districtId: 2,
     })
+    expect(createRequest).not.toHaveProperty('specialStatus')
     expect(toUpdatePatientRequest(patient)).toMatchObject({
       groupId: 3,
       isActive: false,
+      specialStatus: true,
     })
   })
 

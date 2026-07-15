@@ -113,7 +113,7 @@ Duende IdentityServer güçlüdür ama lisans/maliyet kararı gerektirir. Bu kar
 Frontend kararında dikkat:
 
 - Eski Blazor ekranları iş akışı envanteri olarak kullanılmalı, mimari olarak kopyalanmamalı.
-- DevExpress rapor/print ihtiyacı Vue tarafında ayrıca doğrulanmalı.
+- Rapor/print ihtiyacı Vue ve backend tarafında bağımsız çözümlerle ayrıca doğrulanmalı.
 - Token ve tenant bilgisi için `localStorage` tek güven kaynağı olmamalıdır.
 
 ### 2.4 Infrastructure Fazları
@@ -484,7 +484,7 @@ Kritik kural:
 | MedCenters | Merkez, makine, çalışan, merkez dosyaları |
 | References | Status, fiyat, tanı kodları, dialyzer type, indicator |
 | Files | Upload, storage metadata, secure download |
-| Reports | Excel/Word/PDF/DevExpress veya alternatif rapor üretimi |
+| Reports | Excel/Word/PDF rapor üretimi |
 | Audit | Action log, security log, redacted HTTP log |
 
 ### 7.2 Modül Kuralları

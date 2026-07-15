@@ -126,34 +126,69 @@ export interface PatientGridRow extends Patient {
   districtName: string
 }
 
-export interface PatientGridLoadRequest {
-  skip: number
-  take: number
-  requireTotalCount: boolean
-  requireGroupCount: boolean
-  isCountQuery: boolean
-  sort: string | null
-  group: string | null
-  filter: string | null
-  totalSummary: string | null
-  groupSummary: string | null
+export type PatientGridFilterOperator
+  = | 'contains'
+    | 'notContains'
+    | 'startsWith'
+    | 'endsWith'
+    | 'equals'
+    | 'notEquals'
+    | 'greaterThan'
+    | 'greaterThanOrEqual'
+    | 'lessThan'
+    | 'lessThanOrEqual'
+    | 'between'
+    | 'isEmpty'
+    | 'isNotEmpty'
+
+export interface PatientGridSort {
+  field: string
+  descending: boolean
 }
 
-export interface PatientGridExportRequest extends PatientGridLoadRequest {
+export interface PatientGridFilter {
+  field: string
+  operator: PatientGridFilterOperator
+  value: string | null
+  valueTo: string | null
+}
+
+export interface PatientGridQueryRequest {
+  page: number
+  pageSize: number
+  search: string | null
+  sorting: PatientGridSort[]
+  filters: PatientGridFilter[]
+  groupBy: string | null
+}
+
+export interface PatientGridExportRequest extends PatientGridQueryRequest {
   selectedIds: number[]
 }
 
-export interface PatientGridLoadResult {
-  data: unknown[]
+export interface PatientGridGroupSummary {
+  key: string
+  label: string
+  count: number
+}
+
+export interface PatientGridQueryResult {
+  items: PatientGridRow[]
   totalCount: number
-  groupCount: number
-  summary: unknown[] | null
+  groups: PatientGridGroupSummary[]
 }
 
 export interface PatientGroup {
   id: number
   code: string
   name: string
+}
+
+export interface PatientIdentityLookup {
+  found: boolean
+  firstName: string | null
+  lastName: string | null
+  middleName: string | null
 }
 
 export interface District {
@@ -183,11 +218,11 @@ export interface CreatePatientRequest {
   phone: string
   districtId: number
   regionId: number
-  specialStatus: boolean
 }
 
 export interface UpdatePatientRequest extends CreatePatientRequest {
   groupId: number
+  specialStatus: boolean
   isActive: boolean
 }
 

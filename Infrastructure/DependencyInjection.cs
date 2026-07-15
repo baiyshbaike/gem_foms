@@ -40,6 +40,18 @@ public static class DependencyInjection
         services.AddScoped<IRegionService, RegionService>();
         services.AddScoped<IDistrictService, DistrictService>();
         services.AddScoped<IPatientService, PatientService>();
+        services.AddHttpClient<IPatientIdentityLookupService, PatientIdentityLookupService>(client =>
+        {
+            var baseUrl = configuration["PatientIdentity:BaseUrl"];
+            if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri)
+                && (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
+            {
+                client.BaseAddress = baseUri;
+            }
+
+            var timeoutSeconds = configuration.GetValue<int?>("PatientIdentity:TimeoutSeconds") ?? 5;
+            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 1, 30));
+        });
         services.AddScoped<IMedCardService, MedCardService>();
         services.AddScoped<IHdSessionService, HdSessionService>();
         services.AddScoped<ISessionWorkflowSettingsService, SessionWorkflowSettingsService>();

@@ -4,11 +4,11 @@ namespace Application.Patients;
 
 public interface IPatientService
 {
-    Task<PatientGridLoadResult> LoadGridAsync(
-        PatientGridLoadRequest request,
+    Task<PatientGridQueryResult> QueryGridAsync(
+        PatientGridQueryRequest request,
         CancellationToken cancellationToken);
 
-    Task<PatientGridLoadResult> ExportGridAsync(
+    Task<PatientGridQueryResult> ExportGridAsync(
         PatientGridExportRequest request,
         CancellationToken cancellationToken);
 

@@ -12,24 +12,28 @@ namespace Api.Controllers;
 public sealed class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;
+    private readonly IPatientIdentityLookupService _patientIdentityLookupService;
 
-    public PatientsController(IPatientService patientService)
+    public PatientsController(
+        IPatientService patientService,
+        IPatientIdentityLookupService patientIdentityLookupService)
     {
         _patientService = patientService;
+        _patientIdentityLookupService = patientIdentityLookupService;
     }
 
     [HttpPost("grid/query")]
     [Authorize(Policy = "Permission:" + Permissions.PatientRead)]
-    public async Task<ActionResult<PatientGridLoadResult>> LoadGrid(
-        PatientGridLoadRequest request,
+    public async Task<ActionResult<PatientGridQueryResult>> QueryGrid(
+        PatientGridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        return Ok(await _patientService.LoadGridAsync(request, cancellationToken));
+        return Ok(await _patientService.QueryGridAsync(request, cancellationToken));
     }
 
     [HttpPost("grid/export")]
     [Authorize(Policy = "Permission:" + Permissions.PatientExport)]
-    public async Task<ActionResult<PatientGridLoadResult>> ExportGrid(
+    public async Task<ActionResult<PatientGridQueryResult>> ExportGrid(
         PatientGridExportRequest request,
         CancellationToken cancellationToken)
     {
@@ -69,6 +73,20 @@ public sealed class PatientsController : ControllerBase
     {
         var patient = await _patientService.GetByInnAsync(inn, cancellationToken);
         return patient is null ? NotFound() : Ok(patient);
+    }
+
+    [HttpGet("identity-lookup/{inn}")]
+    [Authorize(Policy = "Permission:" + Permissions.PatientCreate)]
+    public async Task<ActionResult<PatientIdentityLookupDto>> LookupIdentity(
+        string inn,
+        CancellationToken cancellationToken)
+    {
+        if (inn.Length != 14 || !inn.All(char.IsAsciiDigit))
+        {
+            return BadRequest();
+        }
+
+        return Ok(await _patientIdentityLookupService.LookupAsync(inn, cancellationToken));
     }
 
     [HttpPost]
