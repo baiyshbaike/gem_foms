@@ -39,7 +39,13 @@ export const measurementPointOptions: { value: SessionMeasurementPoint, label: s
 ]
 
 export function formatDate(value: string | null | undefined) {
-  return value ? value.slice(0, 10) : '-'
+  if (!value) {
+    return '-'
+  }
+
+  const datePart = value.slice(0, 10)
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart)
+  return match ? `${match[3]}.${match[2]}.${match[1]}` : datePart
 }
 
 export function formatDateTime(value: string | null | undefined) {

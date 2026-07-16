@@ -191,6 +191,7 @@ function getPinningStyles(column: Column<TData>, header = false): CSSProperties 
         : undefined,
     left: pinned === 'left' ? `${column.getStart('left')}px` : undefined,
     right: pinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    isolation: pinned ? 'isolate' : undefined,
     position: pinned ? 'sticky' : 'relative',
     width: `${column.getSize()}px`,
     minWidth: `${column.getSize()}px`,
@@ -407,7 +408,11 @@ defineExpose<ServerDataGridExposed>({
                 :key="header.id"
                 :style="getPinningStyles(header.column, true)"
                 :draggable="header.column.id !== 'select' && header.column.id !== 'actions'"
-                class="relative bg-muted/30"
+                class="relative"
+                :class="[
+                  header.column.getIsPinned() ? 'bg-muted' : 'bg-muted/30',
+                  header.column.getIsPinned() === 'right' ? 'border-l' : '',
+                ]"
                 @dragstart="startColumnDrag(header.column.id)"
                 @dragover.prevent
                 @drop="dropColumn(header.column.id)"
@@ -451,7 +456,13 @@ defineExpose<ServerDataGridExposed>({
                     v-for="cell in row.getVisibleCells()"
                     :key="cell.id"
                     :style="getPinningStyles(cell.column)"
-                    class="overflow-hidden border-b bg-background px-2 group-hover/row:bg-muted/40 group-data-[state=selected]/row:bg-muted/70"
+                    class="overflow-hidden border-b px-2"
+                    :class="[
+                      cell.column.getIsPinned()
+                        ? 'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted'
+                        : 'bg-background group-hover/row:bg-muted/40 group-data-[state=selected]/row:bg-muted/70',
+                      cell.column.getIsPinned() === 'right' ? 'border-l' : '',
+                    ]"
                   >
                     <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
                   </UiTableCell>
