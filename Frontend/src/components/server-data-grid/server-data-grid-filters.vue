@@ -2,100 +2,33 @@
 import { FilterIcon, PlusIcon, RotateCcwIcon, Trash2Icon } from '@lucide/vue'
 
 import type {
-  PatientGridFilter,
-  PatientGridFilterOperator,
-  PatientGroup,
-  Region,
-} from '@/services/types/dialysis'
+  ServerDataGridFilter,
+  ServerDataGridFilterField,
+  ServerDataGridFilterOperator,
+  ServerDataGridOption,
+} from './server-data-grid.types'
 
-type FilterValueType = 'text' | 'date' | 'select'
-
-interface FilterOption {
-  label: string
-  value: string
-}
-
-interface FilterFieldDefinition {
-  field: string
-  label: string
-  type: FilterValueType
-  options?: FilterOption[]
-}
-
-const props = defineProps<{
-  modelValue: PatientGridFilter[]
-  groups: PatientGroup[]
-  regions: Region[]
-}>()
+const props = withDefaults(defineProps<{
+  defaultField?: string
+  description?: string
+  fields: ServerDataGridFilterField[]
+  modelValue: ServerDataGridFilter[]
+  title?: string
+}>(), {
+  defaultField: '',
+  description: 'Combine filters to narrow the result set on the server.',
+  title: 'Filters',
+})
 
 const emit = defineEmits<{
-  'update:modelValue': [filters: PatientGridFilter[]]
+  'update:modelValue': [filters: ServerDataGridFilter[]]
 }>()
 
 const open = ref(false)
-const draftFilters = ref<PatientGridFilter[]>([])
-
+const draftFilters = ref<ServerDataGridFilter[]>([])
 const activeFilterCount = computed(() => props.modelValue.length)
-const districts = computed(() => props.regions.flatMap(region => region.districts
-  .filter(district => district.isActive)
-  .map(district => ({
-    label: `${district.name} (${region.name})`,
-    value: String(district.id),
-  }))))
-const fieldDefinitions = computed<FilterFieldDefinition[]>(() => [
-  { field: 'inn', label: 'INN', type: 'text' },
-  { field: 'fullName', label: 'Full name', type: 'text' },
-  { field: 'phone', label: 'Phone', type: 'text' },
-  { field: 'birthDate', label: 'Birth date', type: 'date' },
-  { field: 'createdAt', label: 'Registered date', type: 'date' },
-  {
-    field: 'regionId',
-    label: 'Region',
-    type: 'select',
-    options: props.regions.map(region => ({ label: region.name, value: String(region.id) })),
-  },
-  {
-    field: 'districtId',
-    label: 'District',
-    type: 'select',
-    options: districts.value,
-  },
-  {
-    field: 'groupId',
-    label: 'Group',
-    type: 'select',
-    options: props.groups.map(group => ({ label: group.name, value: String(group.id) })),
-  },
-  {
-    field: 'gender',
-    label: 'Gender',
-    type: 'select',
-    options: [
-      { label: 'Male', value: '1' },
-      { label: 'Female', value: '2' },
-    ],
-  },
-  {
-    field: 'specialStatus',
-    label: 'Special status',
-    type: 'select',
-    options: [
-      { label: 'Special', value: 'true' },
-      { label: 'Standard', value: 'false' },
-    ],
-  },
-  {
-    field: 'isActive',
-    label: 'Active status',
-    type: 'select',
-    options: [
-      { label: 'Active', value: 'true' },
-      { label: 'Inactive', value: 'false' },
-    ],
-  },
-])
 
-const textOperators: FilterOption[] = [
+const textOperators: ServerDataGridOption[] = [
   { label: 'Contains', value: 'contains' },
   { label: 'Does not contain', value: 'notContains' },
   { label: 'Starts with', value: 'startsWith' },
@@ -104,7 +37,16 @@ const textOperators: FilterOption[] = [
   { label: 'Does not equal', value: 'notEquals' },
 ]
 
-const dateOperators: FilterOption[] = [
+const comparisonOperators: ServerDataGridOption[] = [
+  { label: 'Equals', value: 'equals' },
+  { label: 'Less than', value: 'lessThan' },
+  { label: 'Less than or equal', value: 'lessThanOrEqual' },
+  { label: 'Greater than', value: 'greaterThan' },
+  { label: 'Greater than or equal', value: 'greaterThanOrEqual' },
+  { label: 'Between', value: 'between' },
+]
+
+const dateOperators: ServerDataGridOption[] = [
   { label: 'On', value: 'equals' },
   { label: 'Before', value: 'lessThan' },
   { label: 'On or before', value: 'lessThanOrEqual' },
@@ -114,20 +56,21 @@ const dateOperators: FilterOption[] = [
 ]
 
 function openFilters() {
-  draftFilters.value = props.modelValue.map(filter => ({
-    ...filter,
-  }))
+  draftFilters.value = props.modelValue.map(filter => ({ ...filter }))
   open.value = true
 }
 
 function fieldDefinition(field: string) {
-  return fieldDefinitions.value.find(item => item.field === field) ?? fieldDefinitions.value[0]!
+  return props.fields.find(item => item.field === field) ?? props.fields[0]!
 }
 
-function operatorsFor(filter: PatientGridFilter): FilterOption[] {
+function operatorsFor(filter: ServerDataGridFilter): ServerDataGridOption[] {
   const definition = fieldDefinition(filter.field)
   if (definition.type === 'date') {
     return dateOperators
+  }
+  if (definition.type === 'number') {
+    return comparisonOperators
   }
   if (definition.type === 'select') {
     return textOperators.slice(4)
@@ -143,29 +86,34 @@ function removeFilter(index: number) {
   draftFilters.value.splice(index, 1)
 }
 
-function changeField(filter: PatientGridFilter, field: string) {
+function changeField(filter: ServerDataGridFilter, field: string) {
   filter.field = field
   filter.operator = defaultOperator(fieldDefinition(field).type)
   filter.value = null
   filter.valueTo = null
 }
 
-function onFieldChange(filter: PatientGridFilter, event: Event) {
+function onFieldChange(filter: ServerDataGridFilter, event: Event) {
   changeField(filter, (event.target as HTMLSelectElement).value)
 }
 
-function onFilterValueChange(filter: PatientGridFilter, event: Event) {
+function onFilterValueChange(filter: ServerDataGridFilter, event: Event) {
   filter.value = (event.target as HTMLSelectElement).value
 }
 
-function defaultOperator(type: FilterValueType): PatientGridFilterOperator {
+function onInput(filter: ServerDataGridFilter, event: Event, target: 'value' | 'valueTo') {
+  filter[target] = (event.target as HTMLInputElement).value
+}
+
+function defaultOperator(type: ServerDataGridFilterField['type']): ServerDataGridFilterOperator {
   return type === 'text' ? 'contains' : 'equals'
 }
 
-function createFilter(): PatientGridFilter {
+function createFilter(): ServerDataGridFilter {
+  const definition = fieldDefinition(props.defaultField || props.fields[0]?.field || '')
   return {
-    field: 'fullName',
-    operator: 'contains',
+    field: definition.field,
+    operator: defaultOperator(definition.type),
     value: null,
     valueTo: null,
   }
@@ -204,10 +152,8 @@ function applyFilters() {
   <UiSheet v-model:open="open">
     <UiSheetContent class="w-full gap-0 sm:max-w-xl">
       <UiSheetHeader class="border-b px-6 py-5">
-        <UiSheetTitle>Patient filters</UiSheetTitle>
-        <UiSheetDescription>
-          Combine filters to narrow the registry on the server.
-        </UiSheetDescription>
+        <UiSheetTitle>{{ title }}</UiSheetTitle>
+        <UiSheetDescription>{{ description }}</UiSheetDescription>
       </UiSheetHeader>
 
       <div class="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 py-5">
@@ -217,7 +163,7 @@ function applyFilters() {
             No filters applied
           </p>
           <p class="mt-1 text-sm text-muted-foreground">
-            Add one or more conditions to refine the patient list.
+            Add one or more conditions to refine the list.
           </p>
         </div>
 
@@ -233,7 +179,7 @@ function applyFilters() {
               aria-label="Filter field"
               @change="onFieldChange(filter, $event)"
             >
-              <UiNativeSelectOption v-for="field in fieldDefinitions" :key="field.field" :value="field.field">
+              <UiNativeSelectOption v-for="field in fields" :key="field.field" :value="field.field">
                 {{ field.label }}
               </UiNativeSelectOption>
             </UiNativeSelect>
@@ -248,13 +194,7 @@ function applyFilters() {
               </UiNativeSelectOption>
             </UiNativeSelect>
 
-            <UiButton
-              type="button"
-              size="icon"
-              variant="ghost"
-              title="Remove filter"
-              @click="removeFilter(index)"
-            >
+            <UiButton type="button" size="icon" variant="ghost" title="Remove filter" @click="removeFilter(index)">
               <Trash2Icon class="size-4" />
               <span class="sr-only">Remove filter</span>
             </UiButton>
@@ -284,19 +224,19 @@ function applyFilters() {
               :model-value="filter.value ?? ''"
               :type="fieldDefinition(filter.field).type === 'date' ? 'date' : fieldDefinition(filter.field).type"
               placeholder="Filter value"
-              @input="filter.value = $event.target.value"
+              @input="onInput(filter, $event, 'value')"
             />
             <UiInput
               v-if="filter.operator === 'between'"
               :model-value="filter.valueTo ?? ''"
-              type="date"
-              aria-label="Filter end date"
-              @input="filter.valueTo = $event.target.value"
+              :type="fieldDefinition(filter.field).type === 'number' ? 'number' : 'date'"
+              aria-label="Filter end value"
+              @input="onInput(filter, $event, 'valueTo')"
             />
           </div>
         </div>
 
-        <UiButton type="button" variant="outline" class="w-full" @click="addFilter">
+        <UiButton type="button" variant="outline" class="w-full" :disabled="fields.length === 0" @click="addFilter">
           <PlusIcon class="size-4" />
           Add condition
         </UiButton>

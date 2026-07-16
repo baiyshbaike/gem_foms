@@ -76,6 +76,8 @@ declare module 'vue' {
     PropUiStatusBadgeStatus: typeof import('./../components/prop-ui/status-badge/Status.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ServerDataGrid: typeof import('./../components/server-data-grid/server-data-grid.vue')['default']
+    ServerDataGridFilters: typeof import('./../components/server-data-grid/server-data-grid-filters.vue')['default']
     SignInButton: typeof import('./../components/sign-in-button.vue')['default']
     SignUpButton: typeof import('./../components/sign-up-button.vue')['default']
     SortSelect: typeof import('./../components/sort-select/sort-select.vue')['default']

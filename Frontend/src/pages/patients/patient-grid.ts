@@ -7,6 +7,8 @@ import type {
   UpdatePatientRequest,
 } from '@/services/types/dialysis'
 
+import { createServerDataGridQueryRequest } from '@/components/server-data-grid'
+
 import { createPatientSchema, updatePatientSchema } from './patient-schema'
 
 export type PatientEditValues = Partial<Omit<Patient, 'birthDate' | 'districtId' | 'regionId'>> & {
@@ -27,21 +29,7 @@ export interface PatientGridQueryState {
 export function createPatientGridQueryRequest(
   state: PatientGridQueryState,
 ): PatientGridQueryRequest {
-  return {
-    page: Math.max(1, state.pageIndex + 1),
-    pageSize: Math.min(100, Math.max(1, state.pageSize)),
-    search: state.search.trim() || null,
-    sorting: state.sorting.map(sort => ({
-      field: sort.id,
-      descending: sort.desc,
-    })),
-    filters: state.filters.map(filter => ({
-      ...filter,
-      value: filter.value?.trim() || null,
-      valueTo: filter.valueTo?.trim() || null,
-    })),
-    groupBy: state.groupBy || null,
-  }
+  return createServerDataGridQueryRequest(state)
 }
 
 export function toCreatePatientRequest(values: PatientEditValues): CreatePatientRequest {
