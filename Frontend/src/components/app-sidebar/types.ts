@@ -3,9 +3,10 @@ import type { FunctionalComponent } from 'vue'
 
 type NavIcon = FunctionalComponent<LucideProps, Record<any, any>, any, Record<any, any>>
 
-interface BaseNavItem {
+export interface BaseNavItem {
   title: string
   icon?: NavIcon
+  permission?: string
 }
 
 export type NavItem

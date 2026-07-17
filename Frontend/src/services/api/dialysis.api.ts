@@ -10,6 +10,7 @@ import type {
   CreateMedCardRequest,
   CreatePatientRequest,
   CreateSessionRequest,
+  CreateTenantRequest,
   FinishSessionRequest,
   HdSession,
   LoginResponse,
@@ -29,10 +30,15 @@ import type {
   StartSessionRequest,
   SwitchTenantResponse,
   Tenant,
+  TenantDetails,
+  TenantGridExportRequest,
+  TenantGridQueryRequest,
+  TenantGridQueryResult,
   UpdateAdminUserRequest,
   UpdateMedCardRequest,
   UpdatePatientRequest,
   UpdateSessionWorkflowSettingsRequest,
+  UpdateTenantRequest,
   UpsertMedCenterMachineRequest,
 } from '../types/dialysis'
 
@@ -56,6 +62,24 @@ export const tenantApi = {
 
   switch: (tenantId: string) =>
     unwrapData(apiClient.post<SwitchTenantResponse>(`/tenants/${tenantId}/switch`)),
+
+  get: (tenantId: string) =>
+    unwrapData(apiClient.get<TenantDetails>(`/tenants/${tenantId}`)),
+
+  create: (payload: CreateTenantRequest) =>
+    unwrapData(apiClient.post<TenantDetails>('/tenants', payload)),
+
+  update: (tenantId: string, payload: UpdateTenantRequest) =>
+    unwrapData(apiClient.put<TenantDetails>(`/tenants/${tenantId}`, payload)),
+
+  deactivate: (tenantId: string) =>
+    apiClient.delete(`/tenants/${tenantId}`),
+
+  gridQuery: (payload: TenantGridQueryRequest) =>
+    unwrapData(apiClient.post<TenantGridQueryResult>('/tenants/grid/query', payload)),
+
+  gridExport: (payload: TenantGridExportRequest) =>
+    unwrapData(apiClient.post<TenantGridQueryResult>('/tenants/grid/export', payload)),
 }
 
 export const adminUserApi = {
@@ -119,8 +143,8 @@ export const patientApi = {
 }
 
 export const regionApi = {
-  list: () =>
-    unwrapData(apiClient.get<Region[]>('/regions', { params: { includeInactive: false } })),
+  list: (includeInactive = false) =>
+    unwrapData(apiClient.get<Region[]>('/regions', { params: { includeInactive } })),
 }
 
 export const medCardApi = {

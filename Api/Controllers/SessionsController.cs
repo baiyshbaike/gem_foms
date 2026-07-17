@@ -1,5 +1,6 @@
 ﻿using Application.Authorization;
 using Application.Sessions;
+using Api.Auth;
 using Application.Tenants;
 using Contracts.Sessions;
 using Domain.Sessions;
@@ -40,6 +41,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpGet("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.SessionRead)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> GetById(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -59,6 +61,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "Permission:" + Permissions.SessionCreate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Create(
         CreateSessionRequest request,
         CancellationToken cancellationToken)
@@ -80,6 +83,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/start")]
     [Authorize(Policy = "Permission:" + Permissions.SessionStart)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Start(
         long id,
         StartSessionRequest request,
@@ -104,6 +108,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/pause")]
     [Authorize(Policy = "Permission:" + Permissions.SessionPause)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Pause(
         long id,
         PauseSessionRequest request,
@@ -127,6 +132,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/resume")]
     [Authorize(Policy = "Permission:" + Permissions.SessionResume)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Resume(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -146,6 +152,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/finish")]
     [Authorize(Policy = "Permission:" + Permissions.SessionFinish)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Finish(
         long id,
         FinishSessionRequest request,
@@ -169,6 +176,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/end-identify")]
     [Authorize(Policy = "Permission:" + Permissions.SessionEndIdentify)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> EndIdentify(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -189,6 +197,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/send-to-pay")]
     [Authorize(Policy = "Permission:" + Permissions.SessionSendToPay)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> SendToPay(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -209,6 +218,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/mark-paid")]
     [Authorize(Policy = "Permission:" + Permissions.SessionMarkPaid)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> MarkPaid(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -228,6 +238,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/archive")]
     [Authorize(Policy = "Permission:" + Permissions.SessionArchive)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionDto>> Archive(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -248,6 +259,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPut("{id:long}/measurements/{point}")]
     [Authorize(Policy = "Permission:" + Permissions.SessionMeasurementUpdate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<SessionMeasurementDto>> AddOrUpdateMeasurement(
         long id,
         SessionMeasurementPoint point,

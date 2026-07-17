@@ -25,4 +25,7 @@ public sealed class CreateAdminUserRequest
 
     [MinLength(1)]
     public IReadOnlyList<long> RoleIds { get; set; } = [];
+
+    [Range(1, long.MaxValue)]
+    public long? ManagerRegionId { get; set; }
 }

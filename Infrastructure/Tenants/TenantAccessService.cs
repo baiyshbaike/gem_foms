@@ -48,47 +48,21 @@ public sealed class TenantAccessService : ITenantAccessService
 
         if (permissions.Contains(Permissions.TenantAccessAssigned))
         {
-            var managerTenantIds = await _db.ManagerRegionAccesses
-                .AsNoTracking()
-                .Where(x => x.UserId == userId && x.RevokedAt == null && x.Region.IsActive)
-                .SelectMany(x => x.Region.Tenants)
-                .Where(x => x.IsActive)
-                .Select(x => x.Id)
+            var managerTenantIds = await (
+                from assignment in _db.ManagerRegionAssignments.AsNoTracking()
+                from tenant in _db.Tenants.AsNoTracking()
+                where assignment.UserId == userId
+                    && assignment.User.IsActive
+                    && assignment.RevokedAt == null
+                    && assignment.Region.IsActive
+                    && !assignment.Region.IsDeleted
+                    && tenant.RegionId == assignment.RegionId
+                    && tenant.IsActive
+                select tenant.Id)
+                .Distinct()
                 .ToListAsync(cancellationToken);
 
             foreach (var tenantId in managerTenantIds)
-            {
-                tenantIds.Add(tenantId);
-            }
-
-            var managerGeoRegionTenantIds = await (
-                from access in _db.ManagerRegionAccesses.AsNoTracking()
-                from tenant in _db.Tenants.AsNoTracking()
-                where access.UserId == userId &&
-                      access.RevokedAt == null &&
-                      access.GeoRegionId != null &&
-                      tenant.GeoRegionId == access.GeoRegionId &&
-                      tenant.IsActive
-                select tenant.Id)
-                .ToListAsync(cancellationToken);
-
-            foreach (var tenantId in managerGeoRegionTenantIds)
-            {
-                tenantIds.Add(tenantId);
-            }
-
-            var managerDistrictTenantIds = await (
-                from access in _db.ManagerRegionAccesses.AsNoTracking()
-                from tenant in _db.Tenants.AsNoTracking()
-                where access.UserId == userId &&
-                      access.RevokedAt == null &&
-                      access.DistrictId != null &&
-                      tenant.DistrictId == access.DistrictId &&
-                      tenant.IsActive
-                select tenant.Id)
-                .ToListAsync(cancellationToken);
-
-            foreach (var tenantId in managerDistrictTenantIds)
             {
                 tenantIds.Add(tenantId);
             }

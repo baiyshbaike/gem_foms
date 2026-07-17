@@ -10,6 +10,7 @@ using Application.Tenants;
 using Infrastructure.Admin;
 using Infrastructure.Audit;
 using Infrastructure.Auth;
+using Infrastructure.Common;
 using Infrastructure.Data;
 using Infrastructure.MedCards;
 using Infrastructure.MedCenterMachines;
@@ -29,6 +30,7 @@ public static class DependencyInjection
     {
         var conncetionsString = configuration.GetConnectionString("Default");
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(conncetionsString));
+        services.AddSingleton(RegionalSettings.FromConfiguration(configuration));
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();

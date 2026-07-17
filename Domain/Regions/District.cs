@@ -12,5 +12,4 @@ public sealed class District : ActiveSoftDeletableAuditableEntityBase
     public Region Region { get; set; } = default!;
     public ICollection<Patient> Patients { get; set; } = new List<Patient>();
     public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
-    public ICollection<ManagerRegionAccess> ManagerRegionAccesses { get; set; } = new List<ManagerRegionAccess>();
 }

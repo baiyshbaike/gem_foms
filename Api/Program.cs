@@ -31,6 +31,7 @@ if (builder.Environment.IsDevelopment() && allowedOrigins.Length == 0)
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ActiveTenantAuthorizationHandler>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<IRequestContext,HttpRequestContext>();
@@ -65,7 +66,14 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(ActiveTenantPolicy.Name, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new ActiveTenantRequirement());
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

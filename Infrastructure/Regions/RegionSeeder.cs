@@ -19,7 +19,7 @@ public static class RegionSeeder
         var seedFile = await LoadSeedFileAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var existingRegions = await db.GeoRegions
+        var existingRegions = await db.Regions
             .IgnoreQueryFilters()
             .ToListAsync(cancellationToken);
 
@@ -37,7 +37,7 @@ public static class RegionSeeder
                     CreatedBy = SystemUserId
                 };
 
-                db.GeoRegions.Add(region);
+                db.Regions.Add(region);
                 regionsByName[region.Name] = region;
                 continue;
             }

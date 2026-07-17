@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Application.Admin;
 using Application.Audit;
 using Contracts.Admin;
+using Domain.Tenants;
 using Domain.Users;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +12,8 @@ namespace Infrastructure.Admin;
 
 public sealed class AdminUserService : IAdminUserService
 {
+    private const string ManagerRoleCode = "Manager";
+
     private readonly AppDbContext _db;
     private readonly IActionLogService _actionLogService;
 
@@ -38,7 +42,13 @@ public sealed class AdminUserService : IAdminUserService
                 x.UserRoles
                     .OrderBy(ur => ur.Role.Name)
                     .Select(ur => new RoleDto(ur.Role.Id, ur.Role.Code, ur.Role.Name, ur.Role.IsSystem))
-                    .ToList()))
+                    .ToList(),
+                x.ManagerRegionAssignments
+                    .Where(assignment => assignment.RevokedAt == null)
+                    .Select(assignment => new ManagerRegionDto(
+                        assignment.RegionId,
+                        assignment.Region.Name))
+                    .SingleOrDefault()))
             .ToListAsync(cancellationToken);
 
         await _actionLogService.AddAsync(new ActionLogRequest
@@ -87,13 +97,25 @@ public sealed class AdminUserService : IAdminUserService
             return new AdminUserCommandResult<AdminUserDto>(AdminUserCommandStatus.Conflict);
         }
 
-        var roleIds = request.RoleIds.Distinct().ToList();
-        if (roleIds.Count == 0 || await _db.Roles.CountAsync(x => roleIds.Contains(x.Id), cancellationToken) != roleIds.Count)
+        var roleValidation = await ValidateRoleSelectionAsync(
+            request.RoleIds,
+            request.ManagerRegionId,
+            cancellationToken);
+        if (!roleValidation.IsValid)
         {
-            await AddUserLogAsync(actorUserId, "AdminUserCreateFailed", null, 400, false, "Invalid role selection", cancellationToken);
+            await AddUserLogAsync(
+                actorUserId,
+                "AdminUserCreateFailed",
+                null,
+                400,
+                false,
+                roleValidation.Error,
+                cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return new AdminUserCommandResult<AdminUserDto>(AdminUserCommandStatus.ValidationFailed);
         }
+
+        var roleIds = roleValidation.RoleIds;
 
         var user = new User
         {
@@ -117,6 +139,24 @@ public sealed class AdminUserService : IAdminUserService
             });
         }
 
+        if (roleValidation.ManagerRegionId is { } managerRegionId)
+        {
+            _db.ManagerRegionAssignments.Add(new ManagerRegionAssignment
+            {
+                UserId = user.Id,
+                RegionId = managerRegionId,
+                AssignedAt = DateTimeOffset.UtcNow,
+                AssignedBy = actorUserId
+            });
+            await AddManagerRegionLogAsync(
+                actorUserId,
+                "ManagerRegionAssigned",
+                user.Id,
+                previousRegionId: null,
+                managerRegionId,
+                cancellationToken);
+        }
+
         await AddUserLogAsync(actorUserId, "AdminUserCreated", user.Id, 201, true, null, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -133,6 +173,7 @@ public sealed class AdminUserService : IAdminUserService
     {
         var user = await _db.Users
             .Include(x => x.UserRoles)
+            .Include(x => x.ManagerRegionAssignments)
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
         if (user is null)
@@ -157,13 +198,28 @@ public sealed class AdminUserService : IAdminUserService
             return new AdminUserCommandResult<AdminUserDto>(AdminUserCommandStatus.ValidationFailed);
         }
 
-        var roleIds = request.RoleIds.Distinct().ToList();
-        if (roleIds.Count == 0 || await _db.Roles.CountAsync(x => roleIds.Contains(x.Id), cancellationToken) != roleIds.Count)
+        var roleValidation = await ValidateRoleSelectionAsync(
+            request.RoleIds,
+            request.ManagerRegionId,
+            cancellationToken);
+        if (!roleValidation.IsValid)
         {
-            await AddUserLogAsync(actorUserId, "AdminUserUpdateFailed", userId, 400, false, "Invalid role selection", cancellationToken);
+            await AddUserLogAsync(
+                actorUserId,
+                "AdminUserUpdateFailed",
+                userId,
+                400,
+                false,
+                roleValidation.Error,
+                cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
             return new AdminUserCommandResult<AdminUserDto>(AdminUserCommandStatus.ValidationFailed);
         }
+
+        var roleIds = roleValidation.RoleIds;
+        await using var transaction = _db.Database.IsRelational()
+            ? await _db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
 
         user.Username = username;
         user.FirstName = request.FirstName.Trim();
@@ -186,8 +242,68 @@ public sealed class AdminUserService : IAdminUserService
             });
         }
 
+        var activeAssignment = user.ManagerRegionAssignments
+            .SingleOrDefault(assignment => assignment.RevokedAt == null);
+        if (roleValidation.ManagerRegionId is { } managerRegionId)
+        {
+            if (activeAssignment is null)
+            {
+                _db.ManagerRegionAssignments.Add(new ManagerRegionAssignment
+                {
+                    UserId = user.Id,
+                    RegionId = managerRegionId,
+                    AssignedAt = DateTimeOffset.UtcNow,
+                    AssignedBy = actorUserId
+                });
+                await AddManagerRegionLogAsync(
+                    actorUserId,
+                    "ManagerRegionAssigned",
+                    user.Id,
+                    previousRegionId: null,
+                    managerRegionId,
+                    cancellationToken);
+            }
+            else if (activeAssignment.RegionId != managerRegionId)
+            {
+                var previousRegionId = activeAssignment.RegionId;
+                activeAssignment.RevokedAt = DateTimeOffset.UtcNow;
+                activeAssignment.RevokedBy = actorUserId;
+                await _db.SaveChangesAsync(cancellationToken);
+                _db.ManagerRegionAssignments.Add(new ManagerRegionAssignment
+                {
+                    UserId = user.Id,
+                    RegionId = managerRegionId,
+                    AssignedAt = DateTimeOffset.UtcNow,
+                    AssignedBy = actorUserId
+                });
+                await AddManagerRegionLogAsync(
+                    actorUserId,
+                    "ManagerRegionReassigned",
+                    user.Id,
+                    previousRegionId,
+                    managerRegionId,
+                    cancellationToken);
+            }
+        }
+        else if (activeAssignment is not null)
+        {
+            activeAssignment.RevokedAt = DateTimeOffset.UtcNow;
+            activeAssignment.RevokedBy = actorUserId;
+            await AddManagerRegionLogAsync(
+                actorUserId,
+                "ManagerRegionRevoked",
+                user.Id,
+                activeAssignment.RegionId,
+                regionId: null,
+                cancellationToken);
+        }
+
         await AddUserLogAsync(actorUserId, "AdminUserUpdated", user.Id, 200, true, null, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         return new AdminUserCommandResult<AdminUserDto>(
             AdminUserCommandStatus.Succeeded,
@@ -251,8 +367,85 @@ public sealed class AdminUserService : IAdminUserService
                 x.UserRoles
                     .OrderBy(ur => ur.Role.Name)
                     .Select(ur => new RoleDto(ur.Role.Id, ur.Role.Code, ur.Role.Name, ur.Role.IsSystem))
-                    .ToList()))
+                    .ToList(),
+                x.ManagerRegionAssignments
+                    .Where(assignment => assignment.RevokedAt == null)
+                    .Select(assignment => new ManagerRegionDto(
+                        assignment.RegionId,
+                        assignment.Region.Name))
+                    .SingleOrDefault()))
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<RoleSelectionValidationResult> ValidateRoleSelectionAsync(
+        IReadOnlyCollection<long> requestedRoleIds,
+        long? managerRegionId,
+        CancellationToken cancellationToken)
+    {
+        var roleIds = requestedRoleIds.Distinct().ToList();
+        if (roleIds.Count == 0)
+        {
+            return RoleSelectionValidationResult.Failed("At least one role is required.");
+        }
+
+        var roles = await _db.Roles
+            .AsNoTracking()
+            .Where(role => roleIds.Contains(role.Id))
+            .Select(role => new { role.Id, role.Code })
+            .ToListAsync(cancellationToken);
+        if (roles.Count != roleIds.Count)
+        {
+            return RoleSelectionValidationResult.Failed("Invalid role selection.");
+        }
+
+        var hasManagerRole = roles.Any(role => role.Code == ManagerRoleCode);
+        if (!hasManagerRole && managerRegionId is not null)
+        {
+            return RoleSelectionValidationResult.Failed(
+                "A region can only be assigned to a user with the Manager role.");
+        }
+
+        if (!hasManagerRole)
+        {
+            return RoleSelectionValidationResult.Succeeded(roleIds, managerRegionId: null);
+        }
+
+        if (managerRegionId is null)
+        {
+            return RoleSelectionValidationResult.Failed("Region is required for the Manager role.");
+        }
+
+        var regionExists = await _db.Regions
+            .AsNoTracking()
+            .AnyAsync(
+                region => region.Id == managerRegionId.Value
+                    && region.IsActive
+                    && !region.IsDeleted,
+                cancellationToken);
+        return regionExists
+            ? RoleSelectionValidationResult.Succeeded(roleIds, managerRegionId)
+            : RoleSelectionValidationResult.Failed("Region was not found or is inactive.");
+    }
+
+    private Task AddManagerRegionLogAsync(
+        long actorUserId,
+        string action,
+        long userId,
+        long? previousRegionId,
+        long? regionId,
+        CancellationToken cancellationToken)
+    {
+        return _actionLogService.AddAsync(new ActionLogRequest
+        {
+            UserId = actorUserId,
+            Action = action,
+            Module = "admin",
+            EntityName = "ManagerRegionAssignment",
+            EntityId = userId.ToString(),
+            StatusCode = 200,
+            Succeeded = true,
+            MetadataJson = JsonSerializer.Serialize(new { previousRegionId, regionId })
+        }, cancellationToken);
     }
 
     private Task AddUserLogAsync(
@@ -275,5 +468,19 @@ public sealed class AdminUserService : IAdminUserService
             Succeeded = succeeded,
             FailureReason = failureReason
         }, cancellationToken);
+    }
+
+    private sealed record RoleSelectionValidationResult(
+        bool IsValid,
+        IReadOnlyList<long> RoleIds,
+        long? ManagerRegionId,
+        string? Error)
+    {
+        public static RoleSelectionValidationResult Succeeded(
+            IReadOnlyList<long> roleIds,
+            long? managerRegionId) => new(true, roleIds, managerRegionId, null);
+
+        public static RoleSelectionValidationResult Failed(string error) =>
+            new(false, [], null, error);
     }
 }

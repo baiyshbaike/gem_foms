@@ -33,5 +33,12 @@ export function setupAuthGuard(router: Router) {
         query: { redirect: to.fullPath },
       }
     }
+
+    const requiredPermission = to.meta.requiredPermission
+    if (isLogin.value
+      && requiredPermission
+      && !authStore.hasPermission(requiredPermission)) {
+      return { path: '/errors/403' }
+    }
   })
 }

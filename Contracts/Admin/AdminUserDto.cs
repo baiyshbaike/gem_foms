@@ -11,4 +11,5 @@ public sealed record AdminUserDto(
     DateTimeOffset? LastLoginAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt,
-    IReadOnlyList<RoleDto> Roles);
+    IReadOnlyList<RoleDto> Roles,
+    ManagerRegionDto? ManagerRegion);

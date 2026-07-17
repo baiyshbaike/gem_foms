@@ -2,17 +2,24 @@
 import { EditIcon, PlusIcon, RefreshCwIcon, SaveIcon, Trash2Icon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 
-import type { AdminRole, AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/types/dialysis'
+import type { AdminRole, AdminUser, CreateAdminUserRequest, Region, UpdateAdminUserRequest } from '@/services/types/dialysis'
 
 import { BasicPage } from '@/components/global-layout'
 import { formatDateTime } from '@/lib/dialysis'
-import { adminUserApi } from '@/services/api/dialysis.api'
+import { adminUserApi, regionApi } from '@/services/api/dialysis.api'
+
+import {
+  getManagerRegionIdForPayload,
+  getManagerRoleId,
+  hasSelectedManagerRole,
+} from './manager-region'
 
 const loading = ref(false)
 const saving = ref(false)
 const deactivatingId = ref<number | null>(null)
 const users = ref<AdminUser[]>([])
 const roles = ref<AdminRole[]>([])
+const regions = ref<Region[]>([])
 const search = ref('')
 const editingId = ref<number | null>(null)
 const selectedRoleIds = ref<number[]>([])
@@ -23,7 +30,14 @@ const form = reactive({
   firstName: '',
   lastName: '',
   isActive: true,
+  managerRegionId: null as number | null,
 })
+
+const managerRoleId = computed(() => getManagerRoleId(roles.value))
+const hasManagerRole = computed(() =>
+  hasSelectedManagerRole(roles.value, selectedRoleIds.value),
+)
+const activeRegions = computed(() => regions.value.filter(region => region.isActive))
 
 const filteredUsers = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -35,7 +49,8 @@ const filteredUsers = computed(() => {
     user.username.toLowerCase().includes(query)
     || user.firstName.toLowerCase().includes(query)
     || user.lastName.toLowerCase().includes(query)
-    || user.roles.some(role => role.name.toLowerCase().includes(query)),
+    || user.roles.some(role => role.name.toLowerCase().includes(query))
+    || user.managerRegion?.name.toLowerCase().includes(query),
   )
 })
 
@@ -50,6 +65,7 @@ function resetForm() {
     firstName: '',
     lastName: '',
     isActive: true,
+    managerRegionId: null,
   })
 }
 
@@ -62,6 +78,7 @@ function editUser(user: AdminUser) {
     firstName: user.firstName,
     lastName: user.lastName,
     isActive: user.isActive,
+    managerRegionId: user.managerRegion?.id ?? null,
   })
 }
 
@@ -69,6 +86,10 @@ function toggleRole(roleId: number, checked: boolean) {
   selectedRoleIds.value = checked
     ? [...new Set([...selectedRoleIds.value, roleId])]
     : selectedRoleIds.value.filter(id => id !== roleId)
+
+  if (roleId === managerRoleId.value && !checked) {
+    form.managerRegionId = null
+  }
 }
 
 function createPayload(): CreateAdminUserRequest {
@@ -79,6 +100,7 @@ function createPayload(): CreateAdminUserRequest {
     lastName: form.lastName.trim(),
     isActive: form.isActive,
     roleIds: selectedRoleIds.value,
+    managerRegionId: getManagerRegionIdForPayload(roles.value, selectedRoleIds.value, form.managerRegionId),
   }
 }
 
@@ -90,18 +112,21 @@ function updatePayload(): UpdateAdminUserRequest {
     lastName: form.lastName.trim(),
     isActive: form.isActive,
     roleIds: selectedRoleIds.value,
+    managerRegionId: getManagerRegionIdForPayload(roles.value, selectedRoleIds.value, form.managerRegionId),
   }
 }
 
 async function loadData() {
   loading.value = true
   try {
-    const [nextUsers, nextRoles] = await Promise.all([
+    const [nextUsers, nextRoles, nextRegions] = await Promise.all([
       adminUserApi.list(),
       adminUserApi.roles(),
+      regionApi.list(false),
     ])
     users.value = nextUsers
     roles.value = nextRoles
+    regions.value = nextRegions
   }
   catch {
     toast.error('Users could not be loaded')
@@ -119,6 +144,11 @@ async function saveUser() {
 
   if (!editingId.value && form.password.length < 6) {
     toast.error('Password must be at least 6 characters')
+    return
+  }
+
+  if (hasManagerRole.value && !form.managerRegionId) {
+    toast.error('Select a region for the manager')
     return
   }
 
@@ -206,6 +236,9 @@ onMounted(loadData)
                     Roles
                   </th>
                   <th class="px-3 py-2 font-medium">
+                    Region
+                  </th>
+                  <th class="px-3 py-2 font-medium">
                     Last login
                   </th>
                   <th class="px-3 py-2 font-medium">
@@ -218,12 +251,12 @@ onMounted(loadData)
               </thead>
               <tbody>
                 <tr v-if="loading">
-                  <td colspan="5" class="px-3 py-8 text-center text-muted-foreground">
+                  <td colspan="6" class="px-3 py-8 text-center text-muted-foreground">
                     Loading users...
                   </td>
                 </tr>
                 <tr v-else-if="filteredUsers.length === 0">
-                  <td colspan="5" class="px-3 py-8 text-center text-muted-foreground">
+                  <td colspan="6" class="px-3 py-8 text-center text-muted-foreground">
                     No users found.
                   </td>
                 </tr>
@@ -251,6 +284,9 @@ onMounted(loadData)
                           {{ role.name }}
                         </UiBadge>
                       </div>
+                    </td>
+                    <td class="px-3 py-2">
+                      {{ user.managerRegion?.name ?? '-' }}
                     </td>
                     <td class="px-3 py-2">
                       {{ formatDateTime(user.lastLoginAt) }}
@@ -343,6 +379,24 @@ onMounted(loadData)
                   <span class="text-xs text-muted-foreground">{{ role.code }}</span>
                 </label>
               </div>
+            </div>
+
+            <div v-if="hasManagerRole" class="grid gap-2">
+              <UiLabel>Manager region</UiLabel>
+              <UiSelect v-model="form.managerRegionId">
+                <UiSelectTrigger class="w-full">
+                  <UiSelectValue placeholder="Select region" />
+                </UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem
+                    v-for="region in activeRegions"
+                    :key="region.id"
+                    :value="region.id"
+                  >
+                    {{ region.name }}
+                  </UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
             </div>
 
             <label class="flex items-center gap-2 rounded-md border p-3 text-sm">

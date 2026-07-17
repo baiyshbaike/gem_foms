@@ -1744,7 +1744,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("SessionWorkflowSettings", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Tenants.ManagerRegionAccess", b =>
+            modelBuilder.Entity("Domain.Tenants.ManagerRegionAssignment", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -1752,76 +1752,38 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("DistrictId")
-                        .HasColumnType("bigint");
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("GrantedAt");
 
-                    b.Property<long?>("GeoRegionId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("AssignedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("GrantedBy");
 
-                    b.Property<DateTimeOffset>("GrantedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("GrantedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RegionId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<long>("RegionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("GeoRegionId");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("RevokedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DistrictId");
+                    b.HasIndex("RegionId")
+                        .HasDatabaseName("IX_ManagerRegionAccesses_GeoRegionId");
 
-                    b.HasIndex("GeoRegionId");
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ManagerRegionAccesses_UserId_Active")
+                        .HasFilter("\"RevokedAt\" IS NULL");
 
-                    b.HasIndex("RegionId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId", "RegionId")
-                        .IsUnique();
-
-                    b.ToTable("ManagerRegionAccesses");
-                });
-
-            modelBuilder.Entity("Domain.Tenants.Region", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("DisabledAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Regions");
+                    b.ToTable("ManagerRegionAccesses", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Tenants.Tenant", b =>
@@ -1829,6 +1791,10 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -1844,30 +1810,22 @@ namespace Infrastructure.Migrations
                     b.Property<long>("DistrictId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("GeoRegionId")
-                        .HasColumnType("bigint");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Locale")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("RegionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("TimeZoneId")
+                    b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("RegionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("GeoRegionId");
 
                     b.HasKey("Id");
 
@@ -1876,9 +1834,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("DistrictId");
 
-                    b.HasIndex("GeoRegionId");
-
-                    b.HasIndex("RegionId");
+                    b.HasIndex("RegionId")
+                        .HasDatabaseName("IX_Tenants_GeoRegionId");
 
                     b.ToTable("Tenants");
                 });
@@ -2239,33 +2196,19 @@ namespace Infrastructure.Migrations
                     b.Navigation("HdSession");
                 });
 
-            modelBuilder.Entity("Domain.Tenants.ManagerRegionAccess", b =>
+            modelBuilder.Entity("Domain.Tenants.ManagerRegionAssignment", b =>
                 {
-                    b.HasOne("Domain.Regions.District", "District")
-                        .WithMany("ManagerRegionAccesses")
-                        .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Domain.Regions.Region", "GeoRegion")
-                        .WithMany("ManagerRegionAccesses")
-                        .HasForeignKey("GeoRegionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Domain.Tenants.Region", "Region")
-                        .WithMany("ManagerRegionAccesses")
+                    b.HasOne("Domain.Regions.Region", "Region")
+                        .WithMany("ManagerRegionAssignments")
                         .HasForeignKey("RegionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Users.User", "User")
-                        .WithMany("ManagerRegionAccesses")
+                        .WithMany("ManagerRegionAssignments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("District");
-
-                    b.Navigation("GeoRegion");
 
                     b.Navigation("Region");
 
@@ -2280,20 +2223,13 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Regions.Region", "GeoRegion")
+                    b.HasOne("Domain.Regions.Region", "Region")
                         .WithMany("Tenants")
-                        .HasForeignKey("GeoRegionId")
+                        .HasForeignKey("RegionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Tenants.Region", "Region")
-                        .WithMany("Tenants")
-                        .HasForeignKey("RegionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("District");
-
-                    b.Navigation("GeoRegion");
 
                     b.Navigation("Region");
                 });
@@ -2398,8 +2334,6 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Regions.District", b =>
                 {
-                    b.Navigation("ManagerRegionAccesses");
-
                     b.Navigation("Patients");
 
                     b.Navigation("Tenants");
@@ -2409,7 +2343,7 @@ namespace Infrastructure.Migrations
                 {
                     b.Navigation("Districts");
 
-                    b.Navigation("ManagerRegionAccesses");
+                    b.Navigation("ManagerRegionAssignments");
 
                     b.Navigation("Patients");
 
@@ -2421,13 +2355,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Measurements");
 
                     b.Navigation("Pauses");
-                });
-
-            modelBuilder.Entity("Domain.Tenants.Region", b =>
-                {
-                    b.Navigation("ManagerRegionAccesses");
-
-                    b.Navigation("Tenants");
                 });
 
             modelBuilder.Entity("Domain.Tenants.Tenant", b =>
@@ -2449,7 +2376,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
-                    b.Navigation("ManagerRegionAccesses");
+                    b.Navigation("ManagerRegionAssignments");
 
                     b.Navigation("RefreshTokens");
 

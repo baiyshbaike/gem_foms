@@ -141,7 +141,7 @@ public sealed class RegionService : IRegionService
 
     private IQueryable<Domain.Regions.Region> RegionQuery(bool includeInactive)
     {
-        return _db.GeoRegions
+        return _db.Regions
             .AsNoTracking()
             .Where(x => !x.IsDeleted && (includeInactive || x.IsActive));
     }

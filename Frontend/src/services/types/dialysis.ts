@@ -23,6 +23,52 @@ export interface Tenant {
   name: string
 }
 
+export interface TenantDetails extends Tenant {
+  address: string | null
+  phone: string
+  regionId: number
+  regionName: string
+  districtId: number
+  districtName: string
+  isActive: boolean
+  createdAt: string
+  disabledAt: string | null
+}
+
+export type TenantGridRow = TenantDetails
+
+export interface TenantGridQueryRequest {
+  page: number
+  pageSize: number
+  search: string | null
+  sorting: PatientGridSort[]
+  filters: PatientGridFilter[]
+  groupBy: string | null
+}
+
+export interface TenantGridExportRequest extends TenantGridQueryRequest {
+  selectedIds: string[]
+}
+
+export interface TenantGridQueryResult {
+  items: TenantGridRow[]
+  totalCount: number
+  groups: PatientGridGroupSummary[]
+}
+
+export interface CreateTenantRequest {
+  code: string
+  name: string
+  address: string | null
+  phone: string
+  regionId: number
+  districtId: number
+}
+
+export interface UpdateTenantRequest extends CreateTenantRequest {
+  isActive: boolean
+}
+
 export interface SwitchTenantResponse {
   accessToken: string
   expiresAt: string
@@ -56,6 +102,10 @@ export interface AdminUser {
   createdAt: string
   updatedAt: string | null
   roles: AdminRole[]
+  managerRegion: {
+    id: number
+    name: string
+  } | null
 }
 
 export interface CreateAdminUserRequest {
@@ -65,6 +115,7 @@ export interface CreateAdminUserRequest {
   lastName: string
   isActive: boolean
   roleIds: number[]
+  managerRegionId: number | null
 }
 
 export interface UpdateAdminUserRequest {
@@ -74,6 +125,7 @@ export interface UpdateAdminUserRequest {
   lastName: string
   isActive: boolean
   roleIds: number[]
+  managerRegionId: number | null
 }
 
 export interface SessionWorkflowSettings {

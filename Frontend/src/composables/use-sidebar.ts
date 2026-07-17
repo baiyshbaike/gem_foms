@@ -1,4 +1,4 @@
-import { ActivityIcon, BellDotIcon, ClipboardListIcon, HeartPulseIcon, LayoutDashboardIcon, LogsIcon, MonitorCogIcon, PaletteIcon, PictureInPicture2Icon, SettingsIcon, StethoscopeIcon, UserIcon, UsersIcon, WrenchIcon } from '@lucide/vue'
+import { ActivityIcon, BellDotIcon, Building2Icon, ClipboardListIcon, HeartPulseIcon, LayoutDashboardIcon, LogsIcon, MonitorCogIcon, PaletteIcon, PictureInPicture2Icon, SettingsIcon, StethoscopeIcon, UserIcon, UsersIcon, WrenchIcon } from '@lucide/vue'
 
 import type { NavGroup } from '@/components/app-sidebar/types'
 
@@ -26,6 +26,7 @@ export function useSidebar() {
     {
       title: 'Administration',
       items: [
+        { title: 'Tenants', url: '/tenants', icon: Building2Icon, permission: 'admin.tenants' },
         { title: 'Users', url: '/users', icon: UserIcon },
         { title: 'Settings', items: settingsNavItems, icon: SettingsIcon },
       ],

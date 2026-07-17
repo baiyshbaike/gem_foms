@@ -1,5 +1,6 @@
 using Application.Authorization;
 using Application.Sessions;
+using Api.Auth;
 using Application.Tenants;
 using Contracts.Sessions;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ namespace Api.Controllers;
 [ApiController]
 [Route("api/v1/settings/session-workflow")]
 [Authorize]
+[Authorize(Policy = ActiveTenantPolicy.Name)]
 public sealed class SessionWorkflowSettingsController : ControllerBase
 {
     private readonly ISessionWorkflowSettingsService _settingsService;

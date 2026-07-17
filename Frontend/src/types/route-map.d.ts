@@ -300,6 +300,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/tenants/': RouteRecordInfo<
+      '/tenants/',
+      '/tenants',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/user/': RouteRecordInfo<
       '/user/',
       '/user',
@@ -630,6 +637,14 @@ declare module 'vue-router/auto-routes' {
     'src/pages/tasks/index.vue': {
       routes:
         | '/tasks/'
+      views:
+        | never
+      pathParamNames:
+        | never
+    }
+    'src/pages/tenants/index.vue': {
+      routes:
+        | '/tenants/'
       views:
         | never
       pathParamNames:

@@ -5,6 +5,7 @@ public static class Permissions
     public const string AdminUsers = "admin.users";
     public const string AdminRoles = "admin.roles";
     public const string AdminPermissions = "admin.permissions";
+    public const string AdminTenants = "admin.tenants";
     public const string AdminAudit = "admin.audit";
 
     public const string AuthLogin = "auth.login";
@@ -57,6 +58,7 @@ public static class Permissions
         AdminUsers,
         AdminRoles,
         AdminPermissions,
+        AdminTenants,
         AdminAudit,
         AuthLogin,
         AuthRefresh,

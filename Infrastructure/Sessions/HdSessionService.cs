@@ -5,6 +5,7 @@ using Contracts.Sessions;
 using Domain.MedCards;
 using Domain.Patients;
 using Domain.Sessions;
+using Infrastructure.Common;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Domain.MedCenters;
@@ -16,15 +17,18 @@ public sealed class HdSessionService : IHdSessionService
     private readonly AppDbContext _db;
     private readonly IActionLogService _actionLogService;
     private readonly ITenantAccessService _tenantAccessService;
+    private readonly RegionalSettings _regionalSettings;
 
     public HdSessionService(
         AppDbContext db,
         IActionLogService actionLogService,
-        ITenantAccessService tenantAccessService)
+        ITenantAccessService tenantAccessService,
+        RegionalSettings regionalSettings)
     {
         _db = db;
         _actionLogService = actionLogService;
         _tenantAccessService = tenantAccessService;
+        _regionalSettings = regionalSettings;
     }
 
     public async Task<IReadOnlyList<SessionDto>?> GetAsync(
@@ -397,14 +401,13 @@ public sealed class HdSessionService : IHdSessionService
             return new SessionCommandResult<SessionDto>(SessionCommandStatus.Conflict);
         }
 
-        var dayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
-        var dayEnd = dayStart.AddDays(1);
+        var dayRange = _regionalSettings.GetUtcDayRange(now);
 
         var machineSessionCountToday = await _db.HdSessions.CountAsync(x =>
                 x.TenantId == tenantId &&
                 x.MachineId == request.MachineId &&
-                x.StartedAt >= dayStart &&
-                x.StartedAt < dayEnd &&
+                x.StartedAt >= dayRange.Start &&
+                x.StartedAt < dayRange.End &&
                 x.Status != SessionStatus.Cancelled,
             cancellationToken);
 

@@ -5,6 +5,9 @@ import type {
   SessionMeasurementPoint,
 } from '@/services/types/dialysis'
 
+export const APP_LOCALE = 'ru-RU'
+export const APP_TIME_ZONE = 'Asia/Bishkek'
+
 export const patientGroupOptions = [
   { value: 1, label: 'New' },
   { value: 2, label: 'Fresenius' },
@@ -58,9 +61,10 @@ export function formatDateTime(value: string | null | undefined) {
     return value
   }
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(APP_LOCALE, {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: APP_TIME_ZONE,
   }).format(date)
 }
 
@@ -74,8 +78,17 @@ export function toDateTimeLocal(value: string | null | undefined) {
     return value.slice(0, 16)
   }
 
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return local.toISOString().slice(0, 16)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23',
+    minute: '2-digit',
+    month: '2-digit',
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`
 }
 
 export function toIsoDateTime(value: string | null | undefined) {

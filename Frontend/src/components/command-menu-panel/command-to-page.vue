@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { filterNavigationByPermissions } from '@/composables/use-authorized-navigation'
 import { useSidebar } from '@/composables/use-sidebar'
+import { useAuthStore } from '@/stores/auth'
 
 import type { NavGroup, NavItem } from '../app-sidebar/types'
 
@@ -10,6 +12,7 @@ const emit = defineEmits<{
 }>()
 
 const { navData, otherPages } = useSidebar()
+const authStore = useAuthStore()
 
 function getFlatNavItems(navData: NavGroup[]): NavItem[] {
   const flatItems: NavItem[] = []
@@ -26,7 +29,10 @@ function getFlatNavItems(navData: NavGroup[]): NavItem[] {
   return flatItems
 }
 
-const commands = getFlatNavItems([...navData.value!, ...otherPages.value!])
+const commands = computed(() => getFlatNavItems([
+  ...filterNavigationByPermissions(navData.value!, authStore.permissions),
+  ...otherPages.value!,
+]))
 
 const router = useRouter()
 const route = useRoute()

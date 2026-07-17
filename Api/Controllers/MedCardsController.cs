@@ -1,5 +1,6 @@
 ﻿using Application.Authorization;
 using Application.MedCards;
+using Api.Auth;
 using Application.Tenants;
 using Contracts.MedCards;
 using Microsoft.AspNetCore.Authorization;
@@ -39,6 +40,7 @@ public sealed class MedCardsController : ControllerBase
 
     [HttpGet("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCardRead)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCardDto>> GetById(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -53,6 +55,7 @@ public sealed class MedCardsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "Permission:" + Permissions.MedCardCreate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCardDto>> Create(CreateMedCardRequest request, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -79,6 +82,7 @@ public sealed class MedCardsController : ControllerBase
 
     [HttpPut("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCardUpdate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCardDto>> Update(
         long id,
         UpdateMedCardRequest request,
@@ -109,6 +113,7 @@ public sealed class MedCardsController : ControllerBase
 
     [HttpDelete("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCardDelete)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();

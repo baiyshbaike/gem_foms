@@ -54,8 +54,7 @@ public static class IdentitySeeder
         var adminUser = await SeedAdminUserAsync(db, configuration);
         await SeedUserRoleAsync(db, adminUser, adminRole);
 
-        var region = await SeedDefaultRegionAsync(db, configuration);
-        await SeedDefaultTenantAsync(db, configuration, region);
+        await SeedDefaultTenantAsync(db, configuration);
     }
 
     private static async Task SeedPermissionsAsync(AppDbContext db)
@@ -179,37 +178,9 @@ public static class IdentitySeeder
         await db.SaveChangesAsync();
     }
 
-    private static async Task<Region> SeedDefaultRegionAsync(
-        AppDbContext db,
-        IConfiguration configuration)
-    {
-        var regionId = configuration["SEED_REGION_ID"] ?? "dev-region";
-
-        var region = await db.Regions.FirstOrDefaultAsync(x => x.Id == regionId);
-        if (region is not null)
-        {
-            return region;
-        }
-
-        region = new Region
-        {
-            Id = regionId,
-            Code = configuration["SEED_REGION_CODE"] ?? "DEV-REGION",
-            Name = configuration["SEED_REGION_NAME"] ?? "Development Region",
-            IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        db.Regions.Add(region);
-        await db.SaveChangesAsync();
-
-        return region;
-    }
-
     private static async Task<Tenant> SeedDefaultTenantAsync(
         AppDbContext db,
-        IConfiguration configuration,
-        Region region)
+        IConfiguration configuration)
     {
         var tenantId = configuration["SEED_TENANT_ID"] ?? "dev-center";
         var defaultDistrict = await db.Districts
@@ -229,21 +200,9 @@ public static class IdentitySeeder
         {
             var hasChanges = false;
 
-            if (tenant.RegionId is null)
+            if (tenant.RegionId <= 0)
             {
-                tenant.RegionId = region.Id;
-                hasChanges = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(tenant.TimeZoneId))
-            {
-                tenant.TimeZoneId = configuration["SEED_TENANT_TIME_ZONE"] ?? "Asia/Bishkek";
-                hasChanges = true;
-            }
-
-            if (tenant.GeoRegionId <= 0)
-            {
-                tenant.GeoRegionId = defaultDistrict.RegionId;
+                tenant.RegionId = defaultDistrict.RegionId;
                 hasChanges = true;
             }
 
@@ -266,10 +225,8 @@ public static class IdentitySeeder
             Id = tenantId,
             Code = configuration["SEED_TENANT_CODE"] ?? "DEV",
             Name = configuration["SEED_TENANT_NAME"] ?? "Development Dialysis Center",
-            TimeZoneId = configuration["SEED_TENANT_TIME_ZONE"] ?? "Asia/Bishkek",
-            Locale = "ru-RU",
-            RegionId = region.Id,
-            GeoRegionId = defaultDistrict.RegionId,
+            Phone = configuration["SEED_TENANT_PHONE"] ?? "+996 312 00 00 00",
+            RegionId = defaultDistrict.RegionId,
             DistrictId = defaultDistrict.Id,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow

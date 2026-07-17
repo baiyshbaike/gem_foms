@@ -1,5 +1,6 @@
 ﻿using Application.Authorization;
 using Application.MedCenterMachines;
+using Api.Auth;
 using Application.Tenants;
 using Contracts.MedCenterMachines;
 using Microsoft.AspNetCore.Authorization;
@@ -41,6 +42,7 @@ public sealed class MedCenterMachinesController : ControllerBase
 
     [HttpGet("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCenterMachineRead)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCenterMachineDto>> GetById(
         long id,
         CancellationToken cancellationToken)
@@ -62,6 +64,7 @@ public sealed class MedCenterMachinesController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "Permission:" + Permissions.MedCenterMachineCreate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCenterMachineDto>> Create(
         CreateMedCenterMachineRequest request,
         CancellationToken cancellationToken)
@@ -89,6 +92,7 @@ public sealed class MedCenterMachinesController : ControllerBase
 
     [HttpPut("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCenterMachineUpdate)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<ActionResult<MedCenterMachineDto>> Update(
         long id,
         UpdateMedCenterMachineRequest request,
@@ -119,6 +123,7 @@ public sealed class MedCenterMachinesController : ControllerBase
 
     [HttpDelete("{id:long}")]
     [Authorize(Policy = "Permission:" + Permissions.MedCenterMachineDelete)]
+    [Authorize(Policy = ActiveTenantPolicy.Name)]
     public async Task<IActionResult> Delete(
         long id,
         CancellationToken cancellationToken)

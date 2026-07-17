@@ -8,6 +8,7 @@ import {
   getStoredAuthSession,
   setStoredAuthSession,
 } from '@/services/auth-session'
+import { resolveTenantSelection } from '@/services/tenant-selection'
 
 export const useAuthStore = defineStore('auth', () => {
   const stored = getStoredAuthSession()
@@ -101,6 +102,30 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  async function reconcileTenants() {
+    await loadTenants()
+
+    const nextTenantId = resolveTenantSelection(activeTenant.value, tenants.value)
+    if (nextTenantId === undefined) {
+      return
+    }
+
+    if (nextTenantId !== null) {
+      await switchTenant(nextTenantId)
+      return
+    }
+
+    activeTenant.value = null
+    if (user.value) {
+      setStoredAuthSession({
+        accessToken: accessToken.value,
+        refreshToken: refreshToken.value,
+        expiresAt: expiresAt.value,
+        user: user.value,
+      })
+    }
+  }
+
   async function logout() {
     const token = refreshToken.value
 
@@ -133,6 +158,7 @@ export const useAuthStore = defineStore('auth', () => {
     loadMe,
     loadTenants,
     switchTenant,
+    reconcileTenants,
     hasPermission,
     clearSession,
   }
